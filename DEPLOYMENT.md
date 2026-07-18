@@ -49,6 +49,13 @@ docker compose -f docker-compose.staging.yml ps
 curl http://127.0.0.1:3100/api/health
 ```
 
+### CI image smoke (no real ADOS mounts)
+
+GitHub Actions job `docker-image` builds `Dockerfile` and runs a container with
+`ADOS_CONTROL_PLANE_ROOT` pointing at a missing path and auth disabled, then
+checks `GET /api/health` on loopback. That proves the image boots without
+mounting production ADOS roots.
+
 The Compose defaults mount:
 
 ```text

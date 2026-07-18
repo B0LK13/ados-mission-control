@@ -4,6 +4,8 @@ test("overview and project registry render authoritative state", async ({ page }
   await page.goto("/overview");
   await expect(page.getByRole("heading", { name: "Operational overview" })).toBeVisible();
   await expect(page.getByText("DATA LINK")).toBeVisible();
+  await expect(page.locator(".data-link strong")).toHaveText(/CONNECTING|LIVE|DISCONNECTED|DEGRADED/);
+  await expect(page.getByText("FRESHNESS")).toBeVisible();
   await page.getByRole("link", { name: "Projects" }).click();
   await expect(page.getByRole("heading", { name: "Projects", exact: true })).toBeVisible();
   await expect(page.getByText("ADOS control plane", { exact: true })).toBeVisible();

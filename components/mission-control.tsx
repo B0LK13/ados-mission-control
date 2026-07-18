@@ -377,19 +377,44 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
   }, []);
 
   useEffect(() => {
-    const stream = new EventSource("/api/v1/events/stream");
-    stream.onopen = () => setStreamState("LIVE");
-    stream.addEventListener("snapshot", (event) => {
-      try {
-        setSnapshot(JSON.parse((event as MessageEvent<string>).data) as MissionSnapshot);
-        setStreamState("LIVE");
-      } catch {
-        setStreamState("DEGRADED");
-      }
-    });
-    stream.addEventListener("broker-error", () => setStreamState("DEGRADED"));
-    stream.onerror = () => setStreamState("DISCONNECTED");
-    return () => stream.close();
+    let disposed = false;
+    let stream: EventSource | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const connect = () => {
+      if (disposed) return;
+      stream?.close();
+      setStreamState("CONNECTING");
+      stream = new EventSource("/api/v1/events/stream");
+      stream.onopen = () => {
+        if (!disposed) setStreamState("LIVE");
+      };
+      stream.addEventListener("snapshot", (event) => {
+        if (disposed) return;
+        try {
+          setSnapshot(JSON.parse((event as MessageEvent<string>).data) as MissionSnapshot);
+          setStreamState("LIVE");
+        } catch {
+          setStreamState("DEGRADED");
+        }
+      });
+      stream.addEventListener("broker-error", () => {
+        if (!disposed) setStreamState("DEGRADED");
+      });
+      stream.onerror = () => {
+        if (disposed) return;
+        setStreamState("DISCONNECTED");
+        stream?.close();
+        reconnectTimer = setTimeout(connect, 2_000);
+      };
+    };
+
+    connect();
+    return () => {
+      disposed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      stream?.close();
+    };
   }, []);
 
   useEffect(() => { setQuery(""); setStatus("ALL"); }, [view]);
