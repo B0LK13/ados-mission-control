@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.local/schemas/evidence-item.schema.json",
+  "title": "EvidenceItem",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["evidenceId", "path", "authority"],
+  "properties": {
+    "evidenceId": { "type": "string" },
+    "path": { "type": "string" },
+    "sha256": { "type": ["string", "null"] },
+    "creator": { "type": ["string", "null"] },
+    "createdAt": { "type": ["string", "null"] },
+    "relatedTaskId": { "type": ["string", "null"] },
+    "relatedLeaseId": { "type": ["string", "null"] },
+    "trackedState": { "enum": ["tracked", "untracked", "ignored", "runtime_only", "archived", "unknown"] },
+    "redactionStatus": { "type": ["string", "null"] },
+    "trustFlags": { "type": "array", "items": { "type": "string" } },
+    "authority": { "enum": ["AUTHORITATIVE", "NON_AUTHORITATIVE", "OBSERVED"] }
+  }
+}

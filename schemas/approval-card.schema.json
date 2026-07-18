@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.local/schemas/approval-card.schema.json",
+  "title": "ApprovalCard",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["approvalId", "action", "status", "authority"],
+  "properties": {
+    "approvalId": { "type": "string" },
+    "action": { "type": "string" },
+    "status": { "type": "string" },
+    "issuedAt": { "type": ["string", "null"] },
+    "expiresAt": { "type": ["string", "null"] },
+    "issuedBy": { "type": ["string", "null"] },
+    "requestingAgent": { "type": ["string", "null"] },
+    "justification": { "type": ["string", "null"] },
+    "target": { "type": ["object", "null"] },
+    "affectedPaths": { "type": "array", "items": { "type": "string" } },
+    "willDo": { "type": "array", "items": { "type": "string" } },
+    "willNotDo": { "type": "array", "items": { "type": "string" } },
+    "preconditions": { "type": "array", "items": { "type": "string" } },
+    "riskLevel": { "type": ["string", "null"] },
+    "evidenceRefs": { "type": "array", "items": { "type": "string" } },
+    "authority": { "enum": ["AUTHORITATIVE", "NON_AUTHORITATIVE", "OBSERVED"] }
+  }
+}

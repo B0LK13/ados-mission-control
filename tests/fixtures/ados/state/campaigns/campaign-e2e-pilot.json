@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1.0.0",
+  "campaignId": "campaign-e2e-pilot-001",
+  "ownerApprovalRef": "approval-e2e-campaign",
+  "projectIds": ["ados-mission-control-v2"],
+  "canonicalWorktrees": [
+    {
+      "projectId": "ados-mission-control-v2",
+      "path": "D:\\ados-mission-control",
+      "branch": "main",
+      "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ],
+  "primaryRuntime": "cursor-windows",
+  "reviewRuntime": "claude",
+  "allowedActions": [
+    "analyze",
+    "edit-allowlisted-files",
+    "test",
+    "document",
+    "bounded-remediation",
+    "prepare-commit-readiness"
+  ],
+  "readRoots": ["D:\\ados-mission-control"],
+  "writeRoots": ["D:\\ados-mission-control"],
+  "budgets": {
+    "cursorLaunches": { "used": 1, "limit": 3 },
+    "claudeReviews": { "used": 0, "limit": 2 },
+    "remediations": { "used": 0, "limit": 2 }
+  },
+  "policies": {
+    "pushMergeDeploy": "DENY"
+  },
+  "reviewTriggers": ["COMMIT_READY"],
+  "ownerOnlyGates": ["Authorize local commit"],
+  "issuedAt": "2026-07-18T06:00:00Z",
+  "expiresAt": "2026-07-25T06:00:00Z",
+  "status": "APPROVED"
+}

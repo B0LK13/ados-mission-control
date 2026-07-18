@@ -1,0 +1,68 @@
+SOURCE / CONFIGURATION MODIFIED
+.env.example
+.gitignore
+README.md
+app/[view]/page.tsx
+components/mission-control.tsx
+lib/broker/snapshot.ts
+package.json
+tests/broker.test.ts
+
+SOURCE / CONFIGURATION ADDED
+.dockerignore
+ARCHITECTURE.md
+DEPLOYMENT.md
+Dockerfile
+SECURITY.md
+docker-compose.staging.yml
+playwright.config.ts
+scripts/capture-screenshots.mjs
+scripts/generate-evidence-manifest.mjs
+tests/io.test.ts
+tests/normalization.test.ts
+tests/security.test.ts
+tests/e2e/live.spec.ts
+tests/e2e/mobile.spec.ts
+tests/e2e/unavailable.spec.ts
+tests/fixtures/ados/state/orchestrator-lease.json
+tests/fixtures/ados/state/agent-sessions.json
+tests/fixtures/ados/state/project-state.json
+tests/fixtures/ados/state/worktree-registry.json
+tests/fixtures/ados/state/wave-0-dispatch-state.json
+tests/fixtures/ados/state/event-ledger.jsonl
+tests/fixtures/ados/state/approvals.jsonl
+tests/fixtures/ados/state/approval-consumptions.jsonl
+tests/fixtures/ados/handoffs/owner/approvals/approval-e2e-deploy.json
+tests/fixtures/ados/handoffs/codex/inbox/TASK-E2E-001.json
+tests/fixtures/ados/handoffs/codex/completed/TASK-E2E-001.json
+tests/fixtures/ados/evidence/e2e/manifest.json
+
+EVIDENCE GENERATED / ADDED
+evidence/deployment/REPOSITORY-IDENTITY.md
+evidence/deployment/CHANGED-FILES.txt
+evidence/deployment/DEPENDENCIES.txt
+evidence/deployment/VERIFICATION.txt
+evidence/deployment/IMAGE-BUILD.txt
+evidence/deployment/PROCESS-STATUS.txt
+evidence/deployment/HEALTH.json
+evidence/deployment/READ-ONLY-PROOF.md
+evidence/deployment/ROLLBACK.md
+evidence/deployment/FINAL-STATUS.txt
+evidence/deployment/screenshots/overview.png
+evidence/deployment/screenshots/projects.png
+evidence/deployment/screenshots/agents.png
+evidence/deployment/screenshots/tasks.png
+evidence/deployment/screenshots/approvals.png
+evidence/deployment/screenshots/timeline.png
+evidence/deployment/screenshots/routing-incidents.png
+evidence/deployment/SHA256SUMS.txt
+
+GENERATED WORKSPACE ARTIFACTS (NOT RELEASE SOURCE)
+.codebase-memory/graph.db.zst (refreshed by required codebase index)
+.next/**
+node_modules/**
+playwright-report/**
+test-results/**
+tsconfig.tsbuildinfo
+
+package-lock.json was not changed.

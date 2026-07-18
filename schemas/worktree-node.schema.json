@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.local/schemas/worktree-node.schema.json",
+  "title": "WorktreeNode",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["repoId", "pathWindows", "role", "authority"],
+  "properties": {
+    "repoId": { "type": "string" },
+    "pathWindows": { "type": "string" },
+    "pathWsl": { "type": ["string", "null"] },
+    "role": { "type": "string" },
+    "branch": { "type": ["string", "null"] },
+    "head": { "type": ["string", "null"] },
+    "tree": { "type": ["string", "null"] },
+    "dirty": { "type": "boolean" },
+    "untracked": { "type": "array", "items": { "type": "string" } },
+    "ownerAgent": { "type": ["string", "null"] },
+    "prunable": { "type": ["boolean", "null"] },
+    "remote": { "type": ["string", "null"] },
+    "signatureStatus": { "type": ["string", "null"] },
+    "authority": { "enum": ["AUTHORITATIVE", "NON_AUTHORITATIVE", "OBSERVED"] }
+  }
+}

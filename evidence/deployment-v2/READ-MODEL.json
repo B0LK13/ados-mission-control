@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "2.0.0",
+  "sourceMode": "LIVE",
+  "sourceReachable": true,
+  "sourceStale": false,
+  "readModel": {
+    "backend": "SQLITE",
+    "status": "READY",
+    "schemaVersion": 1,
+    "lastPersistedAt": "2026-07-17T13:58:00.322Z",
+    "watermarkCount": 5,
+    "recoveredFromCache": false
+  },
+  "cacheFile": "data/mission-control-v2.sqlite",
+  "cacheBytes": 4096
+}

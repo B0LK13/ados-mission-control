@@ -1,0 +1,6 @@
+docker compose -f docker-compose.staging.yml config --quiet: PASS
+Docker image build/run: NOT ATTEMPTED because Docker Desktop Linux engine was unavailable at npipe:////./pipe/dockerDesktopLinuxEngine.
+Authorized fallback: local optimized production build and production-mode Next.js server on loopback.
+npm run build: PASS (see verification/06-production-build.log)
+
+The validated Compose definition retains a read-only root filesystem, non-root UID/GID, dropped capabilities, read-only ADOS mounts, loopback publishing, app-owned cache volume, and Basic-auth environment file.

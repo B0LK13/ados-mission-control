@@ -1,0 +1,11 @@
+{
+    "schema_version": 1,
+    "commit": "",
+    "indexed_at": "2026-07-17T12:41:47Z",
+    "project": "D-ADOS-Mission-Control",
+    "nodes": 453,
+    "edges": 594,
+    "original_size": 1703936,
+    "compressed_size": 225268,
+    "compression_level": 9
+}

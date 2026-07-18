@@ -1,0 +1,4 @@
+http://127.0.0.1:3100
+Authentication: Basic, local credential stored only in ignored .mission-control-auth.env
+Health: http://127.0.0.1:3100/api/health
+Exposure: loopback only

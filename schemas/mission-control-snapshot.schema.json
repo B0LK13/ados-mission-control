@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.local/schemas/mission-control-snapshot.schema.json",
+  "title": "MissionSnapshot",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "snapshotAt", "systemHealth", "primaryLease", "agents", "readModel", "source"],
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "snapshotAt": { "type": "string" },
+    "productName": { "type": "string" },
+    "uiTitle": { "type": "string" },
+    "systemHealth": {
+      "type": "object",
+      "required": ["severity", "dispatchEnabled", "primaryAgent", "primaryLeaseId"],
+      "properties": {
+        "severity": {
+          "enum": ["INFO", "SUCCESS", "WARNING", "BLOCKED", "CRITICAL", "NOMINAL", "NOTICE", "ATTENTION"]
+        },
+        "dispatchEnabled": { "type": "boolean" },
+        "remoteConfigured": { "type": "boolean" },
+        "riskLevel": { "type": "string" },
+        "primaryAgent": { "type": "string" },
+        "primaryLeaseId": { "type": "string" },
+        "activeAgentCount": { "type": "integer" },
+        "pendingApprovalCount": { "type": "integer" },
+        "blockerCount": { "type": "integer" }
+      }
+    },
+    "primaryLease": {
+      "type": "object",
+      "required": ["leaseId", "authority", "orchestrator", "state"],
+      "properties": {
+        "leaseId": { "type": "string" },
+        "sessionId": { "type": "string" },
+        "orchestrator": { "type": "string" },
+        "mode": { "type": "string" },
+        "state": { "type": "string" },
+        "processId": { "type": "string" },
+        "heartbeatAt": { "type": "string" },
+        "expiresAt": { "type": "string" },
+        "authority": { "enum": ["AUTHORITATIVE", "NON_AUTHORITATIVE", "OBSERVED"] }
+      }
+    },
+    "agents": {
+      "type": "array",
+      "items": { "$ref": "agent-card.schema.json" }
+    },
+    "pendingApprovals": {
+      "type": "array",
+      "items": { "$ref": "approval-card.schema.json" }
+    },
+    "recentEvents": {
+      "type": "array",
+      "items": { "$ref": "event-item.schema.json" }
+    },
+    "alerts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["alertId", "severity", "code", "message"],
+        "properties": {
+          "alertId": { "type": "string" },
+          "severity": { "type": "string" },
+          "code": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "readModel": {
+      "type": "object",
+      "required": ["backend", "status", "schemaVersion", "lastPersistedAt", "watermarkCount", "recoveredFromCache"],
+      "properties": {
+        "backend": { "enum": ["SQLITE", "DISABLED"] },
+        "status": { "enum": ["READY", "STALE", "ERROR", "DISABLED"] },
+        "schemaVersion": { "type": ["integer", "null"] },
+        "lastPersistedAt": { "type": ["string", "null"] },
+        "watermarkCount": { "type": "integer", "minimum": 0 },
+        "recoveredFromCache": { "type": "boolean" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["mode", "configured", "reachable", "parsingWarningCount", "warnings", "stale"],
+      "properties": {
+        "mode": { "enum": ["LIVE", "FIXTURE", "UNAVAILABLE"] },
+        "configured": { "type": "boolean" },
+        "reachable": { "type": "boolean" },
+        "parsingWarningCount": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "array", "items": { "type": "string" } },
+        "stale": { "type": "boolean" }
+      }
+    },
+    "workflowSummary": { "type": "object" }
+  }
+}

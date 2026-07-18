@@ -1,0 +1,8 @@
+Deployment method: optimized local production-mode Next.js process fallback
+Reason: Docker Desktop Linux engine unavailable; docker-compose.staging.yml config validation passed
+Bind: 127.0.0.1:3100
+Current listener PID at restart verification: 23220
+Build: v2-local-staging
+Restart proof: process was stopped after initial authenticated health/read-model verification, started again, and evidence:staging passed after restart.
+Post-restart last successful state refresh: 2026-07-17T13:58:00.098Z
+Current health: ok

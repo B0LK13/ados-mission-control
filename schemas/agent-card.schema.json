@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.local/schemas/agent-card.schema.json",
+  "title": "AgentCard",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["agentId", "displayName", "role", "authority", "status"],
+  "properties": {
+    "agentId": { "type": "string" },
+    "displayName": { "type": "string" },
+    "role": { "type": "string" },
+    "authority": { "enum": ["AUTHORITATIVE", "NON_AUTHORITATIVE", "OBSERVED"] },
+    "sessionIdentity": { "type": ["string", "null"] },
+    "status": { "type": "string" },
+    "frozen": { "type": "boolean" },
+    "currentTask": { "type": ["string", "null"] },
+    "worktree": { "type": ["string", "null"] },
+    "branch": { "type": ["string", "null"] },
+    "registration": { "type": ["string", "null"] },
+    "heartbeatLabel": { "type": ["string", "null"] },
+    "permittedActions": { "type": "array", "items": { "type": "string" } },
+    "prohibitedActions": { "type": "array", "items": { "type": "string" } },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "recentActions": { "type": "array", "items": { "type": "string" } },
+    "cannotAcquireOrchestratorLease": { "type": "boolean" }
+  }
+}

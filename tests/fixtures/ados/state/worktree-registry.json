@@ -1,0 +1,1 @@
+{"verificationStatus":"VERIFIED","verifiedAt":"2026-07-17T12:03:00.000Z","worktrees":[{"path":"D:\\wrong-project-worktree","purpose":"integration worktree","access":"QUARANTINED","priorClassification":"UNEXPECTED_CROSS_PROJECT","branch":"incident/e2e","candidateHead":"1234567890abcdef","createdAt":"2026-07-17T11:00:00.000Z","note":"Contained for owner review."}]}

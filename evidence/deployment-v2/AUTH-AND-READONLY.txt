@@ -1,0 +1,6 @@
+anonymousProtectedStatus=401
+anonymousChallenge=true
+authenticatedProtectedStatus=200
+unsafeMutationStatus=405
+unsafeMutationAllow=GET, HEAD, OPTIONS
+credentialMaterialRecorded=false

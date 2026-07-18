@@ -1,0 +1,6 @@
+Docker CLI: 29.6.1
+Docker Compose: configuration validated successfully.
+Docker image build: NOT EXECUTED because the Docker Desktop Linux engine remained unreachable at npipe:////./pipe/dockerDesktopLinuxEngine.
+Observed error: the system could not find the Docker Desktop Linux engine pipe.
+
+The mission's authorized deployment priority therefore selected the local production-mode Next.js fallback. The multi-stage standalone image configuration remains build-ready and includes a non-root user, healthcheck, minimal runtime artifacts, read-only root filesystem in Compose, dropped capabilities, loopback-only publish, resource limits, and narrowly scoped read-only data mounts.

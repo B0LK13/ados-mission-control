@@ -1,0 +1,11 @@
+Deployment method: local Next.js production process fallback
+Command: npm run start -- --hostname 127.0.0.1 --port 3100
+Environment: MISSION_CONTROL_MODE=live; ADOS_CONTROL_PLANE_ROOT=D:\agent-development-os-orchestrator
+Build identifier: 20260717-local-staging
+URL: http://127.0.0.1:3100
+Listener: TCP 127.0.0.1:3100 LISTENING
+Final observed process ID: 17336
+Health after final restart: ok
+Source reachable: true
+Parsing warnings: 4 (isolated and surfaced; dashboard remains healthy)
+ADOS readiness shown by UI: BLOCKED (truthful operational state, not web-process failure)

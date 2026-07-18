@@ -1,0 +1,4 @@
+node=v26.4.0
+platform=win32
+arch=x64
+generatedAt=2026-07-17T13:56:39.014Z

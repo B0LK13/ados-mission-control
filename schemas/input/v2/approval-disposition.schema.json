@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.internal/schemas/input/v2/approval-disposition.schema.json",
+  "title": "ADOS approval disposition ingestion record",
+  "type": "object",
+  "properties": {
+    "schemaVersion": { "type": ["string", "number"] },
+    "approvalId": { "type": "string", "minLength": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "status": { "type": "string" },
+    "disposition": { "type": "string" }
+  },
+  "anyOf": [{ "required": ["approvalId"] }, { "required": ["id"] }],
+  "additionalProperties": true
+}

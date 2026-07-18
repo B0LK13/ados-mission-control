@@ -1,0 +1,50 @@
+services:
+  mission-control:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-2.0.0}
+        BUILD_ID: ${BUILD_ID:-local-staging}
+    image: ados-mission-control:${APP_VERSION:-2.0.0}
+    container_name: ados-mission-control-staging
+    restart: unless-stopped
+    read_only: true
+    init: true
+    ports:
+      - "127.0.0.1:${MISSION_CONTROL_PORT:-3100}:3000"
+    env_file:
+      - .mission-control-auth.env
+    environment:
+      NODE_ENV: production
+      MISSION_CONTROL_MODE: live
+      ADOS_CONTROL_PLANE_ROOT: /data/ados
+      MISSION_CONTROL_REFRESH_MS: ${MISSION_CONTROL_REFRESH_MS:-5000}
+      MISSION_CONTROL_PERSISTENCE: sqlite
+      MISSION_CONTROL_DATA_ROOT: /var/lib/mission-control
+      MISSION_CONTROL_AUTH_MODE: basic
+      APP_VERSION: ${APP_VERSION:-2.0.0}
+      BUILD_ID: ${BUILD_ID:-v2-local-staging}
+    volumes:
+      - "${ADOS_STATE_HOST:-D:/agent-development-os-orchestrator/state}:/data/ados/state:ro"
+      - "${ADOS_HANDOFFS_HOST:-D:/agent-development-os-orchestrator/handoffs}:/data/ados/handoffs:ro"
+      - "${ADOS_EVIDENCE_HOST:-D:/agent-development-os-orchestrator/evidence}:/data/ados/evidence:ro"
+      - "mission-control-data:/var/lib/mission-control"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+      - /app/.next/cache:rw,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 4
+    mem_limit: 512m
+    cpus: 1.0
+
+volumes:
+  mission-control-data:

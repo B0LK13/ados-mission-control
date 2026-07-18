@@ -1,0 +1,60 @@
+FINAL VERIFICATION — 2026-07-17
+
+Dependency installation
+COMMAND: npm ci
+RESULT: PASS (exit 0), 339 packages installed
+
+Schema validation
+COMMAND: npm run validate:schemas
+RESULT: PASS (exit 0), sample snapshot validated against 8 schemas
+
+Read-only source audit
+COMMAND: npm run verify:readonly
+RESULT: PASS (exit 0), no state writers, process launchers, or dispatch adapters in app/components/lib
+
+Lint
+COMMAND: npm run lint
+RESULT: PASS (exit 0), 0 errors, 0 warnings
+
+Typecheck
+COMMAND: npm run typecheck
+RESULT: PASS (exit 0), strict TypeScript
+
+Unit and security tests
+COMMAND: npm run test:unit
+RESULT: PASS (exit 0)
+TOTAL: 18
+PASSED: 18
+FAILED: 0
+SKIPPED: 0
+
+Browser integration tests
+COMMAND: npm run test:e2e
+RESULT: PASS (exit 0)
+TOTAL: 5
+PASSED: 5
+FAILED: 0
+PROJECTS: live desktop, live mobile, unavailable source
+
+Production build
+COMMAND: npm run build (also final npm run verify)
+RESULT: PASS (exit 0)
+ROUTES: 1 static root, 1 dynamic dashboard view route, 15 read-only API/SSE routes, middleware
+FIRST LOAD JS: 116 kB for /[view]
+
+Production dependency audit
+COMMAND: npm audit --omit=dev --audit-level=moderate
+RESULT: PASS (exit 0), 0 vulnerabilities
+
+Compose validation
+COMMAND: docker compose -f docker-compose.staging.yml config --quiet
+RESULT: PASS (exit 0)
+
+Live smoke checks
+GET /overview: HTTP 200
+GET /api/health: HTTP 200, status ok, source reachable, readOnly true
+POST /api/tasks/probe: HTTP 405 READ_ONLY_V1
+LISTENER: 127.0.0.1:3100 only
+
+Restart proof
+Initial production process became healthy, was stopped, port 3100 became unreachable, a fresh production process was started, and /api/health returned status ok again.

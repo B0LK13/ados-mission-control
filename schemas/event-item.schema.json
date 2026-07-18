@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.local/schemas/event-item.schema.json",
+  "title": "EventItem",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["sequence", "timestamp", "eventType", "summary", "authority"],
+  "properties": {
+    "sequence": { "type": "integer" },
+    "timestamp": { "type": "string" },
+    "eventType": { "type": "string" },
+    "severity": { "type": ["string", "null"] },
+    "summary": { "type": "string" },
+    "taskId": { "type": ["string", "null"] },
+    "sessionId": { "type": ["string", "null"] },
+    "orchestratorLeaseId": { "type": ["string", "null"] },
+    "actor": { "type": ["string", "null"] },
+    "provider": { "type": ["string", "null"] },
+    "authority": { "enum": ["AUTHORITATIVE", "NON_AUTHORITATIVE", "OBSERVED"] }
+  }
+}

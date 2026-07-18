@@ -1,0 +1,184 @@
+{
+  "schemaVersion": "2.0.0",
+  "snapshotAt": "2026-07-16T17:40:00Z",
+  "productName": "ADOS Mission Control",
+  "uiTitle": "The Black Agency Command Deck",
+  "systemHealth": {
+    "severity": "SUCCESS",
+    "dispatchEnabled": false,
+    "remoteConfigured": false,
+    "riskLevel": "LOW",
+    "primaryAgent": "CLAUDE",
+    "primaryLeaseId": "e4732654-4aee-4411-977c-167d18067a54",
+    "activeAgentCount": 1,
+    "pendingApprovalCount": 0,
+    "blockerCount": 1
+  },
+  "primaryLease": {
+    "leaseId": "e4732654-4aee-4411-977c-167d18067a54",
+    "sessionId": "claude-resumed-session-20260716T1652Z",
+    "orchestrator": "CLAUDE",
+    "mode": "PRIMARY",
+    "state": "ACTIVE",
+    "processId": "2928",
+    "hostIdentity": "CYBERCOMMANDCEN",
+    "heartbeatAt": "2026-07-16T18:27:34Z",
+    "expiresAt": "2026-07-17T06:27:34Z",
+    "authority": "AUTHORITATIVE",
+    "processLiveness": {
+      "alive": true,
+      "checkedAt": "2026-07-16T17:40:00Z",
+      "clockSource": "windows_process",
+      "authority": "OBSERVED"
+    }
+  },
+  "agents": [
+    {
+      "agentId": "claude",
+      "displayName": "Claude",
+      "role": "PRIMARY",
+      "authority": "AUTHORITATIVE",
+      "sessionIdentity": "claude-resumed-session-20260716T1652Z",
+      "status": "ACTIVE",
+      "frozen": false,
+      "currentTask": "ADOS-ORCHESTRATOR-PRESERVATION-HOLD-001",
+      "worktree": "D:\\agent-development-os-orchestrator",
+      "branch": null,
+      "registration": "e4732654-4aee-4411-977c-167d18067a54",
+      "heartbeatLabel": "from authoritative lease",
+      "permittedActions": [
+        "primary_orchestration",
+        "lease_hold",
+        "dispatch_authority",
+        "integration_authority"
+      ],
+      "prohibitedActions": [],
+      "blockers": [],
+      "recentActions": [
+        "Preservation hold",
+        "Lease heartbeat renewal"
+      ],
+      "cannotAcquireOrchestratorLease": false
+    },
+    {
+      "agentId": "cursor",
+      "displayName": "Cursor",
+      "role": "NON-AUTHORITATIVE",
+      "authority": "NON_AUTHORITATIVE",
+      "sessionIdentity": "cursor-orchestrator-20260716T165246Z-6e07b891",
+      "status": "AUTHORIZED_NON_AUTHORITATIVE_WORKTREE",
+      "frozen": false,
+      "currentTask": "GOV-RECONCILE-001",
+      "worktree": "D:\\agent-development-os-orchestrator-source-cursor",
+      "branch": "cursor/orchestrator-control-plane",
+      "registration": "88deb673-746b-4d71-bd6d-53644ed9bff2",
+      "heartbeatLabel": "NOT_MIRRORED (overlay)",
+      "permittedActions": [
+        "analysis_support",
+        "planning_support",
+        "proposal_author"
+      ],
+      "prohibitedActions": [
+        "acquire_orchestrator_lease",
+        "become_primary",
+        "enable_dispatch",
+        "self_approve"
+      ],
+      "blockers": [
+        "BLOCKED_ENVIRONMENT: clock skew awareness"
+      ],
+      "recentActions": [
+        "Governance reconciliation READY_FOR_PRIMARY_REVIEW"
+      ],
+      "cannotAcquireOrchestratorLease": true
+    },
+    {
+      "agentId": "kimi",
+      "displayName": "Kimi",
+      "role": "CERTIFICATION",
+      "authority": "AUTHORITATIVE",
+      "sessionIdentity": null,
+      "status": "FROZEN_AWAITING_WP42_CERTIFICATION_APPROVAL",
+      "frozen": true,
+      "currentTask": null,
+      "worktree": null,
+      "branch": null,
+      "registration": null,
+      "heartbeatLabel": null,
+      "permittedActions": [],
+      "prohibitedActions": ["implement_remediation", "direct_cursor"],
+      "blockers": ["Awaiting owner certification approval"],
+      "recentActions": [],
+      "cannotAcquireOrchestratorLease": true
+    }
+  ],
+  "pendingApprovals": [],
+  "recentEvents": [
+    {
+      "sequence": 1010,
+      "timestamp": "2026-07-16T17:52:50Z",
+      "eventType": "ORCHESTRATOR_ENTERED_PRESERVATION_ONLY_HOLD",
+      "severity": "INFO",
+      "summary": "Owner directed preservation-only holding state; lease retained.",
+      "taskId": "ADOS-ORCHESTRATOR-PRESERVATION-HOLD-001",
+      "sessionId": "claude-resumed-session-20260716T1652Z",
+      "orchestratorLeaseId": "e4732654-4aee-4411-977c-167d18067a54",
+      "actor": "claude-resumed-orchestrator",
+      "provider": "CLAUDE",
+      "authority": "AUTHORITATIVE"
+    },
+    {
+      "sequence": 1009,
+      "timestamp": "2026-07-16T17:45:00Z",
+      "eventType": "CONTROL_PLANE_SOURCE_REPOSITORY_ESTABLISHED",
+      "severity": "INFO",
+      "summary": "Source repository established at baseline 07053a2.",
+      "taskId": "ADOS-CONTROL-PLANE-SOURCE-BOOTSTRAP-001",
+      "sessionId": "claude-resumed-session-20260716T1652Z",
+      "orchestratorLeaseId": "e4732654-4aee-4411-977c-167d18067a54",
+      "actor": "claude-resumed-orchestrator",
+      "provider": "CLAUDE",
+      "authority": "AUTHORITATIVE"
+    }
+  ],
+  "alerts": [
+    {
+      "alertId": "alert-clock-skew-policy",
+      "severity": "NOTICE",
+      "code": "CLOCK_SKEW_AWARE",
+      "message": "WSL/Windows clock skew possible; lease expiry not inferred from WSL wall clock alone."
+    }
+  ],
+  "readModel": {
+    "backend": "DISABLED",
+    "status": "DISABLED",
+    "schemaVersion": null,
+    "lastPersistedAt": null,
+    "watermarkCount": 0,
+    "recoveredFromCache": false
+  },
+  "source": {
+    "mode": "FIXTURE",
+    "configured": false,
+    "reachable": true,
+    "sourceLabel": "Packaged non-authoritative fixture",
+    "lastIngestAt": "2026-07-16T17:40:00Z",
+    "lastSuccessfulRefresh": null,
+    "parsingWarningCount": 0,
+    "warnings": ["Fixture mode does not report live ADOS state."],
+    "stale": false
+  },
+  "workflowSummary": {
+    "nodes": [
+      "Owner",
+      "Claude PRIMARY",
+      "Task Assignment",
+      "Cursor / Codex",
+      "Review Result",
+      "Claude Validation",
+      "Owner Integration Approval",
+      "Integration"
+    ],
+    "activeEdge": "Claude PRIMARY → preservation hold (no new dispatch)"
+  }
+}

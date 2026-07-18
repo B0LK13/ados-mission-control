@@ -1,0 +1,7 @@
+Node.js: 26.4.0 (required >=22.14.0)
+npm: 11.17.0 package manager declaration
+Next.js: 15.5.20
+React / React DOM: 19.2.7
+TypeScript: 5.9.3
+SQLite runtime: Node built-in node:sqlite, SQLite 3.53.2
+Production dependency audit: 0 vulnerabilities

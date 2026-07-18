@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.local/schemas/handoff-item.schema.json",
+  "title": "HandoffItem",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["handoffId", "fromAgent", "toAgent", "title", "status", "lifecycleStage", "authority"],
+  "properties": {
+    "handoffId": { "type": "string" },
+    "fromAgent": { "type": "string" },
+    "toAgent": { "type": "string" },
+    "title": { "type": "string" },
+    "status": { "type": "string" },
+    "path": { "type": ["string", "null"] },
+    "sha256": { "type": ["string", "null"] },
+    "expiresAt": { "type": ["string", "null"] },
+    "taskId": { "type": ["string", "null"] },
+    "lifecycleStage": {
+      "enum": [
+        "REQUEST_PUBLISHED",
+        "WORKER_UNAVAILABLE",
+        "ACKNOWLEDGED",
+        "IN_PROGRESS",
+        "RESULT_RECEIVED",
+        "VALIDATED",
+        "ARCHIVED"
+      ]
+    },
+    "authority": { "enum": ["AUTHORITATIVE", "NON_AUTHORITATIVE", "OBSERVED"] }
+  }
+}

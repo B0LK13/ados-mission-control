@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "gateId": "gate-e2e-commit-001",
+  "campaignId": "campaign-e2e-pilot-001",
+  "missionId": "mission-e2e-precommit-001",
+  "decisionType": "AUTHORIZE_LOCAL_COMMIT",
+  "summary": "OWNER_ACTION_REQUIRED: Authorize local commit",
+  "options": ["AUTHORIZE_LOCAL_COMMIT", "DENY", "REQUEST_CHANGES"],
+  "recommendedOption": "AUTHORIZE_LOCAL_COMMIT",
+  "status": "OPEN",
+  "createdAt": "2026-07-18T06:30:00Z",
+  "expiresAt": "2026-07-19T06:30:00Z"
+}

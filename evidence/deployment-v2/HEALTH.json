@@ -1,0 +1,13 @@
+{
+  "status": "ok",
+  "version": "2.0.0",
+  "buildId": "v2-local-staging",
+  "dataSourceReachable": true,
+  "dataSourceStale": false,
+  "lastSuccessfulStateRefresh": "2026-07-17T13:58:00.098Z",
+  "parsingWarningCount": 5,
+  "authentication": "basic",
+  "readModel": "READY",
+  "readModelBackend": "SQLITE",
+  "readOnly": true
+}

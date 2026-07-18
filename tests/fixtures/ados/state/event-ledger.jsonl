@@ -1,0 +1,3 @@
+{"sequence":1,"timestamp":"2026-07-17T12:00:00.000Z","eventType":"TASK_STARTED","severity":"INFO","summary":"Bounded test task started.","taskId":"TASK-E2E-001","actor":"claude"}
+{malformed-test-record
+{"sequence":3,"timestamp":"2026-07-17T12:02:00.000Z","eventType":"CROSS_PROJECT_ROUTING_INCIDENT","severity":"WARN","summary":"A wrong repository was contained.","taskId":"TASK-E2E-001","actor":"claude"}
