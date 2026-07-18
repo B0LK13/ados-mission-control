@@ -49,6 +49,16 @@ docker compose -f docker-compose.staging.yml ps
 curl http://127.0.0.1:3100/api/health
 ```
 
+### Request metrics (process-local)
+
+`GET /api/health` includes a `metrics` object with aggregate counters only:
+
+- `health_requests_total`
+- `ingest_warning_events_total`
+- `source_unavailable_events_total`
+
+Counters never include filesystem paths, credentials, or raw ledger payloads.
+
 ### CI image smoke (no real ADOS mounts)
 
 GitHub Actions job `docker-image` builds `Dockerfile` and runs a container with

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { MissionControl, type DashboardView } from "@/components/mission-control";
 import { getMissionSnapshot } from "@/lib/broker/snapshot";
@@ -21,5 +22,9 @@ export default async function DashboardPage({ params }: { params: Promise<{ view
   const { view } = await params;
   if (!serverDashboardViews.includes(view as DashboardView)) notFound();
   const snapshot = await getMissionSnapshot();
-  return <MissionControl initialSnapshot={snapshot} view={view as DashboardView} />;
+  return (
+    <Suspense fallback={<div className="mission-shell">Loading Command Deck…</div>}>
+      <MissionControl initialSnapshot={snapshot} view={view as DashboardView} />
+    </Suspense>
+  );
 }

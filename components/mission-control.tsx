@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Activity,
@@ -363,11 +364,14 @@ function OwnerGates({ snapshot }: { snapshot: MissionSnapshot }) {
 }
 
 export function MissionControl({ initialSnapshot, view }: { initialSnapshot: MissionSnapshot; view: DashboardView }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [streamState, setStreamState] = useState<"CONNECTING" | "LIVE" | "DISCONNECTED" | "DEGRADED">("CONNECTING");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("ALL");
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
+  const [status, setStatus] = useState(() => searchParams.get("status") || "ALL");
 
   useEffect(() => {
     const saved = window.localStorage.getItem("mission-control-theme");
@@ -417,7 +421,20 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
     };
   }, []);
 
-  useEffect(() => { setQuery(""); setStatus("ALL"); }, [view]);
+  useEffect(() => {
+    setQuery(searchParams.get("q") || "");
+    setStatus(searchParams.get("status") || "ALL");
+  }, [view, searchParams]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (query.trim()) params.set("q", query.trim());
+    if (status && status !== "ALL") params.set("status", status);
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next === current) return;
+    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+  }, [query, status, pathname, router, searchParams]);
 
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";

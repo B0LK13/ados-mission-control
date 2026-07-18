@@ -23,8 +23,10 @@ test("approval and task filters update visible rows", async ({ page }) => {
   await expect(page.getByText("TASK-E2E-001", { exact: true })).toBeVisible();
   await page.getByLabel("Filter by status").selectOption("COMPLETED");
   await expect(page.getByText("TASK-E2E-001", { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/status=COMPLETED/);
   await page.getByLabel("Search task, project, agent, or objective").fill("missing-task");
   await expect(page.getByText("No matching tasks")).toBeVisible();
+  await expect(page).toHaveURL(/q=missing-task/);
 });
 
 test("parsing warning and routing incident states are visible", async ({ page }) => {
