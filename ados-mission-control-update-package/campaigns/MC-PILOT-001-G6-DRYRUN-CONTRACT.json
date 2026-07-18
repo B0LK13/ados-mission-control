@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.1.0",
+  "taskId": "MC-PILOT-001-G6-DRYRUN",
+  "agent": "cursor",
+  "role": "ADAPTER_DRY_RUN_VERIFICATION",
+  "status": "READY",
+  "createdAt": "2026-07-18T16:00:00.0000000Z",
+  "mission": "G6 dry-run only: do not mutate any files. Adapter must accept the contract and exit without launching Cursor when -DryRun is set.",
+  "workspace": "D:\\agent-development-orchestrator\\orchestrators\\agent-development-os-mission-control-cursor-live-integration",
+  "candidateId": null,
+  "expectedHead": "942c42deb30b93fe406d74d830a8686ab63cf0ec",
+  "expectedTree": "49d98eb7c5e8b8b2b8de4d00446400c47cc43dbe",
+  "branch": "cursor/mission-control-live-integration",
+  "ownerApprovalRef": "OWNER-AUTH-MC-PILOT-001-20260718",
+  "allowedActions": [
+    "analyze"
+  ],
+  "prohibitedActions": [
+    "any file mutation",
+    "git push",
+    "git commit",
+    "network install"
+  ],
+  "requiredOutputs": [],
+  "stopCondition": "Stop immediately; this contract is for -DryRun verification only.",
+  "assignedAgent": "cursor",
+  "assignedRole": "ADAPTER_DRY_RUN_VERIFICATION",
+  "executionEnvironment": "WINDOWS_NATIVE",
+  "runtimeId": "cursor-windows",
+  "runtimePlatform": "WINDOWS_NATIVE",
+  "dispatchMode": "HEADLESS_AGENT_DISPATCH",
+  "acknowledgmentProtocol": "Emit CURSOR_TASK_ACKNOWLEDGED as first structured line if ever launched (must not launch under -DryRun).",
+  "completionProtocol": "Emit CURSOR_TASK_COMPLETED only after real work (must not launch under -DryRun).",
+  "fallbackPolicy": "On any ambiguity stop; do not improvise."
+}
