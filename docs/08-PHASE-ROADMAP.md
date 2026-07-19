@@ -1,4 +1,6 @@
-# Phase Roadmap — ADOS Mission Control
+# Phase Roadmap — ADOS Mission Control (V1–V2 / Phases 1–4)
+
+> **Next roadmap:** [`docs/09-PHASE-ROADMAP-V3.md`](09-PHASE-ROADMAP-V3.md) (Phases 5–8) — **AUTHORIZED** 2026-07-19 via [`docs/authorizations/v3-roadmap-20260719.md`](authorizations/v3-roadmap-20260719.md).
 
 > Release note: application version 2.0 ships read-only resilience, opt-in Phase 2 owner commands, opt-in Phase 3 approved-only controlled operations (`MISSION_CONTROL_PHASE3_COMMANDS=enabled`), and opt-in Phase 4 fleet observation + Prometheus/Grafana hooks (`MISSION_CONTROL_FLEET_MODE=enabled`).
 

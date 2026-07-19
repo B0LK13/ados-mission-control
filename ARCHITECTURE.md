@@ -104,6 +104,10 @@ When `MISSION_CONTROL_PHASE3_COMMANDS=enabled`:
 - Cursor PRIMARY / lease transfer remains impossible through Mission Control.
 - UI surface: `/operations`.
 
+## V3 roadmap (authorized 2026-07-19)
+
+See `docs/09-PHASE-ROADMAP-V3.md`. Next implementation wave: Phase 5 operator intelligence (read-only), then Phase 6 (`MISSION_CONTROL_PHASE6_COMMANDS`), Phase 7 (`MISSION_CONTROL_ALERTS`), Phase 8 hardening. Authorization: `docs/authorizations/v3-roadmap-20260719.md`.
+
 ## Phase 4 fleet + metrics (authorized 2026-07-19)
 
 When `MISSION_CONTROL_FLEET_MODE=enabled` and `MISSION_CONTROL_FLEET_CONFIG` points at a member registry:

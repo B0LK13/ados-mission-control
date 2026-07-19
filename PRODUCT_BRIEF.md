@@ -53,4 +53,6 @@ An owner can open Mission Control and, within seconds, know who holds the lease,
 
 **Phase 4 fleet + metrics MVP: COMPLETE (2026-07-19)** — opt-in fleet observation (`MISSION_CONTROL_FLEET_MODE=enabled`) + Prometheus `/api/v1/metrics` + Grafana JSON stub. See `docs/authorizations/phase4-fleet-metrics-20260719.md` and `docs/adr/ADR-001-fleet-and-prometheus.md`. Fleet never inherits PRIMARY authority.
 
-**Roadmap MVP closeout:** Phases 1–4 for Mission Control V2 are complete. Further work needs a new backlog item + owner authorization.
+**Roadmap MVP closeout:** Phases 1–4 for Mission Control V2 are complete.
+
+**V3 roadmap: AUTHORIZED (2026-07-19)** — Phases 5–8 (operator intelligence, controlled-ops completeness, alerting, platform hardening). See `docs/09-PHASE-ROADMAP-V3.md` and `docs/authorizations/v3-roadmap-20260719.md`. Implementation not started; next task `ados-mission-control-v2-roadmap-phase5-001`.

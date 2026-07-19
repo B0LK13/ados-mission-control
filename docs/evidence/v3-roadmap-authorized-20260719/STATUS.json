@@ -1,0 +1,17 @@
+{
+  "classification": "MISSION_CONTROL_V3_ROADMAP_AUTHORIZED",
+  "authorizedAt": "2026-07-19",
+  "authorization": "docs/authorizations/v3-roadmap-20260719.md",
+  "roadmap": "docs/09-PHASE-ROADMAP-V3.md",
+  "predecessor": "MISSION_CONTROL_V2_ROADMAP_PHASES_1_TO_4_MVP_COMPLETE",
+  "phases": {
+    "5": "Operator intelligence (read-only)",
+    "6": "Controlled operations completeness (MISSION_CONTROL_PHASE6_COMMANDS)",
+    "7": "Alerting & external ops hooks (MISSION_CONTROL_ALERTS)",
+    "8": "Platform hardening & performance"
+  },
+  "backlogTaskCount": 21,
+  "backlogTaskIdPrefix": "ados-mission-control-v2-roadmap-phase{5,6,7,8}-",
+  "implementationStatus": "NOT_STARTED",
+  "nextRecommendedTask": "ados-mission-control-v2-roadmap-phase5-001"
+}

@@ -99,6 +99,10 @@ The internal URL is `http://127.0.0.1:3100`; the safe health endpoint is `GET /a
 
 Copy `.env.example` to `.env.local` only when the default `D:\` paths need to change.
 
+## V3 roadmap (authorized)
+
+Phases 5–8 are owner-authorized — see [`docs/09-PHASE-ROADMAP-V3.md`](docs/09-PHASE-ROADMAP-V3.md) and [`docs/authorizations/v3-roadmap-20260719.md`](docs/authorizations/v3-roadmap-20260719.md). Implementation starts at backlog task `ados-mission-control-v2-roadmap-phase5-001`.
+
 ## Authority invariants
 
 - Claude remains the sole `PRIMARY` lease holder when the live lease says so.
