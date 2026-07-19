@@ -37,6 +37,10 @@ import {
   type ParseWarning,
 } from "./io";
 
+import { computeHeartbeatAge } from "./heartbeat";
+
+export { computeHeartbeatAge } from "./heartbeat";
+
 const AGENTS = ["cursor", "kimi", "claude", "codex"] as const;
 const BLOCKING_TOKENS = ["BLOCKED", "FROZEN", "UNAVAILABLE", "AWAITING"];
 
@@ -1130,6 +1134,8 @@ export async function getMissionSnapshot(): Promise<MissionSnapshot> {
   const now = new Date(checkedAt);
   const processId = text(leaseDocument, "processId");
   const processAlive = processIsAlive(processId, config.orchestratorRoot);
+  const heartbeatAt = text(leaseDocument, "heartbeatAt") || undefined;
+  const heartbeat = computeHeartbeatAge(heartbeatAt, now);
   const primaryLease: MissionSnapshot["primaryLease"] = {
     leaseId: text(leaseDocument, "leaseId") || "UNKNOWN_LEASE",
     sessionId: text(leaseDocument, "sessionId") || undefined,
@@ -1139,7 +1145,9 @@ export async function getMissionSnapshot(): Promise<MissionSnapshot> {
     state: text(leaseDocument, "state") || "UNKNOWN",
     processId: processId || undefined,
     hostIdentity: text(leaseDocument, "hostIdentity") || undefined,
-    heartbeatAt: text(leaseDocument, "heartbeatAt") || undefined,
+    heartbeatAt,
+    heartbeatAgeSeconds: heartbeat.heartbeatAgeSeconds,
+    heartbeatFreshness: heartbeat.heartbeatFreshness,
     expiresAt: text(leaseDocument, "expiresAt") || undefined,
     authority: "AUTHORITATIVE",
     processLiveness: { alive: processAlive, checkedAt, clockSource: processAlive === null ? "not_observable_from_runtime" : "windows_process", authority: "OBSERVED" },
@@ -1164,6 +1172,21 @@ export async function getMissionSnapshot(): Promise<MissionSnapshot> {
   const alerts: SafetyAlert[] = [];
 
   if (processAlive === false) alerts.push({ alertId: "primary-process-dead", severity: "WARNING", code: "PROCESS_NOT_OBSERVED", message: "The lease process was not observed alive; Mission Control does not supersede the authoritative lease." });
+  if (heartbeat.heartbeatFreshness === "stale") {
+    alerts.push({
+      alertId: "lease-heartbeat-stale",
+      severity: "WARNING",
+      code: "HEARTBEAT_STALE",
+      message: `Authoritative lease heartbeat is stale (${heartbeat.heartbeatAgeSeconds ?? "?"}s). Age is measured from heartbeatAt — not assumed healthy.`,
+    });
+  } else if (heartbeat.heartbeatFreshness === "missing" || heartbeat.heartbeatFreshness === "malformed" || heartbeat.heartbeatFreshness === "error") {
+    alerts.push({
+      alertId: "lease-heartbeat-unavailable",
+      severity: "WARNING",
+      code: "HEARTBEAT_UNAVAILABLE",
+      message: `Lease heartbeat state is ${heartbeat.heartbeatFreshness}; Mission Control will not invent a healthy age of 0.`,
+    });
+  }
   if (dispatchEnabled) alerts.push({ alertId: "dispatch-enabled", severity: "CRITICAL", code: "DISPATCH_UNEXPECTED", message: "Production dispatch appears enabled. Verify the matching owner approval context immediately." });
   if (agents.some((agent) => agent.agentId === "cursor" && agent.role === "PRIMARY")) alerts.push({ alertId: "cursor-primary", severity: "CRITICAL", code: "CURSOR_CLAIMS_LEASE", message: "Cursor cannot become the authoritative orchestrator through Mission Control." });
   if (pendingApprovals.length) alerts.push({ alertId: "owner-approvals", severity: "WARNING", code: "OWNER_ATTENTION_REQUIRED", message: `${pendingApprovals.length} current approval request${pendingApprovals.length === 1 ? "" : "s"} require owner action.` });

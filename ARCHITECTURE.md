@@ -59,7 +59,8 @@ V2 extends the read model for supervisor observation without becoming a control 
 - `lib/data-quality.ts` maps source/cache/stream state onto `LIVE|CACHED|MOCK|STALE|INFERRED|AUTHORITATIVE|UNAVAILABLE` (fixtures are always `MOCK`).
 - Snapshot projections include `campaigns`, `ownerGates`, and `freshness`.
 - GET `/api/v1/campaigns`, `/api/v1/owner-gates`, and `/api/v1/replay` are read-only.
-- UI views `campaigns` and `owner-gates` show budgets and protected decisions with explicit “no UI action” banners.
+- UI views `campaigns`, `owner-gates`, and `replay` show budgets, protected decisions, and GET-only supervisor-run chronology with explicit “no UI action” banners.
+- The browser SSE client reconnects after stream failure; e2e covers disconnect → `DISCONNECTED` → `LIVE`.
 - Owner pause/kill/resume remain control-plane tools only.
 
 Planning artifacts and remaining supervisor units live under `ados-mission-control-update-package/` and require cleared readiness gates before control-plane writes.

@@ -85,6 +85,14 @@ export interface SystemHealth {
   approvalCounts: Record<string, number>;
 }
 
+export type HeartbeatFreshness =
+  | "fresh"
+  | "stale"
+  | "missing"
+  | "malformed"
+  | "unknown"
+  | "error";
+
 export interface PrimaryLease {
   leaseId: string;
   sessionId?: string;
@@ -95,6 +103,9 @@ export interface PrimaryLease {
   processId?: string;
   hostIdentity?: string;
   heartbeatAt?: string;
+  /** Seconds since heartbeatAt; null when missing/malformed. Never hardcode 0. */
+  heartbeatAgeSeconds?: number | null;
+  heartbeatFreshness?: HeartbeatFreshness;
   expiresAt?: string;
   authority: Authority;
   processLiveness?: {

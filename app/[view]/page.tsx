@@ -16,6 +16,7 @@ const serverDashboardViews: readonly DashboardView[] = [
   "owner-gates",
   "timeline",
   "routing-incidents",
+  "replay",
 ];
 
 export default async function DashboardPage({ params }: { params: Promise<{ view: string }> }) {

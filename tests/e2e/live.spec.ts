@@ -41,10 +41,50 @@ test("campaigns and owner gates render from live fixture projections", async ({ 
   await page.goto("/campaigns");
   await expect(page.getByRole("heading", { name: "Campaigns", exact: true })).toBeVisible();
   await expect(page.getByText("campaign-e2e-pilot-001", { exact: true })).toBeVisible();
-  await expect(page.getByText("FRESHNESS")).toBeVisible();
+  await expect(page.getByText("FRESHNESS", { exact: true })).toBeVisible();
   await page.goto("/owner-gates");
   await expect(page.getByRole("heading", { name: "Owner gates", exact: true })).toBeVisible();
   await expect(page.getByText("gate-e2e-commit-001", { exact: true })).toBeVisible();
   await expect(page.getByText("OWNER_ACTION_REQUIRED: Authorize local commit")).toBeVisible();
   await expect(page.getByText("NO UI ACTION")).toBeVisible();
+});
+
+test("replay UI loads chronological redacted supervisor-run events", async ({ page }) => {
+  await page.goto("/replay?campaignId=campaign-replay-001&runId=run-replay-001");
+  await expect(page.getByRole("heading", { name: "Run replay", exact: true })).toBeVisible();
+  await expect(page.getByText("GET-ONLY REPLAY")).toBeVisible();
+  await expect(page.getByText("campaign-replay-001", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("run-replay-001", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "START", exact: true })).toBeVisible();
+  await expect(page.getByText("first step", { exact: true })).toBeVisible();
+  await expect(page.locator(".timeline-entry")).toHaveCount(3);
+  await expect(page.getByText("REDACTED").first()).toBeVisible();
+  await expect(page.getByText("sk-abcdefghijklmnopqrstuvwxyz")).toHaveCount(0);
+  await expect(page.getByText(/Bearer abcdefghijklmnop/i)).toHaveCount(0);
+
+  await page.goto("/replay?campaignId=missing-campaign&runId=missing-run");
+  await expect(page.getByText("Replay unavailable")).toBeVisible();
+  await expect(page.getByText(/No supervisor-run evidence directory/i)).toBeVisible();
+});
+
+test("SSE data link reconnects after temporary disconnect", async ({ page }) => {
+  let allowStream = true;
+  await page.route("**/api/v1/events/stream", async (route) => {
+    if (!allowStream) {
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.goto("/overview");
+  const dataLink = page.locator(".data-link strong");
+  await expect(dataLink).toHaveText("LIVE", { timeout: 20_000 });
+
+  allowStream = false;
+  await page.reload();
+  await expect(dataLink).toHaveText("DISCONNECTED", { timeout: 20_000 });
+
+  allowStream = true;
+  await expect(dataLink).toHaveText("LIVE", { timeout: 30_000 });
 });

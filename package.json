@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit",
-    "test:unit": "tsx --test tests/*.test.ts",
+    "test:unit": "node scripts/run-unit-tests.mjs",
     "test:e2e": "playwright test",
     "evidence:screenshots": "node scripts/capture-screenshots.mjs",
     "evidence:verify": "node scripts/collect-v2-verification.mjs",

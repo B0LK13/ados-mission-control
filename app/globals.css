@@ -76,6 +76,15 @@ code {
 }
 
 .mission-shell { min-height: 100vh; display: grid; grid-template-columns: 258px minmax(0, 1fr); }
+.cockpit-identity-banner {
+  grid-column: 1 / -1;
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--amber, #c9a227) 18%, var(--panel, #12141a));
+  border-bottom: 1px solid color-mix(in srgb, var(--amber, #c9a227) 45%, transparent);
+  color: var(--muted, #c8cdd8);
+  font: 600 0.68rem/1.45 "Cascadia Mono", ui-monospace, monospace;
+  letter-spacing: 0.04em;
+}
 .command-rail {
   position: sticky;
   top: 0;
@@ -310,6 +319,45 @@ code {
 .tone-critical.status-badge, .tone-critical.verification-badge { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, var(--line)); }
 
 .filter-bar { margin: 18px; display: flex; gap: 10px; }
+.replay-form {
+  margin: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+}
+.replay-form .search-field { flex: 1; min-width: 180px; }
+.replay-submit {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-3);
+  color: var(--text);
+  cursor: pointer;
+  font: 700 0.68rem/1 "Cascadia Mono", monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.replay-submit:hover { border-color: var(--lime); color: var(--lime); }
+.replay-meta {
+  margin: 0 18px 8px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.replay-meta > div {
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.replay-meta span {
+  display: block;
+  color: var(--faint);
+  font: 700 0.58rem/1.4 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.replay-meta strong { display: block; word-break: break-word; }
 .search-field, .select-field { display: flex; align-items: center; gap: 9px; min-height: 42px; padding: 0 12px; background: var(--surface-2); border: 1px solid var(--line); color: var(--faint); }
 .search-field { flex: 1; }
 .search-field:focus-within, .select-field:focus-within { border-color: var(--lime); }
@@ -434,6 +482,8 @@ td .status-badge, td .verification-badge { display: inline-flex; margin-right: 4
   .metric { min-height: 122px; }
   .lease-card dl { grid-template-columns: 1fr; }
   .filter-bar { flex-direction: column; }
+  .replay-form { flex-direction: column; }
+  .replay-meta { grid-template-columns: 1fr 1fr; }
   .select-field { min-width: 0; }
   .timeline-list { padding-inline: 14px; }
   .timeline-list::before { left: 12px; }

@@ -11,39 +11,11 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Maturity:** moderate (overall score 3.4/5) → target: advanced
 - **Summary:** Well-documented read-only ADOS observability cockpit (README, ARCHITECTURE.md, DEPLOYMENT.md, Dockerfile, docker-compose.staging.yml, tests/ with broker/io/normalization specs, evidence/ and examples/) that is a separate real project from the similarly-named agent-development-os-mission-control, creating naming collision risk; no .github/workflows found despite mature test setup.
 
-## Open Tasks (1)
+## Open Tasks (0)
 
 | Priority | Count |
 |---|---|
-| Critical | 1 |
 
-### `ados-mission-control-v2-blocked-001` — [BLOCKED] Clear Cursor-First G0–G7 gates before control-plane supervisor writes
-
-- **Priority:** Critical | **Severity:** Critical | **Effort:** S | **Risk:** High | **Phase:** Foundation | **Status:** Blocked
-- **Category:** governance / authorization
-- **Owner role:** owner
-
-**Current state:** Planning package complete; executionAuthorization false; G0–G7 incomplete per IMPLEMENTATION-READINESS.
-
-**Target state:** All gates green with evidence; campaign APPROVED; then BL-A3/U1 may write control-plane schemas.
-
-**Gap:** Supervisor implementation cannot legally start in the orchestrator tree.
-
-**Acceptance criteria:**
-- [ ] CANONICAL_PATHS_RECONCILED recorded
-- [ ] Disk-backed campaign status APPROVED with budgets
-- [ ] Write allowlist + pre-change hashes for next unit
-- [ ] Lease healthy; cursor-windows eligible; adapter dry-run VERIFIED
-- [ ] Git/source home declared
-
-**Validation steps:**
-1. Walk checklist in ados-mission-control-update-package/docs/IMPLEMENTATION-READINESS.md
-
-**Source evidence:**
-- ados-mission-control-update-package/docs/BACKLOG-CURSOR-FIRST-SUPERVISOR.md §3
-- executionAuthorization: false in package docs
-
-**Labels:** blocked, authorization, cursor-first
 
 <!-- END AUTO-GENERATED BACKLOG -->
 
@@ -61,8 +33,8 @@ Ordered against `ados-mission-control-update-package/04-CURSOR-MASTER-INSTRUCTIO
 
 4. ~~Harden CI to Node 22 + full verify/e2e~~ (done this session).
 5. ~~Campaigns / owner-gates GET APIs + UI + freshness labels~~ (U7 partial — done).
-6. Replay UI surface + SSE reconnect Playwright (API stub exists; UI/e2e reconnect still open).
-7. Docker image build job in CI.
+6. ~~Replay UI surface + SSE reconnect Playwright~~ (done this session — `/replay` UI + live e2e).
+7. ~~Docker image build job in CI~~ (done — `.github/workflows/ci.yml` `docker-image` job).
 
 ### Medium — package / contracts
 

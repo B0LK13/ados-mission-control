@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -16,6 +16,7 @@ import {
   Flag,
   Gauge,
   Hexagon,
+  History,
   ListFilter,
   Moon,
   Network,
@@ -37,6 +38,7 @@ import type {
   VerificationLabel,
 } from "@/lib/contracts";
 import { freshnessFromSnapshot } from "@/lib/data-quality";
+import type { ReplayEvent, ReplayProjection } from "@/lib/replay";
 
 export const dashboardViews = [
   "overview",
@@ -48,6 +50,7 @@ export const dashboardViews = [
   "owner-gates",
   "timeline",
   "routing-incidents",
+  "replay",
 ] as const;
 export type DashboardView = (typeof dashboardViews)[number];
 
@@ -61,6 +64,7 @@ const navigation: Array<{ view: DashboardView; label: string; icon: typeof Gauge
   { view: "owner-gates", label: "Owner gates", icon: ShieldAlert },
   { view: "timeline", label: "Evidence & audit", icon: Activity },
   { view: "routing-incidents", label: "Routing incidents", icon: Waypoints },
+  { view: "replay", label: "Replay", icon: History },
 ];
 
 const viewCopy: Record<DashboardView, { eyebrow: string; title: string; description: string }> = {
@@ -73,6 +77,7 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   "owner-gates": { eyebrow: "Protected decision / 07", title: "Owner gates", description: "Open and historical owner-only decisions. Mission Control cannot approve, deny, or clear these gates." },
   timeline: { eyebrow: "Trust timeline / 08", title: "Evidence & audit timeline", description: "A filterable chronology separating authoritative results, direct verification, reported claims, and diagnostics." },
   "routing-incidents": { eyebrow: "Containment register / 09", title: "Routing incidents", description: "Cross-project mistakes, repository containment, owner disposition, and recorded resolution." },
+  replay: { eyebrow: "Run chronology / 10", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
 };
 
 function formatTimestamp(value?: string | null, compact = false): string {
@@ -188,7 +193,7 @@ function Overview({ snapshot }: { snapshot: MissionSnapshot }) {
           {snapshot.ownerActions.length ? <ol className="action-list">{snapshot.ownerActions.map((action, index) => <li key={`${action}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><p>{action}</p><ChevronRight size={16} /></li>)}</ol> : <EmptyState title="No current owner action" detail="No unexpired pending approval or critical action was derived from authoritative state." />}
         </Panel>
         <Panel code="LEASE / PRIMARY" title="Authority anchor" meta={snapshot.primaryLease.authority}>
-          <div className="lease-card"><div className="lease-orbit"><ShieldCheck size={27} /></div><span>ACTIVE ORCHESTRATOR</span><strong>{snapshot.primaryLease.orchestrator}</strong><StatusBadge value={snapshot.primaryLease.state} /><dl><div><dt>Lease</dt><dd title={snapshot.primaryLease.leaseId}>{compactPath(snapshot.primaryLease.leaseId, 24)}</dd></div><div><dt>Heartbeat</dt><dd>{formatTimestamp(snapshot.primaryLease.heartbeatAt, true)}</dd></div><div><dt>Host process</dt><dd>{snapshot.primaryLease.processLiveness?.alive === true ? "OBSERVED ALIVE" : snapshot.primaryLease.processLiveness?.alive === false ? "NOT OBSERVED" : "NOT OBSERVABLE"}</dd></div></dl></div>
+          <div className="lease-card"><div className="lease-orbit"><ShieldCheck size={27} /></div><span>ACTIVE ORCHESTRATOR</span><strong>{snapshot.primaryLease.orchestrator}</strong><StatusBadge value={snapshot.primaryLease.state} /><dl><div><dt>Lease</dt><dd title={snapshot.primaryLease.leaseId}>{compactPath(snapshot.primaryLease.leaseId, 24)}</dd></div><div><dt>Heartbeat</dt><dd>{formatTimestamp(snapshot.primaryLease.heartbeatAt, true)}</dd></div><div><dt>Heartbeat age</dt><dd>{snapshot.primaryLease.heartbeatAgeSeconds == null ? "UNKNOWN" : `${snapshot.primaryLease.heartbeatAgeSeconds}s`} · {(snapshot.primaryLease.heartbeatFreshness || "unknown").toUpperCase()}</dd></div><div><dt>Host process</dt><dd>{snapshot.primaryLease.processLiveness?.alive === true ? "OBSERVED ALIVE" : snapshot.primaryLease.processLiveness?.alive === false ? "NOT OBSERVED" : "NOT OBSERVABLE"}</dd></div></dl></div>
         </Panel>
       </div>
 
@@ -363,6 +368,177 @@ function OwnerGates({ snapshot }: { snapshot: MissionSnapshot }) {
   );
 }
 
+function Replay() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [campaignId, setCampaignId] = useState(() => searchParams.get("campaignId") || "");
+  const [runId, setRunId] = useState(() => searchParams.get("runId") || "");
+  const [projection, setProjection] = useState<ReplayProjection | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const requestedCampaignId = searchParams.get("campaignId")?.trim() || "";
+  const requestedRunId = searchParams.get("runId")?.trim() || "";
+
+  useEffect(() => {
+    setCampaignId(requestedCampaignId);
+    setRunId(requestedRunId);
+    if (!requestedCampaignId || !requestedRunId) {
+      setProjection(null);
+      setFetchError(null);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setFetchError(null);
+
+    void fetch(
+      `/api/v1/replay?campaignId=${encodeURIComponent(requestedCampaignId)}&runId=${encodeURIComponent(requestedRunId)}`,
+    )
+      .then(async (response) => {
+        const body = (await response.json()) as ReplayProjection;
+        if (cancelled) return;
+        setProjection(body);
+        if (!response.ok && body.freshness !== "UNAVAILABLE") {
+          setFetchError(`Replay request failed with HTTP ${response.status}.`);
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setProjection(null);
+        setFetchError(error instanceof Error ? error.message : "Replay request failed.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [requestedCampaignId, requestedRunId]);
+
+  const openReplay = (event: FormEvent) => {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    if (campaignId.trim()) params.set("campaignId", campaignId.trim());
+    if (runId.trim()) params.set("runId", runId.trim());
+    const next = params.toString();
+    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+  };
+
+  const freshness = projection?.freshness;
+  const events = projection?.events ?? [];
+
+  return (
+    <Panel
+      code="REPLAY / EVIDENCE"
+      title="Supervisor run chronology"
+      meta={
+        requestedCampaignId && requestedRunId
+          ? `${events.length} event${events.length === 1 ? "" : "s"} · freshness ${freshness || "PENDING"}`
+          : "awaiting campaignId + runId"
+      }
+    >
+      <div className="readonly-banner">
+        <History size={16} />
+        <strong>GET-ONLY REPLAY</strong>
+        <span>Reads evidence/supervisor-runs under the configured control-plane root. Secrets are redacted before display. Mission Control never mutates run evidence.</span>
+      </div>
+
+      <form className="replay-form" onSubmit={openReplay}>
+        <label className="search-field">
+          <Flag size={16} />
+          <span className="sr-only">Campaign ID</span>
+          <input
+            aria-label="Campaign ID"
+            name="campaignId"
+            value={campaignId}
+            onChange={(event) => setCampaignId(event.target.value)}
+            placeholder="campaignId"
+            autoComplete="off"
+          />
+        </label>
+        <label className="search-field">
+          <TerminalSquare size={16} />
+          <span className="sr-only">Run ID</span>
+          <input
+            aria-label="Run ID"
+            name="runId"
+            value={runId}
+            onChange={(event) => setRunId(event.target.value)}
+            placeholder="runId"
+            autoComplete="off"
+          />
+        </label>
+        <button type="submit" className="replay-submit">Open replay</button>
+      </form>
+
+      {loading && <EmptyState title="Loading replay" detail="Fetching redacted supervisor-run chronology…" />}
+      {!loading && fetchError && <EmptyState title="Replay request failed" detail={fetchError} />}
+      {!loading && !fetchError && !requestedCampaignId && (
+        <EmptyState
+          title="No run selected"
+          detail="Enter a campaignId and runId to open a GET-only chronological replay. Example fixture: campaign-replay-001 / run-replay-001."
+        />
+      )}
+      {!loading && !fetchError && requestedCampaignId && !requestedRunId && (
+        <EmptyState title="Run ID required" detail="Both campaignId and runId are required. Missing identifiers never invent a timeline." />
+      )}
+      {!loading && !fetchError && projection && freshness === "UNAVAILABLE" && (
+        <EmptyState
+          title="Replay unavailable"
+          detail={projection.warnings[0] || "No supervisor-run evidence directory was found for the requested identifiers."}
+        />
+      )}
+      {!loading && !fetchError && projection && freshness !== "UNAVAILABLE" && (
+        <>
+          <div className="replay-meta">
+            <div><span>CAMPAIGN</span><strong>{projection.campaignId}</strong></div>
+            <div><span>RUN</span><strong>{projection.runId}</strong></div>
+            <div><span>FRESHNESS</span><strong><FreshnessBadge value={projection.freshness} /></strong></div>
+            <div><span>EVENTS</span><strong>{events.length}</strong></div>
+          </div>
+          {projection.warnings.length > 0 && (
+            <div className="source-notice tone-warning" role="status">
+              <AlertTriangle size={18} />
+              <div>
+                <strong>REPLAY WARNINGS</strong>
+                <span>{projection.warnings[0]}</span>
+              </div>
+              <StatusBadge value="WARNING" />
+            </div>
+          )}
+          {events.length ? (
+            <div className="timeline-list">
+              {events.map((entry: ReplayEvent, index) => (
+                <article className="timeline-entry" key={`${entry.sequence}-${entry.timestamp}-${index}`}>
+                  <time dateTime={entry.timestamp}>{formatTimestamp(entry.timestamp)}</time>
+                  <span className={`timeline-node tone-${stateTone(entry.severity)}`} />
+                  <div>
+                    <div className="timeline-kicker">
+                      <b>{entry.actor}</b>
+                      <StatusBadge value={entry.severity} />
+                      <VerificationBadge value={entry.verification} />
+                    </div>
+                    <h2>{entry.eventType.replaceAll("_", " ")}</h2>
+                    <p>{entry.summary}</p>
+                    <small>seq {entry.sequence}{entry.taskId ? ` · task ${entry.taskId}` : ""}{entry.evidenceRef ? ` · ${compactPath(entry.evidenceRef, 48)}` : ""}</small>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="No replay events" detail="The run directory exists but no supervisor/cursor/claude event streams were derived." />
+          )}
+        </>
+      )}
+    </Panel>
+  );
+}
+
 export function MissionControl({ initialSnapshot, view }: { initialSnapshot: MissionSnapshot; view: DashboardView }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -427,6 +603,7 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
   }, [view, searchParams]);
 
   useEffect(() => {
+    if (view !== "tasks" && view !== "approvals" && view !== "timeline") return;
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
     if (status && status !== "ALL") params.set("status", status);
@@ -434,7 +611,7 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
     const current = searchParams.toString();
     if (next === current) return;
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
-  }, [query, status, pathname, router, searchParams]);
+  }, [query, status, pathname, router, searchParams, view]);
 
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -453,11 +630,20 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
     if (view === "campaigns") return <Campaigns snapshot={snapshot} />;
     if (view === "owner-gates") return <OwnerGates snapshot={snapshot} />;
     if (view === "timeline") return <Timeline snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
+    if (view === "replay") return <Replay />;
     return <RoutingIncidents snapshot={snapshot} />;
   }, [view, snapshot, query, status]);
 
+  const cockpitMode = snapshot.source.mode === "LIVE" ? "LIVE" : snapshot.source.mode === "FIXTURE" ? "MOCK/FIXTURE" : String(snapshot.source.mode || "UNKNOWN");
+  const heartbeatLabel = (snapshot.primaryLease.heartbeatFreshness || "unknown").toUpperCase();
+
   return (
     <div className="mission-shell">
+      <div className="cockpit-identity-banner" role="banner" aria-label="Cockpit identity">
+        <strong>COCKPIT:</strong> ados-mission-control v2 (live broker) · <strong>MODE:</strong> {cockpitMode} · <strong>MUTATION:</strong> READ-ONLY · <strong>HEARTBEAT:</strong> {heartbeatLabel}
+        {snapshot.primaryLease.heartbeatAgeSeconds != null ? ` (${snapshot.primaryLease.heartbeatAgeSeconds}s)` : " (age unavailable)"}
+        {" · "}Not the foundation mock at agent-development-os-mission-control
+      </div>
       <aside className="command-rail" aria-label="Mission Control navigation">
         <Link className="brand-mark" href="/overview" aria-label="Mission Control overview"><Hexagon size={34} /><span>MC</span></Link>
         <div className="brand-copy"><strong>THE BLACK AGENCY</strong><span>ADOS MISSION CONTROL</span></div>

@@ -97,8 +97,9 @@ Copy `.env.example` to `.env.local` only when the default `D:\` paths need to ch
 - Task and handoff views aligned to current ADOS contracts
 - Worktree registry and evidence metadata views
 - Event timeline and safety alerts
+- GET-only supervisor run replay UI at `/replay`
 - Read-only REST endpoints under `/api/v1`
-- Server-Sent Events at `/api/v1/events/stream`
+- Server-Sent Events at `/api/v1/events/stream` with client reconnect
 - Versioned legacy/V2 ingestion validation with isolated per-record warnings
 - Redacted SQLite snapshot cache and per-source ingest watermarks under `MISSION_CONTROL_DATA_ROOT`
 - Blocked, visibly stale cache recovery when the external ADOS source disappears
@@ -149,12 +150,17 @@ The verification runner executes schema validation, the read-only source audit, 
 
 ## Source roots
 
+Canonical defaults (see workspace `docs/PATH-REGISTRY.md`). Stale bare
+`D:\agent-development-os-orchestrator-source` paths must not be used.
+
 | Purpose | Default path |
 | --- | --- |
-| Live orchestrator | `D:\agent-development-os-orchestrator` |
-| Orchestrator source | `D:\agent-development-os-orchestrator-source` |
-| Cursor overlay worktree | `D:\agent-development-os-orchestrator-source-cursor` |
+| Live orchestrator (runtime) | `D:\agent-development-os-orchestrator` |
+| Orchestrator source | `D:\agent-development-orchestrator\orchestrators\agent-development-os-orchestrator-source` |
+| Cursor overlay worktree | `D:\agent-development-orchestrator\orchestrators\agent-development-os-orchestrator-source-cursor` |
 | ADOS product | `D:\agent-development-os` |
+
+Cockpit identity: this tree is **Mission Control v2 (live broker)**. The foundation/mock cockpit lives at `D:\agent-development-os-mission-control`.
 
 The detailed design remains in `docs/`. The synchronous-dispatch correction is recorded in `docs/09-SYNCHRONOUS-DISPATCH-ADAPTATION.md`.
 
