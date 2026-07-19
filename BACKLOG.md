@@ -9,14 +9,14 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Primary language:** TypeScript
 - **Classification status:** confirmed
 - **Maturity:** strong (overall score 3.6/5) → target: advanced
-- **Summary:** Phase-1++ read-only cockpit: CI (Node 22 + Playwright incl. axe a11y), support-bundle, PATH-REGISTRY, SSE fan-out, campaigns/owner-gates/replay. Phase-1 surfaces + evidence-diff + campaign budget burn shipped 2026-07-19; remaining open work is mainly Phase 2+ owner-gated and optimization tracks.
+- **Summary:** Phase-1++ read-only cockpit: CI (Node 22 + Playwright incl. axe a11y), support-bundle, PATH-REGISTRY, SSE fan-out, campaigns/owner-gates/replay. Deep analysis 2026-07-19 found Phase-1 screen gaps (workflow/handoffs/worktrees/evidence dedicated views), thin approval consequences, and owner-gated Phase 2+ items.
 
-## Open Tasks (10)
+## Open Tasks (8)
 
 | Priority | Count |
 |---|---|
 | High | 2 |
-| Medium | 4 |
+| Medium | 2 |
 | Low | 4 |
 
 ### `ados-mission-control-v2-roadmap-phase2-001` — [OWNER-GATED] Phase 2: approve/reject/withdraw via ADOS tools (no raw state writes)
@@ -73,60 +73,6 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - docs/08-PHASE-ROADMAP.md
 
 **Labels:** phase-2, owner-gated, signing
-
-### `ados-mission-control-v2-ui-007` — Add task dependency graph visualization (PRD §6.4)
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Low | **Phase:** Optimization | **Status:** Open
-- **Category:** ui / tasks
-- **Owner role:** frontend-engineer
-
-**Current state:** Tasks view is tabular with filters.
-
-**Target state:** Optional graph/canvas or adjacency visualization derived from task dependencies without inventing edges.
-
-**Gap:** Blocked/ready relationships harder to see than PRD task graph requires.
-
-**Acceptance criteria:**
-- [ ] Graph uses only snapshot/API edges
-- [ ] Empty/unavailable when deps missing
-- [ ] Table remains available
-
-**Validation steps:**
-1. Fixture with deps renders; no deps shows empty state
-
-**Source evidence:**
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-- docs/05-SCREEN-INVENTORY.md
-- docs/08-PHASE-ROADMAP.md
-
-**Labels:** prd, tasks
-
-### `ados-mission-control-v2-feature-003` — Add dead-letter / repeated-failure incident surface
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Low | **Phase:** Optimization | **Status:** Open
-- **Category:** feature / incidents
-- **Owner role:** fullstack-engineer
-
-**Current state:** routing-incidents covers misroute cases; no general dead-letter queue UI.
-
-**Target state:** View or panel listing repeated failures / dead-lettered tasks from snapshot or ledger-derived fields without fabricating.
-
-**Gap:** Chronic failures blend into task tables.
-
-**Acceptance criteria:**
-- [ ] Surface only derived failures
-- [ ] Links to evidence/replay when present
-- [ ] Empty state when none
-
-**Validation steps:**
-1. Fixture with repeated failure appears; clean fixture empty
-
-**Source evidence:**
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-- docs/05-SCREEN-INVENTORY.md
-- docs/08-PHASE-ROADMAP.md
-
-**Labels:** ops, reliability
 
 ### `ados-mission-control-v2-security-002` — Add structured field allowlisting to redaction pipeline
 
