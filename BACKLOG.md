@@ -39,8 +39,8 @@ Ordered against `ados-mission-control-update-package/04-CURSOR-MASTER-INSTRUCTIO
 ### Medium — package / contracts
 
 8. Port package schemas to control-plane `config/schemas/` **only after** G3–G4 (U1 / BL-A3).
-9. Keep package fixtures/schemas synced (`npm`/`node` validate-package-schemas.mjs).
-10. Secrets baseline for pre-commit detect-secrets.
+9. ~~Keep package fixtures/schemas synced~~ (done — `npm run validate:package-schemas` in verify + CI).
+10. ~~Secrets baseline for pre-commit detect-secrets~~ (done — refreshed `.secrets.baseline` + `npm run verify:secrets`).
 
 ### Additional features (post-authorization)
 

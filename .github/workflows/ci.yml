@@ -34,6 +34,15 @@ jobs:
       - name: Schema validation
         run: npm run validate:schemas
 
+      - name: Package schema validation
+        run: npm run validate:package-schemas
+
+      - name: Secrets baseline (detect-secrets)
+        run: |
+          python3 -m pip install --user "detect-secrets==1.5.0"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          npm run verify:secrets
+
       - name: Production build
         run: npm run build
 

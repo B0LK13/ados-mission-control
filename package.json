@@ -19,7 +19,9 @@
     "evidence:manifest": "node scripts/generate-evidence-manifest.mjs",
     "auth:generate": "node scripts/generate-auth-secret.mjs",
     "validate:schemas": "node scripts/validate-schemas.mjs",
+    "validate:package-schemas": "node ados-mission-control-update-package/scripts/validate-package-schemas.mjs",
     "verify:readonly": "node scripts/verify-readonly.mjs",
+    "verify:secrets": "node scripts/verify-secrets.mjs",
     "verify": "node scripts/verify.mjs"
   },
   "engines": {

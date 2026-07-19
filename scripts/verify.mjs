@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 const npmCli = process.env.npm_execpath;
 const checks = [
   "validate:schemas",
+  "validate:package-schemas",
   "verify:readonly",
   "lint",
   "typecheck",
