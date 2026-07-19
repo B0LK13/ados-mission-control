@@ -11,39 +11,11 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Maturity:** strong (overall score 3.7/5) → target: advanced
 - **Summary:** Phases 1–4 MVP complete (2026-07-19): read-only Command Deck, opt-in Phase 2/3 commands, opt-in Phase 4 fleet/metrics. V3 roadmap AUTHORIZED: operator intelligence, controlled-ops completeness, alerting, and platform hardening (docs/09-PHASE-ROADMAP-V3.md).
 
-## Open Tasks (5)
+## Open Tasks (4)
 
 | Priority | Count |
 |---|---|
-| Medium | 1 |
 | Low | 4 |
-
-### `ados-mission-control-v2-feature-004` — Request corrections / more evidence on approvals (Phase 2 leftover)
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Medium | **Phase:** Advanced | **Status:** Open
-- **Category:** feature / approvals
-- **Owner role:** fullstack-engineer
-
-**Current state:** Approvals UI has approve/reject/withdraw when Phase 2 enabled.
-
-**Target state:** Request-evidence/corrections action via allowlisted tool + consequence preview; audit trail.
-
-**Gap:** Phase 2 exit narrative incomplete vs docs/08-PHASE-ROADMAP.md.
-
-**Acceptance criteria:**
-- [ ] Uses ADOS tool only
-- [ ] Denied without Phase 2 flag
-- [ ] Ledger/audit event
-
-**Validation steps:**
-1. Unit negative tests
-2. UI disabled when flag off
-
-**Source evidence:**
-- docs/08-PHASE-ROADMAP.md
-- docs/05-SCREEN-INVENTORY.md
-
-**Labels:** phase2, approvals, gap-analysis-2026-07-19
 
 ### `ados-mission-control-v2-api-002` — Implement cursor/limit pagination and ETag on list endpoints
 
@@ -159,7 +131,7 @@ Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-
 ### Recommended next
 
 1. ~~**V3 Phases 5–8**~~ — done 2026-07-19.
-2. ~~**Residual polish**~~ — `api-003`, `security-003`, `docs-005`, `ui-008/009`, `ux-004`, `testing-004` closed 2026-07-19. Remaining open: `feature-004`, `api-002`, `security-004/005`, `ui-010`.
+2. ~~**Residual polish**~~ — `api-003`, `security-003`, `docs-005`, `ui-008/009`, `ux-004`, `testing-004`, `feature-004` closed 2026-07-19. Remaining open: `api-002`, `security-004/005`, `ui-010`.
 3. Optional future: amend ADR-002 to implement SSE deltas only if non-fabricating.
 
 **Classification:** `MISSION_CONTROL_V3_PHASES_5_TO_8_COMPLETE`.

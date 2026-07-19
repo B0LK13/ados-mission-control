@@ -72,6 +72,8 @@ Authorization packages: [`docs/authorizations/phase2-owner-commands-20260719.md`
 | POST | `/api/v1/approvals/{id}/approve` | Allowlisted ADOS disposition tool |
 | POST | `/api/v1/approvals/{id}/reject` | Allowlisted ADOS disposition tool |
 | POST | `/api/v1/approvals/{id}/withdraw` | Allowlisted ADOS disposition tool |
+| POST | `/api/v1/approvals/{id}/request-evidence` | Allowlisted ADOS follow-up tool (non-terminal) |
+| POST | `/api/v1/approvals/{id}/request-corrections` | Allowlisted ADOS follow-up tool (non-terminal) |
 | POST | `/api/v1/owner-gates/{gateId}/challenge` | Issue challenge for external Ed25519 sign |
 | POST | `/api/v1/owner-gates/{gateId}/decide` | Verify signature → ADOS decide tool |
 

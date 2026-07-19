@@ -6,6 +6,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { NextRequest } from "next/server";
 import { runApprovalDisposition } from "../lib/commands/approval-actions";
+import { runApprovalFollowup } from "../lib/commands/approval-followup";
 import { createOwnerGateChallenge, decideOwnerGate } from "../lib/commands/owner-gate-actions";
 import { signOwnerDecision } from "../lib/commands/owner-signing";
 import { middleware } from "../middleware";
@@ -72,6 +73,86 @@ test("phase2 approval routes pass middleware when commands enabled", async () =>
     assert.equal(response.headers.get("x-ados-authority"), "phase2-commands");
     assert.equal(response.headers.get("x-middleware-next"), "1");
   });
+});
+
+test("request-evidence / request-corrections stay READ_ONLY_V2 when phase2 disabled", async () => {
+  await withEnv({ MISSION_CONTROL_PHASE2_COMMANDS: "disabled", MISSION_CONTROL_AUTH_MODE: "disabled" }, async () => {
+    for (const action of ["request-evidence", "request-corrections"]) {
+      const response = middleware(
+        new NextRequest(`http://localhost/api/v1/approvals/approval-phase2-pending/${action}`, { method: "POST" }),
+      );
+      assert.equal(response.status, 405);
+      assert.equal((await response.json()).error.code, "READ_ONLY_V2");
+    }
+  });
+});
+
+test("approval follow-up tool appends non-terminal ledger event and refuses without justification", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "mc-phase2-followup-"));
+  const fixtureRoot = path.join(process.cwd(), "tests", "fixtures", "ados");
+  copyTree(fixtureRoot, root);
+
+  await withEnv(
+    {
+      MISSION_CONTROL_PHASE2_COMMANDS: "enabled",
+      ADOS_CONTROL_PLANE_ROOT: root,
+      MISSION_CONTROL_MODE: "live",
+    },
+    async () => {
+      const missingJustification = await runApprovalFollowup({
+        approvalId: "approval-phase2-pending",
+        kind: "evidence",
+        justification: "",
+      });
+      assert.equal(missingJustification.httpStatus, 400);
+
+      const evidence = await runApprovalFollowup({
+        approvalId: "approval-phase2-pending",
+        kind: "evidence",
+        justification: "Need SHA-256 evidence refs before approve.",
+        idempotencyKey: "followup-evidence-1",
+      });
+      assert.equal(evidence.httpStatus, 200);
+      assert.equal((evidence.body as { ok?: boolean; terminal?: boolean }).ok, true);
+      assert.equal((evidence.body as { terminal?: boolean }).terminal, false);
+
+      const corrections = await runApprovalFollowup({
+        approvalId: "approval-phase2-pending",
+        kind: "corrections",
+        justification: "Scope paths must exclude production deploy.",
+        idempotencyKey: "followup-corrections-1",
+      });
+      assert.equal(corrections.httpStatus, 200);
+
+      const approvalsPath = path.join(root, "state", "approvals.jsonl");
+      const ledgerPath = path.join(root, "state", "event-ledger.jsonl");
+      const approvalsText = fs.readFileSync(approvalsPath, "utf8");
+      const ledgerText = fs.readFileSync(ledgerPath, "utf8");
+      assert.match(approvalsText, /EVIDENCE_REQUESTED/);
+      assert.match(approvalsText, /CORRECTIONS_REQUESTED/);
+      assert.match(ledgerText, /OWNER_APPROVAL_FOLLOWUP/);
+
+      const agentSpawn = spawnSync(
+        process.execPath,
+        [
+          path.join(process.cwd(), "scripts", "ados-tools", "request-approval-followup.mjs"),
+          "--root",
+          root,
+          "--approval-id",
+          "approval-phase2-pending",
+          "--kind",
+          "evidence",
+          "--actor",
+          "cursor",
+          "--justification",
+          "agent should not be able to request follow-up",
+        ],
+        { encoding: "utf8" },
+      );
+      assert.notEqual(agentSpawn.status, 0);
+      assert.match(`${agentSpawn.stdout}\n${agentSpawn.stderr}`, /NON_OWNER_ACTOR/);
+    },
+  );
 });
 
 test("approval disposition tool appends ledger via owner actor only", async () => {

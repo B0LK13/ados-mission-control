@@ -115,7 +115,7 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   projects: { eyebrow: "Repository registry / 02", title: "Projects", description: "Canonical repositories, control-plane boundaries, integration worktrees, and next permitted actions." },
   agents: { eyebrow: "Runtime registry / 03", title: "Agents & runtimes", description: "Availability, verification, authority, last execution, and promotion state without runtime mutation controls." },
   tasks: { eyebrow: "Execution ledger / 04", title: "Tasks & executions", description: "Task contracts reconciled with results, protocol state, approvals, evidence, and bounded next actions." },
-  approvals: { eyebrow: "Owner gate / 05", title: "Approvals", description: "Filed status, authoritative disposition, consumption, expiry, and scope. Phase 2 can approve/reject/withdraw via allowlisted ADOS tools when enabled." },
+  approvals: { eyebrow: "Owner gate / 05", title: "Approvals", description: "Filed status, authoritative disposition, consumption, expiry, and scope. Phase 2 can approve/reject/withdraw/request-evidence/request-corrections via allowlisted ADOS tools when enabled." },
   campaigns: { eyebrow: "Autonomy campaign / 06", title: "Campaigns", description: "Cursor-first campaign status, budgets, runtimes, and push/merge/deploy policy — observation only." },
   "owner-gates": { eyebrow: "Protected decision / 07", title: "Owner gates", description: "Open and historical owner-only decisions. Phase 2 uses challenge → external Ed25519 sign → ADOS tool decide. Agents cannot self-approve." },
   workflow: { eyebrow: "Protocol graph / 08", title: "Workflow", description: "Read-only Owner → agent → validation flow derived from the brokered workflow summary. No drag-to-dispatch." },
@@ -517,9 +517,17 @@ function Approvals({ snapshot, query, setQuery, status, setStatus }: { snapshot:
   const items = snapshot.approvals.filter((approval) => (status === "ALL" || approval.status === status) && `${approval.approvalId} ${approval.action} ${approval.scopeSummary}`.toLowerCase().includes(query.toLowerCase()));
 
   const router = useRouter();
-  const runAction = async (approvalId: string, action: "approve" | "reject" | "withdraw") => {
+  const runAction = async (
+    approvalId: string,
+    action: "approve" | "reject" | "withdraw" | "request-evidence" | "request-corrections",
+  ) => {
     if (!phase2) return;
-    const confirmed = window.confirm(`Confirm owner ${action.toUpperCase()} for ${approvalId} via ADOS tools?\n\nThis appends a disposition ledger event. Mission Control does not write state/* directly.`);
+    const isFollowup = action === "request-evidence" || action === "request-corrections";
+    const confirmed = window.confirm(
+      isFollowup
+        ? `Confirm owner ${action.toUpperCase()} for ${approvalId} via ADOS tools?\n\nThis does NOT approve/deny/revoke. It appends OWNER_APPROVAL_FOLLOWUP to the ledger and records a non-terminal follow-up. Mission Control does not write state/* directly.`
+        : `Confirm owner ${action.toUpperCase()} for ${approvalId} via ADOS tools?\n\nThis appends a disposition ledger event. Mission Control does not write state/* directly.`,
+    );
     if (!confirmed) return;
     setBusyId(approvalId);
     setActionMessage(null);
@@ -530,7 +538,11 @@ function Approvals({ snapshot, query, setQuery, status, setStatus }: { snapshot:
           "content-type": "application/json",
           "idempotency-key": `${action}-${approvalId}-${Date.now()}`,
         },
-        body: JSON.stringify({ justification: `Owner ${action} via Mission Control Phase 2` }),
+        body: JSON.stringify({
+          justification: isFollowup
+            ? `Owner ${action} via Mission Control Phase 2 — provide the missing ${action === "request-evidence" ? "evidence refs" : "corrections"} before re-decision.`
+            : `Owner ${action} via Mission Control Phase 2`,
+        }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -553,8 +565,8 @@ function Approvals({ snapshot, query, setQuery, status, setStatus }: { snapshot:
         <strong>{phase2 ? "PHASE 2 COMMANDS" : "READ-ONLY V1"}</strong>
         <span>
           {phase2
-            ? "Approve / Reject / Withdraw invoke allowlisted ADOS tools (append-only dispositions). No raw state/* writes from Next.js."
-            : "Approve / Reject remain disabled until MISSION_CONTROL_PHASE2_COMMANDS=enabled."}
+            ? "Approve / Reject / Withdraw / Request evidence / Request corrections invoke allowlisted ADOS tools (append-only). No raw state/* writes from Next.js."
+            : "Owner actions remain disabled until MISSION_CONTROL_PHASE2_COMMANDS=enabled."}
         </span>
       </div>
       {actionMessage && <div className="source-notice tone-warning" role="status"><strong>COMMAND RESULT</strong><span>{actionMessage}</span></div>}
@@ -574,9 +586,20 @@ function Approvals({ snapshot, query, setQuery, status, setStatus }: { snapshot:
                   <button type="button" disabled={!phase2 || busyId === approval.approvalId || approval.status !== "PENDING"} onClick={() => runAction(approval.approvalId, "approve")} title={phase2 ? "Approve via ADOS disposition tool" : "Phase 2 disabled"}>Approve</button>
                   <button type="button" disabled={!phase2 || busyId === approval.approvalId || approval.status !== "PENDING"} onClick={() => runAction(approval.approvalId, "reject")} title={phase2 ? "Reject via ADOS disposition tool" : "Phase 2 disabled"}>Reject</button>
                   <button type="button" disabled={!phase2 || busyId === approval.approvalId || !["PENDING", "APPROVED"].includes(approval.status)} onClick={() => runAction(approval.approvalId, "withdraw")} title={phase2 ? "Withdraw/revoke via ADOS disposition tool" : "Phase 2 disabled"}>Withdraw</button>
+                  <button type="button" disabled={!phase2 || busyId === approval.approvalId || approval.status !== "PENDING"} onClick={() => runAction(approval.approvalId, "request-evidence")} title={phase2 ? "Request more evidence via ADOS follow-up tool" : "Phase 2 disabled"}>Request evidence</button>
+                  <button type="button" disabled={!phase2 || busyId === approval.approvalId || approval.status !== "PENDING"} onClick={() => runAction(approval.approvalId, "request-corrections")} title={phase2 ? "Request corrections via ADOS follow-up tool" : "Phase 2 disabled"}>Request corrections</button>
                   <StatusBadge value={approval.status} />
                 </div>
               </header>
+              <div className="followup-consequences" aria-label={`Follow-up consequences for ${approval.approvalId}`}>
+                <span>Follow-up consequences (non-terminal)</span>
+                <ul>
+                  <li>Request evidence / corrections never approve, deny, or revoke</li>
+                  <li>ADOS tool appends OWNER_APPROVAL_FOLLOWUP to the event ledger</li>
+                  <li>Status stays PENDING so a later approve/reject/withdraw remains possible</li>
+                  <li>Impossible without Phase 2 flag — buttons stay disabled when off</li>
+                </ul>
+              </div>
               <dl className="approval-meta">
                 <div><dt>Filed vs ledger</dt><dd>Filed · {approval.fileStatus} · Ledger · {approval.authoritativeDisposition}</dd></div>
                 <div><dt>Risk / consumption</dt><dd>{(() => { const risk = scoreApprovalRisk(approval); return `${risk.band} (${risk.freshness}${risk.fromControlPlane ? " · control-plane" : " · derived"})`; })()} · {approval.consumed ? "CONSUMED" : "UNCONSUMED"} ({approval.consumptionCount}/{approval.executionLimit ?? "∞"})</dd></div>

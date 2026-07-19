@@ -6,7 +6,7 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const AUTH_EXEMPT_PATHS = new Set(["/api/health", "/api/v1/health", "/api/v1/metrics"]);
 
 const PHASE2_POST_ROUTES = [
-  /^\/api\/v1\/approvals\/[^/]+\/(approve|reject|withdraw)$/,
+  /^\/api\/v1\/approvals\/[^/]+\/(approve|reject|withdraw|request-evidence|request-corrections)$/,
   /^\/api\/v1\/owner-gates\/[^/]+\/(challenge|decide)$/,
 ];
 

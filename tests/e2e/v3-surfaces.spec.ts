@@ -63,6 +63,9 @@ test("phase 2/3/4 opt-in surfaces stay disabled by default", async ({ page }) =>
   }
   await expect(page.getByRole("button", { name: "Reject" }).first()).toBeDisabled();
   await expect(page.getByRole("button", { name: "Withdraw" }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Request evidence" }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Request corrections" }).first()).toBeDisabled();
+  await expect(page.getByText("Follow-up consequences (non-terminal)").first()).toBeVisible();
 
   await page.goto("/operations");
   await expect(page.getByText("PHASE 3 DISABLED")).toBeVisible();

@@ -590,6 +590,25 @@ td .status-badge, td .verification-badge { display: inline-flex; margin-right: 4
 }
 .consequence-grid ul { margin: 0; padding-left: 16px; color: var(--muted); font-size: 0.76rem; }
 .consequence-grid p { margin: 0; color: var(--faint); font-size: 0.76rem; }
+.followup-consequences {
+  padding: 10px 14px 12px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--amber) 4%, var(--surface-2));
+}
+.followup-consequences > span {
+  display: block;
+  color: var(--faint);
+  font: 600 0.57rem/1 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.followup-consequences ul {
+  margin: 0;
+  padding-left: 16px;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
 .detector-legend {
   display: grid;
   gap: 10px;

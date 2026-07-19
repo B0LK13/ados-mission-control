@@ -4,6 +4,7 @@ import { getMissionControlConfig } from "@/lib/config";
 
 export type AdosToolName =
   | "set-owner-approval-disposition"
+  | "request-approval-followup"
   | "set-owner-gate-decision"
   | "dispatch-approved-operation"
   | "set-campaign-control"
@@ -13,6 +14,7 @@ export type AdosToolName =
 
 const ALLOWED_TOOLS: Record<AdosToolName, { script: string; phase: 2 | 3 | 6 }> = {
   "set-owner-approval-disposition": { script: "set-owner-approval-disposition.mjs", phase: 2 },
+  "request-approval-followup": { script: "request-approval-followup.mjs", phase: 2 },
   "set-owner-gate-decision": { script: "set-owner-gate-decision.mjs", phase: 2 },
   "dispatch-approved-operation": { script: "dispatch-approved-operation.mjs", phase: 3 },
   "set-campaign-control": { script: "set-campaign-control.mjs", phase: 3 },

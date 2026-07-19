@@ -9,7 +9,7 @@
 
 1. Enable `MISSION_CONTROL_PHASE2_COMMANDS=enabled` for loopback/staging Mission Control.
 2. Expose POST command routes that invoke allowlisted ADOS tools / `scripts/ados-tools/*` adapters.
-3. Append approval dispositions to `state/approvals.jsonl` and owner-gate decisions under `handoffs/owner/**` via those tools only.
+3. Append approval dispositions and non-terminal follow-ups (request evidence / corrections) to `state/approvals.jsonl` + ledger, and owner-gate decisions under `handoffs/owner/**`, via those tools only.
 4. Require Ed25519 owner signatures for owner-gate decisions (fail-closed without pinned public key).
 5. Keep Basic-auth (when configured) in front of mutation routes.
 

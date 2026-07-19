@@ -154,6 +154,10 @@ export function normalizeState(value: unknown): NormalizedState {
   if (state.includes("BLOCK") || state.includes("UNAVAILABLE")) return "BLOCKED";
   if (state.includes("COMPLETE") || state.includes("SUCCESS") || state.includes("VALIDATED") || state.includes("ARCHIVED")) return "COMPLETED";
   if (state.includes("RUNNING") || state.includes("IN_PROGRESS") || state === "ACTIVE" || state.includes("DISPATCHED")) return "RUNNING";
+  // Follow-ups are non-terminal: keep PENDING so owner can still approve/reject later.
+  if (state.includes("EVIDENCE_REQUEST") || state.includes("CORRECTIONS_REQUEST") || state.includes("MORE_EVIDENCE")) {
+    return "PENDING";
+  }
   if (state.includes("APPROV") || state.includes("AUTHORIZ")) return "APPROVED";
   if (state.includes("PENDING") || state.includes("READY") || state.includes("DRAFT") || state.includes("NOT_STARTED")) return "PENDING";
   return "UNKNOWN";
