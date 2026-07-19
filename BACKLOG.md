@@ -766,19 +766,20 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - SECURITY.md
 
 **Labels:** security, sso, design, gap-analysis-2026-07-19
+
 <!-- END AUTO-GENERATED BACKLOG -->
 
 ## Deep analysis (2026-07-19)
 
 Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md).
 
-**Verdict:** Phases 1–5 complete. V3 Phase 5 operator intelligence shipped. Phase 6+ remain open under `docs/authorizations/v3-roadmap-20260719.md`.
+**Verdict:** Phases 1–5 complete. V3 Phase 5 operator intelligence shipped. Next is Phase 6 under `docs/authorizations/v3-roadmap-20260719.md`.
 
 ### Recommended next
 
 1. ~~**Phases 1–5**~~ — done 2026-07-19.
 2. **Start V3 Phase 6** — `ados-mission-control-v2-roadmap-phase6-001` (`MISSION_CONTROL_PHASE6_COMMANDS`).
-3. Then Phase 7 alerts / Phase 8 hardening per sequencing in `docs/09-PHASE-ROADMAP-V3.md`.
+3. Parallel polish / Phase 7–8 per `docs/09-PHASE-ROADMAP-V3.md`.
 
-**Classification:** `MISSION_CONTROL_V3_PHASE5_OPERATOR_INTELLIGENCE_COMPLETE`. Default remains GET-only; Phase 2/3/4/6/7 features are opt-in.
+**Classification:** `MISSION_CONTROL_V3_PHASE5_OPERATOR_INTELLIGENCE_COMPLETE`.
 
