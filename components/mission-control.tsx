@@ -12,9 +12,12 @@ import {
   ChevronRight,
   CircleDot,
   FileCheck2,
+  FileSearch,
   Fingerprint,
   Flag,
+  FolderGit2,
   Gauge,
+  GitBranch,
   Hexagon,
   History,
   ListFilter,
@@ -24,18 +27,23 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  Siren,
   Sun,
   TerminalSquare,
   Waypoints,
+  Workflow as WorkflowIcon,
 } from "lucide-react";
 import type {
   ApprovalCard,
   AuditEntry,
   CampaignCard,
+  EvidenceItem,
   FreshnessLabel,
+  HandoffItem,
   MissionSnapshot,
   OwnerGateCard,
   VerificationLabel,
+  WorktreeNode,
 } from "@/lib/contracts";
 import { freshnessFromSnapshot } from "@/lib/data-quality";
 import type { ReplayEvent, ReplayProjection } from "@/lib/replay";
@@ -48,6 +56,11 @@ export const dashboardViews = [
   "approvals",
   "campaigns",
   "owner-gates",
+  "workflow",
+  "handoffs",
+  "worktrees",
+  "evidence",
+  "safety",
   "timeline",
   "routing-incidents",
   "replay",
@@ -62,6 +75,11 @@ const navigation: Array<{ view: DashboardView; label: string; icon: typeof Gauge
   { view: "approvals", label: "Approvals", icon: FileCheck2 },
   { view: "campaigns", label: "Campaigns", icon: Flag },
   { view: "owner-gates", label: "Owner gates", icon: ShieldAlert },
+  { view: "workflow", label: "Workflow", icon: WorkflowIcon },
+  { view: "handoffs", label: "Handoffs", icon: GitBranch },
+  { view: "worktrees", label: "Worktrees", icon: FolderGit2 },
+  { view: "evidence", label: "Evidence", icon: FileSearch },
+  { view: "safety", label: "Safety", icon: Siren },
   { view: "timeline", label: "Evidence & audit", icon: Activity },
   { view: "routing-incidents", label: "Routing incidents", icon: Waypoints },
   { view: "replay", label: "Replay", icon: History },
@@ -75,9 +93,14 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   approvals: { eyebrow: "Owner gate / 05", title: "Approvals", description: "Filed status, authoritative disposition, consumption, expiry, scope, and current owner-action requirements." },
   campaigns: { eyebrow: "Autonomy campaign / 06", title: "Campaigns", description: "Cursor-first campaign status, budgets, runtimes, and push/merge/deploy policy — observation only." },
   "owner-gates": { eyebrow: "Protected decision / 07", title: "Owner gates", description: "Open and historical owner-only decisions. Mission Control cannot approve, deny, or clear these gates." },
-  timeline: { eyebrow: "Trust timeline / 08", title: "Evidence & audit timeline", description: "A filterable chronology separating authoritative results, direct verification, reported claims, and diagnostics." },
-  "routing-incidents": { eyebrow: "Containment register / 09", title: "Routing incidents", description: "Cross-project mistakes, repository containment, owner disposition, and recorded resolution." },
-  replay: { eyebrow: "Run chronology / 10", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
+  workflow: { eyebrow: "Protocol graph / 08", title: "Workflow", description: "Read-only Owner → agent → validation flow derived from the brokered workflow summary. No drag-to-dispatch." },
+  handoffs: { eyebrow: "Handoff queue / 09", title: "Handoffs", description: "Per-agent handoff packets, lifecycle stage, and synchronous adapter protocol — observation only." },
+  worktrees: { eyebrow: "Repo hygiene / 10", title: "Worktrees", description: "Registered worktrees, dirty/untracked signals, branch/HEAD, and owner agent — no cleanup actions." },
+  evidence: { eyebrow: "Trust store / 11", title: "Evidence", description: "Evidence metadata, trust flags, and verification labels. Content bodies are not ingested; hashes are observational." },
+  safety: { eyebrow: "Safety monitor / 12", title: "Safety", description: "Active safety signals and severity. Detectors are read-model derived; Mission Control never clears alerts." },
+  timeline: { eyebrow: "Trust timeline / 13", title: "Evidence & audit timeline", description: "A filterable chronology separating authoritative results, direct verification, reported claims, and diagnostics." },
+  "routing-incidents": { eyebrow: "Containment register / 14", title: "Routing incidents", description: "Cross-project mistakes, repository containment, owner disposition, and recorded resolution." },
+  replay: { eyebrow: "Run chronology / 15", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
 };
 
 function formatTimestamp(value?: string | null, compact = false): string {
@@ -171,6 +194,21 @@ function Overview({ snapshot }: { snapshot: MissionSnapshot }) {
   const activeTask = snapshot.tasks.find((task) => task.status === "RUNNING") || snapshot.tasks.find((task) => task.status === "PENDING");
   const activeProject = snapshot.projects.find((project) => project.currentTask === activeTask?.taskId) || snapshot.projects.find((project) => project.classification === "ADOS_COMPONENT_REPOSITORY");
   const recentExecutions = snapshot.tasks.filter((task) => ["COMPLETED", "FAILED", "BLOCKED"].includes(task.status)).slice(0, 6);
+  const blockedTasks = snapshot.tasks.filter((task) => task.status === "BLOCKED");
+  const dirtyTrees = snapshot.worktrees.filter((tree) => tree.dirty || (tree.untracked?.length ?? 0) > 0);
+  const waitingReviews = snapshot.tasks.filter((task) => /REVIEW|AWAITING|CONDITIONAL/i.test(task.status) || /REVIEW|AWAITING/i.test(task.protocolStatus));
+  const activeAgents = snapshot.agents.filter((agent) => !/OFFLINE|UNKNOWN|UNAVAILABLE/i.test(agent.availabilityState));
+  const nineQuestions = [
+    { q: "Active agents", a: activeAgents.length ? activeAgents.map((agent) => agent.displayName).join(", ") : "NONE OBSERVED" },
+    { q: "Lease holder", a: `${snapshot.primaryLease.orchestrator} · ${snapshot.primaryLease.state}` },
+    { q: "Current work", a: activeTask ? `${activeTask.taskId} · ${activeTask.owner}` : "NO ACTIVE TASK VERIFIED" },
+    { q: "Blocked tasks", a: blockedTasks.length ? blockedTasks.map((task) => task.taskId).slice(0, 4).join(", ") : "NONE" },
+    { q: "Owner attention", a: health.pendingApprovalCount ? `${health.pendingApprovalCount} pending approval(s)` : "NONE" },
+    { q: "Path / worktree conflicts", a: dirtyTrees.length || snapshot.routingIncidents.length ? `${dirtyTrees.length} dirty tree(s) · ${snapshot.routingIncidents.length} routing incident(s)` : "NONE OBSERVED" },
+    { q: "Reviews waiting", a: waitingReviews.length ? `${waitingReviews.length} task(s)` : "NONE" },
+    { q: "Production dispatch", a: health.dispatchEnabled ? "ENABLED — VERIFY OWNER APPROVAL" : "DISABLED" },
+    { q: "System health", a: `${health.severity} · ${health.readiness.replaceAll("_", " ")}` },
+  ] as const;
 
   return (
     <>
@@ -183,6 +221,15 @@ function Overview({ snapshot }: { snapshot: MissionSnapshot }) {
           <div><dt>Primary authority</dt><dd>{health.primaryAgent}</dd></div>
           <div><dt>Snapshot</dt><dd>{formatTimestamp(snapshot.snapshotAt)}</dd></div>
         </dl>
+      </section>
+
+      <section className="nine-questions" aria-label="Nine operational questions">
+        {nineQuestions.map((item) => (
+          <article key={item.q}>
+            <span>{item.q}</span>
+            <strong title={item.a}>{item.a}</strong>
+          </article>
+        ))}
       </section>
 
       <section className="metric-grid" aria-label="Operational metrics">
@@ -256,9 +303,54 @@ function Approvals({ snapshot, query, setQuery, status, setStatus }: { snapshot:
   const items = snapshot.approvals.filter((approval) => (status === "ALL" || approval.status === status) && `${approval.approvalId} ${approval.action} ${approval.scopeSummary}`.toLowerCase().includes(query.toLowerCase()));
   return (
     <Panel code="GATE / OWNER" title="Approval reconciliation" meta={`${items.length} of ${snapshot.approvals.length}`}>
-      <div className="readonly-banner"><ShieldCheck size={16} /><strong>READ-ONLY V1</strong><span>No approval action is enabled. File status and authoritative disposition are intentionally shown separately.</span></div>
+      <div className="readonly-banner"><ShieldCheck size={16} /><strong>READ-ONLY V1</strong><span>Approve / Reject remain Phase 2. Consequence text below is observational only.</span></div>
       <FilterBar query={query} onQuery={setQuery} status={status} onStatus={setStatus} statuses={statuses} label="Search approval ID, action, or scope" />
-      {items.length ? <TableFrame><table><thead><tr><th>Approval / action</th><th>Filed vs authoritative</th><th>Effective state</th><th>Issue / expiry</th><th>Consumption</th><th>Scope / owner action</th></tr></thead><tbody>{items.map((approval: ApprovalCard) => <tr key={approval.approvalId}><td><code className="full-id">{approval.approvalId}</code><strong>{approval.action.replaceAll("_", " ")}</strong></td><td><span>Filed · {approval.fileStatus}</span><strong>Ledger · {approval.authoritativeDisposition}</strong></td><td><StatusBadge value={approval.status} /><small>{approval.riskLevel || "RISK UNRATED"}</small></td><td><span>{formatTimestamp(approval.issuedAt)}</span><small>{formatTimestamp(approval.expiresAt)}</small></td><td><strong>{approval.consumed ? "CONSUMED" : "UNCONSUMED"}</strong><span>{approval.consumptionCount} / {approval.executionLimit ?? "∞"}</span></td><td><span>{approval.scopeSummary}</span>{approval.ownerActionRequired ? <StatusBadge value="OWNER ACTION REQUIRED" /> : <small>NO CURRENT OWNER ACTION</small>}</td></tr>)}</tbody></table></TableFrame> : <EmptyState title="No matching approvals" detail="Adjust the approval search or state filter." />}
+      {items.length ? (
+        <div className="approval-stack">
+          {items.map((approval: ApprovalCard) => (
+            <article className="approval-card" key={approval.approvalId}>
+              <header>
+                <div>
+                  <code className="full-id">{approval.approvalId}</code>
+                  <strong>{approval.action.replaceAll("_", " ")}</strong>
+                  <small>{approval.requestingAgent || approval.issuedBy || "REQUESTER UNAVAILABLE"}</small>
+                </div>
+                <div className="approval-actions-preview">
+                  <button type="button" disabled title="Phase 2: Approve via ADOS owner tools">Approve · Phase 2</button>
+                  <button type="button" disabled title="Phase 2: Reject via ADOS owner tools">Reject · Phase 2</button>
+                  <StatusBadge value={approval.status} />
+                </div>
+              </header>
+              <dl className="approval-meta">
+                <div><dt>Filed vs ledger</dt><dd>Filed · {approval.fileStatus} · Ledger · {approval.authoritativeDisposition}</dd></div>
+                <div><dt>Risk / consumption</dt><dd>{approval.riskLevel || "RISK UNRATED"} · {approval.consumed ? "CONSUMED" : "UNCONSUMED"} ({approval.consumptionCount}/{approval.executionLimit ?? "∞"})</dd></div>
+                <div><dt>Issue / expiry</dt><dd>{formatTimestamp(approval.issuedAt)} → {formatTimestamp(approval.expiresAt)}</dd></div>
+                <div><dt>Scope</dt><dd>{approval.scopeSummary || "SCOPE UNAVAILABLE"}{approval.ownerActionRequired ? " · OWNER ACTION REQUIRED" : ""}</dd></div>
+              </dl>
+              <div className="consequence-grid">
+                <div>
+                  <span>Will do</span>
+                  {approval.willDo.length ? <ul>{approval.willDo.map((item) => <li key={item}>{item}</li>)}</ul> : <p>UNAVAILABLE</p>}
+                </div>
+                <div>
+                  <span>Will not do</span>
+                  {approval.willNotDo.length ? <ul>{approval.willNotDo.map((item) => <li key={item}>{item}</li>)}</ul> : <p>UNAVAILABLE</p>}
+                </div>
+                <div>
+                  <span>Affected paths</span>
+                  {approval.affectedPaths.length ? <ul>{approval.affectedPaths.map((item) => <li key={item} title={item}>{compactPath(item, 48)}</li>)}</ul> : <p>UNAVAILABLE</p>}
+                </div>
+                <div>
+                  <span>Preconditions</span>
+                  {approval.preconditions.length ? <ul>{approval.preconditions.map((item) => <li key={item}>{item}</li>)}</ul> : <p>UNAVAILABLE</p>}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="No matching approvals" detail="Adjust the approval search or state filter." />
+      )}
     </Panel>
   );
 }
@@ -278,6 +370,209 @@ function RoutingIncidents({ snapshot }: { snapshot: MissionSnapshot }) {
   return (
     <Panel code="ROUTING / CONTAINMENT" title="Cross-project incident register" meta={`${snapshot.routingIncidents.length} recorded`}>
       {snapshot.routingIncidents.length ? <div className="incident-grid">{snapshot.routingIncidents.map((incident) => <article className="incident-card" key={incident.incidentId}><header><div><Waypoints size={18} /><span>{incident.incidentId}</span></div><StatusBadge value={incident.containmentStatus} /></header><dl><div><dt>Intended project</dt><dd>{incident.intendedProject}</dd></div><div><dt>Incorrect repository</dt><dd title={incident.incorrectRepository}>{compactPath(incident.incorrectRepository, 58)}</dd></div><div><dt>Branch / commit</dt><dd>{incident.branch || "UNAVAILABLE"} · {incident.commit?.slice(0, 12) || "UNAVAILABLE"}</dd></div><div><dt>Owner disposition</dt><dd>{incident.ownerDispositionRequired ? "REQUIRED" : "NOT CURRENTLY REQUIRED"}</dd></div></dl><div className="incident-resolution"><span>FINAL RESOLUTION / CURRENT RECORD</span><p>{incident.resolution}</p></div><VerificationBadge value={incident.verification} /></article>)}</div> : <EmptyState title="No routing incident record" detail="No cross-project repository mistake was derived from current authoritative state." />}
+    </Panel>
+  );
+}
+
+function Workflow({ snapshot }: { snapshot: MissionSnapshot }) {
+  const nodes = snapshot.workflowSummary?.nodes ?? [];
+  const activeEdge = snapshot.workflowSummary?.activeEdge || "UNAVAILABLE";
+  const protocol = snapshot.protocol;
+  return (
+    <>
+      <div className="readonly-banner"><ShieldCheck size={16} /><strong>READ-ONLY V2</strong><span>Workflow is observational. Dispatch, acknowledgment, and completion remain control-plane adapter concerns.</span></div>
+      <Panel code="WORKFLOW / PATH" title="Synchronous adapter path" meta={`${nodes.length} nodes · ${protocol.dispatchModel}`}>
+        {nodes.length ? (
+          <ol className="workflow-flow" aria-label="Workflow nodes">
+            {nodes.map((node, index) => (
+              <li className="workflow-node" key={`${index}-${node}`}>
+                <span className="workflow-index">{String(index + 1).padStart(2, "0")}</span>
+                <strong>{node}</strong>
+                {index < nodes.length - 1 && <ChevronRight className="workflow-arrow" size={18} aria-hidden />}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <EmptyState title="Workflow unavailable" detail="No workflowSummary.nodes were derived from the configured source." />
+        )}
+      </Panel>
+      <div className="dashboard-grid equal">
+        <Panel code="WORKFLOW / EDGE" title="Active edge" meta="derived">
+          <div className="workflow-active-edge">
+            <Network size={18} />
+            <div>
+              <span>CURRENT OBSERVED EDGE</span>
+              <strong>{activeEdge}</strong>
+            </div>
+          </div>
+        </Panel>
+        <Panel code="WORKFLOW / PROTOCOL" title="Protocol contract" meta="GET /api/v1/workflow">
+          <dl className="workflow-protocol">
+            <div><dt>Dispatch model</dt><dd>{protocol.dispatchModel}</dd></div>
+            <div><dt>Cursor inbox</dt><dd><code>{protocol.cursorInbox}</code></dd></div>
+            <div><dt>Cursor completed</dt><dd><code>{protocol.cursorCompleted}</code></dd></div>
+            <div><dt>Ack sentinel</dt><dd><code>{protocol.acknowledgmentSentinel}</code></dd></div>
+            <div><dt>Completion sentinel</dt><dd><code>{protocol.completionSentinel}</code></dd></div>
+            <div><dt>Outbox protocol</dt><dd>{protocol.outboxProtocolCreated ? "CREATED" : "NOT CREATED"}</dd></div>
+          </dl>
+        </Panel>
+      </div>
+    </>
+  );
+}
+
+function Handoffs({ snapshot, query, setQuery, status, setStatus }: { snapshot: MissionSnapshot; query: string; setQuery: (value: string) => void; status: string; setStatus: (value: string) => void }) {
+  const stages = [...new Set(snapshot.handoffs.map((item) => item.lifecycleStage))];
+  const items = snapshot.handoffs.filter((item) => (
+    (status === "ALL" || item.lifecycleStage === status)
+    && `${item.handoffId} ${item.fromAgent} ${item.toAgent} ${item.title} ${item.taskId || ""}`.toLowerCase().includes(query.toLowerCase())
+  ));
+  return (
+    <Panel code="HANDOFF / QUEUE" title="Agent handoff queue" meta={`${items.length} of ${snapshot.handoffs.length}`}>
+      <FilterBar query={query} onQuery={setQuery} status={status} onStatus={setStatus} statuses={stages} label="Search handoff, agent, or task" />
+      {items.length ? (
+        <TableFrame label="Scrollable handoffs table">
+          <table>
+            <thead>
+              <tr>
+                <th>Handoff / title</th>
+                <th>From → to</th>
+                <th>Lifecycle</th>
+                <th>Task / expiry</th>
+                <th>Path / digest</th>
+                <th>Authority</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item: HandoffItem) => (
+                <tr key={item.handoffId}>
+                  <td><code className="full-id">{item.handoffId}</code><strong>{item.title}</strong></td>
+                  <td><strong>{item.fromAgent}</strong><span>→ {item.toAgent}</span></td>
+                  <td><StatusBadge value={item.lifecycleStage} /><StatusBadge value={item.status} /></td>
+                  <td><span>{item.taskId || "NO TASK ID"}</span><small>{formatTimestamp(item.expiresAt, true)}</small></td>
+                  <td><span title={item.path || undefined}>{compactPath(item.path, 36)}</span><small>{item.sha256 ? item.sha256.slice(0, 12) : "DIGEST UNAVAILABLE"}</small></td>
+                  <td><StatusBadge value={item.authority} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableFrame>
+      ) : (
+        <EmptyState title="No matching handoffs" detail="Adjust the handoff search or lifecycle filter." />
+      )}
+    </Panel>
+  );
+}
+
+function Worktrees({ snapshot }: { snapshot: MissionSnapshot }) {
+  return (
+    <Panel code="REPO / WORKTREES" title="Registered worktrees" meta={`${snapshot.worktrees.length} nodes`}>
+      <div className="readonly-banner"><FolderGit2 size={16} /><strong>READ-ONLY</strong><span>Cleanup, prune, and commit actions remain control-plane / owner tools.</span></div>
+      {snapshot.worktrees.length ? (
+        <TableFrame label="Scrollable worktrees table">
+          <table>
+            <thead>
+              <tr>
+                <th>Repo / role</th>
+                <th>Path</th>
+                <th>Branch / HEAD</th>
+                <th>Dirty / untracked</th>
+                <th>Owner</th>
+                <th>Remote / prune</th>
+              </tr>
+            </thead>
+            <tbody>
+              {snapshot.worktrees.map((tree: WorktreeNode) => (
+                <tr key={`${tree.repoId}-${tree.pathWindows}`}>
+                  <td><strong>{tree.repoId}</strong><span>{tree.role}</span></td>
+                  <td><span title={tree.pathWindows}>{compactPath(tree.pathWindows, 42)}</span>{tree.pathWsl && <small title={tree.pathWsl}>{compactPath(tree.pathWsl, 42)}</small>}</td>
+                  <td><code>{tree.branch || "UNAVAILABLE"}</code><span>{tree.head ? tree.head.slice(0, 12) : "HEAD UNAVAILABLE"}</span></td>
+                  <td>
+                    <StatusBadge value={tree.dirty ? "DIRTY" : "CLEAN"} />
+                    <span>{tree.untracked?.length ? `${tree.untracked.length} untracked` : "NO UNTRACKED"}</span>
+                  </td>
+                  <td>{tree.ownerAgent || "UNASSIGNED"}</td>
+                  <td><span>{tree.remote || "NO REMOTE"}</span><small>{tree.prunable == null ? "PRUNE UNKNOWN" : tree.prunable ? "PRUNABLE" : "NOT PRUNABLE"}</small></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableFrame>
+      ) : (
+        <EmptyState title="No worktree records" detail="No worktree registry entries were derived from the configured ADOS source." />
+      )}
+    </Panel>
+  );
+}
+
+function EvidenceBrowser({ snapshot, query, setQuery, status, setStatus }: { snapshot: MissionSnapshot; query: string; setQuery: (value: string) => void; status: string; setStatus: (value: string) => void }) {
+  const states = [...new Set(snapshot.evidence.map((item) => item.trackedState))];
+  const items = snapshot.evidence.filter((item) => (
+    (status === "ALL" || item.trackedState === status)
+    && `${item.evidenceId} ${item.path} ${item.relatedTaskId || ""} ${item.trustFlags.join(" ")}`.toLowerCase().includes(query.toLowerCase())
+  ));
+  return (
+    <Panel code="EVIDENCE / TRUST" title="Evidence metadata browser" meta={`${items.length} of ${snapshot.evidence.length}`}>
+      <div className="readonly-banner"><FileSearch size={16} /><strong>METADATA ONLY</strong><span>Bodies are not ingested (`contentIngested: false`). Hash values are observational — no write-back verify.</span></div>
+      <FilterBar query={query} onQuery={setQuery} status={status} onStatus={setStatus} statuses={states} label="Search evidence id, path, or task" />
+      {items.length ? (
+        <TableFrame label="Scrollable evidence table">
+          <table>
+            <thead>
+              <tr>
+                <th>Evidence</th>
+                <th>Path</th>
+                <th>SHA256 / size</th>
+                <th>Tracked / trust</th>
+                <th>Related</th>
+                <th>Verification</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item: EvidenceItem) => (
+                <tr key={item.evidenceId}>
+                  <td><code className="full-id">{item.evidenceId}</code><small>{item.creator || "CREATOR UNAVAILABLE"} · {formatTimestamp(item.createdAt, true)}</small></td>
+                  <td><span title={item.path}>{compactPath(item.path, 40)}</span></td>
+                  <td><code>{item.sha256 ? item.sha256.slice(0, 16) : "HASH UNAVAILABLE"}</code><span>{item.sizeBytes != null ? `${item.sizeBytes} B` : "SIZE UNAVAILABLE"}</span></td>
+                  <td><StatusBadge value={item.trackedState} />{item.trustFlags.length ? item.trustFlags.map((flag) => <span key={flag}>{flag}</span>) : <span>NO TRUST FLAGS</span>}</td>
+                  <td><span>{item.relatedTaskId || "NO TASK"}</span><small>{item.relatedApprovalId || item.relatedLeaseId || "NO APPROVAL/LEASE"}</small></td>
+                  <td><VerificationBadge value={item.verification} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableFrame>
+      ) : (
+        <EmptyState title="No matching evidence" detail="Adjust the evidence search or tracked-state filter." />
+      )}
+    </Panel>
+  );
+}
+
+function Safety({ snapshot }: { snapshot: MissionSnapshot }) {
+  const severities = ["CRITICAL", "BLOCKED", "ATTENTION", "NOTICE", "NOMINAL"] as const;
+  return (
+    <Panel code="SENTRY / SAFETY" title="Safety monitor" meta={`${snapshot.alerts.length} active · system ${snapshot.systemHealth.severity}`}>
+      <div className="readonly-banner"><Siren size={16} /><strong>OBSERVATION ONLY</strong><span>Mission Control never acknowledges or clears safety alerts.</span></div>
+      <div className="detector-legend" aria-label="Severity legend">
+        {severities.map((level) => <span key={level} className={`tone-${stateTone(level)}`}>{level}</span>)}
+      </div>
+      {snapshot.alerts.length ? (
+        <div className="alert-list">
+          {snapshot.alerts.map((alert) => (
+            <div className={`alert-item tone-${stateTone(alert.severity)}`} key={alert.alertId}>
+              <AlertTriangle size={17} />
+              <div>
+                <strong>{alert.code.replaceAll("_", " ")}</strong>
+                <span>{alert.message}</span>
+              </div>
+              <StatusBadge value={alert.severity} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="No safety signals" detail="The current read model did not derive an active alert." />
+      )}
     </Panel>
   );
 }
@@ -607,7 +902,7 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
   }, [view, searchParams]);
 
   useEffect(() => {
-    if (view !== "tasks" && view !== "approvals" && view !== "timeline") return;
+    if (!["tasks", "approvals", "timeline", "handoffs", "evidence"].includes(view)) return;
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
     if (status && status !== "ALL") params.set("status", status);
@@ -633,6 +928,11 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
     if (view === "approvals") return <Approvals snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
     if (view === "campaigns") return <Campaigns snapshot={snapshot} />;
     if (view === "owner-gates") return <OwnerGates snapshot={snapshot} />;
+    if (view === "workflow") return <Workflow snapshot={snapshot} />;
+    if (view === "handoffs") return <Handoffs snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
+    if (view === "worktrees") return <Worktrees snapshot={snapshot} />;
+    if (view === "evidence") return <EvidenceBrowser snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
+    if (view === "safety") return <Safety snapshot={snapshot} />;
     if (view === "timeline") return <Timeline snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
     if (view === "replay") return <Replay />;
     return <RoutingIncidents snapshot={snapshot} />;

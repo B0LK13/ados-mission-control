@@ -38,15 +38,25 @@ Mission Control V2 provides authenticated, resilient visibility only. It does no
 
 ## Pages
 
-- `/overview`
+Live Command Deck routes (`components/mission-control.tsx` → `dashboardViews`):
+
+- `/overview` — readiness + nine PRD operational questions
 - `/projects`
 - `/agents`
 - `/tasks`
-- `/approvals`
+- `/approvals` — consequence panels; Approve/Reject disabled (Phase 2)
+- `/campaigns`
+- `/owner-gates`
+- `/workflow` — read-only graph from `workflowSummary` (GET `/api/v1/workflow`)
+- `/handoffs` — GET `/api/v1/handoffs`
+- `/worktrees` — GET `/api/v1/worktrees`
+- `/evidence` — metadata browser (bodies not ingested)
+- `/safety` — alert monitor
 - `/timeline`
 - `/routing-incidents`
+- `/replay`
 
-All lists use truthful empty/unavailable states. Tasks, approvals, and the audit timeline have client-side search and normalized-state/category filters.
+All lists use truthful empty/unavailable states. Tasks, approvals, timeline, handoffs, and evidence have client-side search and normalized-state/category filters.
 
 ## Refresh and failure isolation
 

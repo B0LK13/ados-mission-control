@@ -3,12 +3,34 @@ import { expect, test } from "@playwright/test";
 test("overview and project registry render authoritative state", async ({ page }) => {
   await page.goto("/overview");
   await expect(page.getByRole("heading", { name: "Operational overview" })).toBeVisible();
+  await expect(page.getByLabel("Nine operational questions")).toBeVisible();
+  await expect(page.getByText("Production dispatch", { exact: true })).toBeVisible();
   await expect(page.getByText("DATA LINK")).toBeVisible();
   await expect(page.locator(".data-link strong")).toHaveText(/CONNECTING|LIVE|DISCONNECTED|DEGRADED/);
   await expect(page.getByText("FRESHNESS")).toBeVisible();
   await page.getByRole("link", { name: "Projects" }).click();
   await expect(page.getByRole("heading", { name: "Projects", exact: true })).toBeVisible();
   await expect(page.getByText("ADOS control plane", { exact: true })).toBeVisible();
+});
+
+test("phase-1 module views render from live fixture projections", async ({ page }) => {
+  await page.goto("/workflow");
+  await expect(page.getByRole("heading", { name: "Workflow", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Workflow nodes")).toBeVisible();
+
+  await page.goto("/handoffs");
+  await expect(page.getByRole("heading", { name: "Handoffs", exact: true })).toBeVisible();
+
+  await page.goto("/worktrees");
+  await expect(page.getByRole("heading", { name: "Worktrees", exact: true })).toBeVisible();
+
+  await page.goto("/evidence");
+  await expect(page.getByRole("heading", { name: "Evidence", exact: true })).toBeVisible();
+  await expect(page.getByText("METADATA ONLY")).toBeVisible();
+
+  await page.goto("/safety");
+  await expect(page.getByRole("heading", { name: "Safety", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Severity legend")).toBeVisible();
 });
 
 test("approval and task filters update visible rows", async ({ page }) => {
@@ -47,6 +69,20 @@ test("campaigns and owner gates render from live fixture projections", async ({ 
   await expect(page.getByText("gate-e2e-commit-001", { exact: true })).toBeVisible();
   await expect(page.getByText("OWNER_ACTION_REQUIRED: Authorize local commit")).toBeVisible();
   await expect(page.getByText("NO UI ACTION")).toBeVisible();
+});
+
+test("phase-1 surface views render workflow handoffs worktrees evidence safety", async ({ page }) => {
+  await page.goto("/workflow");
+  await expect(page.getByRole("heading", { name: "Workflow", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Workflow nodes")).toBeVisible();
+  await page.goto("/handoffs");
+  await expect(page.getByRole("heading", { name: "Handoffs", exact: true })).toBeVisible();
+  await page.goto("/worktrees");
+  await expect(page.getByRole("heading", { name: "Worktrees", exact: true })).toBeVisible();
+  await page.goto("/evidence");
+  await expect(page.getByRole("heading", { name: "Evidence", exact: true })).toBeVisible();
+  await page.goto("/safety");
+  await expect(page.getByRole("heading", { name: "Safety", exact: true })).toBeVisible();
 });
 
 test("replay UI loads chronological redacted supervisor-run events", async ({ page }) => {

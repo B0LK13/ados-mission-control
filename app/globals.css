@@ -422,6 +422,123 @@ td .status-badge, td .verification-badge { display: inline-flex; margin-right: 4
 .timeline-list.compact { padding-bottom: 8px; }
 .timeline-list.compact .timeline-entry { padding: 11px 0; }
 
+.workflow-flow {
+  list-style: none;
+  margin: 0;
+  padding: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 10px;
+}
+.workflow-node {
+  position: relative;
+  min-width: 140px;
+  flex: 1 1 140px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.workflow-index {
+  color: var(--faint);
+  font: 600 0.58rem/1 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+}
+.workflow-node strong {
+  color: var(--text);
+  font-family: "Bahnschrift Condensed", sans-serif;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+.workflow-arrow { color: var(--cyan); align-self: flex-end; margin-top: auto; }
+.workflow-active-edge {
+  min-height: 120px;
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.workflow-active-edge svg { color: var(--lime); margin-top: 2px; }
+.workflow-active-edge span {
+  display: block;
+  color: var(--faint);
+  font: 600 0.57rem/1 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.workflow-active-edge strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.workflow-protocol {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.workflow-protocol div {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 12px;
+}
+.workflow-protocol dt { color: var(--faint); font: 600 0.58rem/1.4 "Cascadia Mono", monospace; }
+.workflow-protocol dd { margin: 0; color: var(--muted); font-size: 0.78rem; overflow-wrap: anywhere; }
+.approval-stack { display: flex; flex-direction: column; gap: 14px; padding: 16px; }
+.approval-card { background: var(--surface-2); border: 1px solid var(--line); }
+.approval-card header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+.approval-card header strong { display: block; margin-top: 6px; }
+.approval-actions-preview { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; }
+.approval-actions-preview button {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--faint);
+  padding: 6px 10px;
+  font: 600 0.62rem/1 "Cascadia Mono", monospace;
+  cursor: not-allowed;
+}
+.approval-meta { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.approval-meta div { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.consequence-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+.consequence-grid > div { padding: 14px 16px; border-top: 1px solid var(--line); }
+.consequence-grid span {
+  display: block;
+  color: var(--faint);
+  font: 600 0.57rem/1 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.consequence-grid ul { margin: 0; padding-left: 16px; color: var(--muted); font-size: 0.76rem; }
+.consequence-grid p { margin: 0; color: var(--faint); font-size: 0.76rem; }
+.detector-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.detector-legend span {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  font: 600 0.58rem/1 "Cascadia Mono", monospace;
+}
 .incident-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 18px; }
 .incident-card { background: var(--surface-2); border: 1px solid var(--line); }
 .incident-card header { min-height: 54px; padding: 12px 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -433,6 +550,158 @@ td .status-badge, td .verification-badge { display: inline-flex; margin-right: 4
 .incident-resolution p { margin: 7px 0 0; color: var(--muted); font-size: 0.76rem; }
 .incident-card > .verification-badge { margin: 0 14px 14px; }
 
+.nine-questions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.nine-questions article {
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  min-height: 72px;
+}
+.nine-questions span {
+  display: block;
+  color: var(--faint);
+  font: 700 0.56rem/1.3 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.nine-questions strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.approval-stack { display: grid; gap: 14px; }
+.approval-card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.approval-card > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.approval-card > header strong { display: block; margin-top: 6px; }
+.approval-card > header small { display: block; color: var(--faint); margin-top: 4px; }
+.approval-actions-preview { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.approval-actions-preview button {
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--muted);
+  padding: 7px 10px;
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+.approval-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+}
+.approval-meta div { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.approval-meta dt {
+  color: var(--faint);
+  font: 700 0.56rem/1.3 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.approval-meta dd { margin: 0; color: var(--muted); }
+.consequence-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+.consequence-grid > div {
+  padding: 14px 16px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.consequence-grid > div:nth-child(2n) { border-right: 0; }
+.consequence-grid span {
+  display: block;
+  color: var(--faint);
+  font: 700 0.56rem/1.3 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.consequence-grid ul { margin: 0; padding-left: 18px; color: var(--muted); }
+.consequence-grid p { margin: 0; color: var(--faint); }
+.workflow-flow {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+}
+.workflow-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.workflow-index {
+  color: var(--lime);
+  font: 700 0.62rem/1 "Cascadia Mono", monospace;
+}
+.workflow-arrow { color: var(--faint); flex-shrink: 0; }
+.workflow-active-edge {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 8px 2px;
+  color: var(--muted);
+}
+.workflow-active-edge span {
+  display: block;
+  color: var(--faint);
+  font: 700 0.56rem/1.3 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.workflow-protocol { margin: 0; display: grid; gap: 10px; }
+.workflow-protocol div { display: grid; gap: 4px; }
+.workflow-protocol dt {
+  color: var(--faint);
+  font: 700 0.56rem/1.3 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+}
+.workflow-protocol dd { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+.detector-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.detector-legend span {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font: 700 0.56rem/1 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+}
+@media (max-width: 900px) {
+  .nine-questions,
+  .approval-meta,
+  .consequence-grid { grid-template-columns: 1fr; }
+  .approval-card > header { flex-direction: column; }
+}
 .empty-state { min-height: 130px; padding: 24px; display: flex; align-items: center; justify-content: center; gap: 14px; color: var(--faint); text-align: left; }
 .empty-state > div { display: flex; flex-direction: column; }
 .empty-state strong { color: var(--muted); font-family: "Bahnschrift Condensed", sans-serif; font-size: 1rem; text-transform: uppercase; }

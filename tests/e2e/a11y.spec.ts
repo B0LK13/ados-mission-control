@@ -5,6 +5,7 @@ const views = [
   { path: "/overview", heading: "Operational overview" },
   { path: "/tasks", heading: "Tasks & executions" },
   { path: "/campaigns", heading: "Campaigns" },
+  { path: "/workflow", heading: "Workflow" },
   { path: "/replay", heading: "Run replay" },
 ] as const;
 
