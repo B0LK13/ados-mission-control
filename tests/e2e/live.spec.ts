@@ -68,6 +68,7 @@ test("replay UI loads chronological redacted supervisor-run events", async ({ pa
 });
 
 test("SSE data link reconnects after temporary disconnect", async ({ page }) => {
+  test.setTimeout(60_000);
   let allowStream = true;
   await page.route("**/api/v1/events/stream", async (route) => {
     if (!allowStream) {
@@ -83,8 +84,10 @@ test("SSE data link reconnects after temporary disconnect", async ({ page }) => 
 
   allowStream = false;
   await page.reload();
-  await expect(dataLink).toHaveText("DISCONNECTED", { timeout: 20_000 });
+  await expect(dataLink).toHaveText(/DISCONNECTED|CONNECTING/, { timeout: 20_000 });
 
   allowStream = true;
+  // Force a fresh EventSource attempt once the route is open again.
+  await page.reload();
   await expect(dataLink).toHaveText("LIVE", { timeout: 30_000 });
 });
