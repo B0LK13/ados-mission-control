@@ -71,17 +71,19 @@ V3 raises Mission Control from “complete cockpit” to **operator intelligence
 
 ## Phase 8 — Platform hardening & performance
 
+**Status:** COMPLETE (2026-07-19) — `phase8-001`…`005` Done in backlog.
+
 **Goal:** Make the cockpit safer and faster under sustained operator use.
 
 | ID | Deliverable | Effort | Notes |
 |----|-------------|--------|-------|
-| P8-01 | SSE bounded delta protocol ADR | M | Design-only first; implement only if gaps cannot be fabricated |
-| P8-02 | Snapshot/query performance | M | Measure + reduce broker rebuild cost; keep fan-out correctness |
-| P8-03 | Fleet aggregation polish | S | Grouping, filter, last-probe age; still NON_AUTHORITATIVE |
-| P8-04 | Threat model + SECURITY refresh | S | Cover Phases 5–7 surfaces |
-| P8-05 | E2E coverage for V3 surfaces | M | Playwright for intelligence panels, Phase 6 ops, alerts |
+| P8-01 | SSE bounded delta protocol ADR | M | Done — ADR-002 accepted; delta implementation deferred |
+| P8-02 | Snapshot/query performance | M | Done — parallel fleet/approval IO + PERF-NOTES |
+| P8-03 | Fleet aggregation polish | S | Done — filters + last-probe age on `/fleet` |
+| P8-04 | Threat model + SECURITY refresh | S | Done — SECURITY.md + `docs/security/V3-THREAT-MODEL.md` |
+| P8-05 | E2E coverage for V3 surfaces | M | Done — `tests/e2e/v3-surfaces.spec.ts` |
 
-**Exit gate:** No authority regression; typecheck + unit + readonly + e2e green.
+**Exit gate:** No authority regression; typecheck + unit + readonly + e2e green. ✅
 
 ## Sequencing
 

@@ -1178,9 +1178,15 @@ export async function getMissionSnapshot(): Promise<MissionSnapshot> {
   ];
   const approvalFiles: Record<string, unknown>[] = [];
   const approvalDirectory = resolveWithinRoot(config.orchestratorRoot, "handoffs", "owner", "approvals");
-  for (const file of await listJsonFiles(approvalDirectory)) {
-    const parsed = record(await readJson(file));
-    const validation = validateInputRecords("approval-file", [parsed], path.basename(file));
+  // P8-02: parallelize approval-file reads (same validation; lower rebuild wall time).
+  const approvalFilePaths = await listJsonFiles(approvalDirectory);
+  const approvalParsed = await Promise.all(
+    approvalFilePaths.map(async (file) => {
+      const parsed = record(await readJson(file));
+      return validateInputRecords("approval-file", [parsed], path.basename(file));
+    }),
+  );
+  for (const validation of approvalParsed) {
     approvalFiles.push(...validation.records);
     parseWarnings.push(...validation.warnings);
   }

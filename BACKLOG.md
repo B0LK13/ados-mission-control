@@ -11,124 +11,12 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Maturity:** strong (overall score 3.7/5) → target: advanced
 - **Summary:** Phases 1–4 MVP complete (2026-07-19): read-only Command Deck, opt-in Phase 2/3 commands, opt-in Phase 4 fleet/metrics. V3 roadmap AUTHORIZED: operator intelligence, controlled-ops completeness, alerting, and platform hardening (docs/09-PHASE-ROADMAP-V3.md).
 
-## Open Tasks (17)
+## Open Tasks (12)
 
 | Priority | Count |
 |---|---|
-| Medium | 9 |
-| Low | 8 |
-
-### `ados-mission-control-v2-roadmap-phase8-001` — Phase 8: SSE bounded delta protocol ADR (design gate)
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** High | **Phase:** V3-Hardening | **Status:** Open
-- **Category:** roadmap / phase-8
-- **Owner role:** tech-lead
-
-**Current state:** SSE resume is full-snapshot only (wont-fix for Phase-1).
-
-**Target state:** ADR accepted with threat model; implementation ticket unblocked only if non-fabricating protocol is proven.
-
-**Gap:** Reconnect bandwidth remains high; unsafe deltas were correctly deferred.
-
-**Acceptance criteria:**
-- [ ] ADR documents fabrication risks and rejection criteria
-- [ ] Keeps full-snapshot fallback
-- [ ] No implementation without ADR acceptance note
-
-**Validation steps:**
-1. Owner/Claude review of ADR
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-8, v3, sse, adr, authorized
-
-### `ados-mission-control-v2-roadmap-phase8-002` — Phase 8: snapshot/query performance pass
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Medium | **Phase:** V3-Hardening | **Status:** Open
-- **Category:** roadmap / phase-8
-- **Owner role:** fullstack-engineer
-
-**Current state:** Shared snapshot fan-out exists; rebuild cost under large fixtures is unbudgeted.
-
-**Target state:** Documented baseline + at least one measured improvement (cache, selective IO, or projection reuse) with tests still green.
-
-**Gap:** WSL/D: and large control planes remain slow for operators.
-
-**Acceptance criteria:**
-- [ ] Before/after notes in evidence or docs
-- [ ] No freshness/authority regressions
-- [ ] Unit tests pass
-
-**Validation steps:**
-1. Benchmark note + npm run test:unit
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-8, v3, performance, authorized
-
-### `ados-mission-control-v2-roadmap-phase8-004` — Phase 8: threat model + SECURITY.md refresh for V3 surfaces
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** S | **Risk:** Low | **Phase:** V3-Hardening | **Status:** Open
-- **Category:** roadmap / phase-8
-- **Owner role:** security-engineer
-
-**Current state:** SECURITY covers Phases 2–4 primarily.
-
-**Target state:** SECURITY.md and optional threat-model note cover V3 surfaces and rollback flags.
-
-**Gap:** Security docs lag authorized V3 scope.
-
-**Acceptance criteria:**
-- [ ] Phase 6/7 flags documented
-- [ ] Webhook secret handling documented
-- [ ] INFERRED vs AUTHORITATIVE guidance present
-
-**Validation steps:**
-1. Doc review against authorization package
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-8, v3, security, docs, authorized
-
-### `ados-mission-control-v2-roadmap-phase8-005` — Phase 8: Playwright e2e coverage for V3 surfaces
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Low | **Phase:** V3-Hardening | **Status:** Open
-- **Category:** roadmap / phase-8
-- **Owner role:** qa-engineer
-
-**Current state:** E2E covers core views/a11y/keyboard; V3 surfaces not covered.
-
-**Target state:** Playwright specs assert V3 routes render and Phase 6/7 controls respect disabled defaults.
-
-**Gap:** Regressions in new surfaces would slip past CI.
-
-**Acceptance criteria:**
-- [ ] CI Playwright includes V3 smoke
-- [ ] Defaults remain fail-closed in tests
-- [ ] No authority regression assertions weakened
-
-**Validation steps:**
-1. npm run test:e2e (or project subset)
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-8, v3, e2e, authorized
+| Medium | 5 |
+| Low | 7 |
 
 ### `ados-mission-control-v2-api-003` — Add primary-lease and entity detail GET routes
 
@@ -263,35 +151,6 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - playwright.config.ts
 
 **Labels:** e2e, phase2, phase3, phase4, gap-analysis-2026-07-19
-
-### `ados-mission-control-v2-roadmap-phase8-003` — Phase 8: fleet aggregation polish (filters, last-probe age)
-
-- **Priority:** Low | **Severity:** Low | **Effort:** S | **Risk:** Low | **Phase:** V3-Hardening | **Status:** Open
-- **Category:** roadmap / phase-8
-- **Owner role:** frontend-engineer
-
-**Current state:** Fleet probes and cards exist; limited filtering/aggregation.
-
-**Target state:** Filter by reachability/role; show last probe age; still NON_AUTHORITATIVE.
-
-**Gap:** Multi-member fleets are hard to scan.
-
-**Acceptance criteria:**
-- [ ] Authority remains NON_AUTHORITATIVE
-- [ ] No mutation controls added
-- [ ] Empty/disabled states preserved
-
-**Validation steps:**
-1. Manual /fleet with fixture members
-2. Unit test for filter helper if extracted
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-8, v3, fleet, authorized
 
 ### `ados-mission-control-v2-api-002` — Implement cursor/limit pagination and ETag on list endpoints
 
@@ -475,12 +334,12 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 
 Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md).
 
-**Verdict:** Phases 1–7 complete. Next is Phase 8 hardening under `docs/authorizations/v3-roadmap-20260719.md`.
+**Verdict:** V3 Phases 5–8 complete. Residual non-roadmap gaps remain in the open backlog.
 
 ### Recommended next
 
-1. ~~**Phases 1–7**~~ — done 2026-07-19.
-2. **Start V3 Phase 8** — `ados-mission-control-v2-roadmap-phase8-001` (SSE delta ADR).
-3. Parallel polish residuals per gap analysis.
+1. ~~**V3 Phases 5–8**~~ — done 2026-07-19.
+2. **Residual polish** — gap-analysis items (`ui-008/009`, `docs-005`, `security-003`…).
+3. Optional future: amend ADR-002 to implement SSE deltas only if non-fabricating.
 
-**Classification:** `MISSION_CONTROL_V3_PHASE7_ALERTING_COMPLETE`.
+**Classification:** `MISSION_CONTROL_V3_PHASES_5_TO_8_COMPLETE`.

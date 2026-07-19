@@ -80,6 +80,31 @@ detect-secrets-hook --baseline .secrets.baseline $(git ls-files)
 
 The suite additionally covers Basic-auth failure modes, versioned ingestion warnings, SQLite redaction/watermarks, stale recovery, evidence correlation, and authenticated browser access.
 
+## V3 surfaces — threat model (Phases 5–7)
+
+| Surface | Flag (default off unless noted) | Threat | Control |
+|---------|----------------------------------|--------|---------|
+| Conflict / risk / digests (Phase 5) | always-on read-only | Operator treats `INFERRED` as `AUTHORITATIVE` | Explicit freshness labels; scores never upgrade authority |
+| Evidence hash verify | always-on GET | Path traversal / body exfil | Root-bound paths; `contentIngested: false` |
+| Phase 6 validate/integration/pickup | `MISSION_CONTROL_PHASE6_COMMANDS` | Unapproved mutation | APPROVED disposition + action matchers + consumption ledger; argv-only tools |
+| Phase 7 alert rules | `MISSION_CONTROL_ALERTS` | Alert-driven approve/dispatch | GET-only APIs; `mutationActions: []` |
+| Phase 7 webhook | `MISSION_CONTROL_ALERT_WEBHOOK_URL` (+ optional secret) | Secret exfil / non-TLS delivery | HTTPS-only URL; env-only secret; redacted payloads |
+| Fleet / metrics (Phase 4) | `MISSION_CONTROL_FLEET_MODE` | Fake PRIMARY via fleet | Rows always `NON_AUTHORITATIVE` |
+| SSE resume | n/a | Fabricated chronology via deltas | Full-snapshot only — `docs/adr/ADR-002-sse-bounded-delta-protocol.md` |
+
+**INFERRED vs AUTHORITATIVE:** Control-plane lease/disposition fields remain authoritative when sourced from ADOS state. Derived conflict cards, risk bands, approval digests, alert hits, and fleet probes are `INFERRED` / `NON_AUTHORITATIVE` / `OBSERVED` and must not be treated as owner decisions.
+
+**Rollback flags:** unset or `disabled` for `MISSION_CONTROL_PHASE2_COMMANDS`, `MISSION_CONTROL_PHASE3_COMMANDS`, `MISSION_CONTROL_PHASE6_COMMANDS`, `MISSION_CONTROL_ALERTS`, `MISSION_CONTROL_FLEET_MODE`. Unset webhook URL/secret when disabling alerts.
+
+## V3 surfaces (Phases 5–7)
+
+See [`docs/security/V3-THREAT-MODEL.md`](docs/security/V3-THREAT-MODEL.md) for the compact threat matrix. Summary:
+
+- **INFERRED vs AUTHORITATIVE:** Phase 5 conflict/risk/summary outputs are derived and must never render as authoritative lease/approval truth.
+- **Phase 6 flags:** `MISSION_CONTROL_PHASE6_COMMANDS` defaults off; middleware returns `405 READ_ONLY_V2` for validate/integration/review-pickup when disabled. Tools refuse lease/PRIMARY mutations.
+- **Phase 7 alerts:** `MISSION_CONTROL_ALERTS` defaults off. Optional `MISSION_CONTROL_ALERT_WEBHOOK_URL` must be HTTPS; `MISSION_CONTROL_ALERT_WEBHOOK_SECRET` stays env-only and is never committed. Webhook payloads are redacted and include empty `mutationActions`.
+- **SSE deltas:** Deferred by [`docs/adr/ADR-002-sse-bounded-delta-protocol.md`](docs/adr/ADR-002-sse-bounded-delta-protocol.md); production resume remains full-snapshot.
+
 ## Known limitations
 
 - The schema registry covers the ingested ledger/approval families; it is not a complete schema archive for every historical ADOS document.

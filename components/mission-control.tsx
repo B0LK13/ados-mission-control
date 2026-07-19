@@ -55,6 +55,7 @@ import { buildCampaignBudgetPanel } from "@/lib/campaign-budgets";
 import { buildDeadLetterProjection, type DeadLetterItem } from "@/lib/dead-letter";
 import { freshnessFromSnapshot } from "@/lib/data-quality";
 import type { EvidenceDiffProjection } from "@/lib/evidence-diff";
+import { filterFleetMembers, formatProbeAge, type FleetReachabilityFilter } from "@/lib/fleet-filters";
 import type { ReplayEvent, ReplayProjection } from "@/lib/replay";
 import { scoreApprovalRisk, scoreCampaignRisk, scoreTaskRisk } from "@/lib/risk-scoring";
 import { buildTaskDependencyGraph } from "@/lib/task-dependency-graph";
@@ -628,6 +629,7 @@ type FleetApiMember = {
   freshness: string;
   detail: string;
   authority: string;
+  probedAt?: string;
 };
 
 type FleetApiResponse = {
@@ -635,6 +637,7 @@ type FleetApiResponse = {
   configured: boolean;
   members: FleetApiMember[];
   warnings: string[];
+  probedAt?: string | null;
   authority?: string;
   note?: string;
 };
@@ -827,6 +830,8 @@ function Fleet({ snapshot }: { snapshot: MissionSnapshot }) {
   const [projection, setProjection] = useState<FleetApiResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reachability, setReachability] = useState<FleetReachabilityFilter>("ALL");
+  const [roleQuery, setRoleQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -849,6 +854,16 @@ function Fleet({ snapshot }: { snapshot: MissionSnapshot }) {
     };
   }, [fleetMode]);
 
+  const filteredMembers = filterFleetMembers(
+    (projection?.members || []).map((member) => ({
+      ...member,
+      freshness: member.freshness === "OBSERVED" ? "OBSERVED" : "UNAVAILABLE",
+      authority: "NON_AUTHORITATIVE" as const,
+      probedAt: member.probedAt || projection?.probedAt || new Date(0).toISOString(),
+    })),
+    { reachability, roleQuery },
+  );
+
   return (
     <Panel code="FLEET / PHASE-4" title="Fleet observation" meta={fleetMode ? "FLEET MODE ENABLED" : "FLEET MODE DISABLED"}>
       <div className="readonly-banner">
@@ -868,10 +883,37 @@ function Fleet({ snapshot }: { snapshot: MissionSnapshot }) {
           <span>{projection.warnings.join(" · ")}</span>
         </div>
       ) : null}
+      {projection && !loading && projection.members.length > 0 && (
+        <div className="owner-gate-workflow" aria-label="Fleet filters">
+          <strong>Filters (observation only)</strong>
+          <label>
+            <span className="sr-only">Reachability filter</span>
+            <select
+              aria-label="Fleet reachability filter"
+              value={reachability}
+              onChange={(event) => setReachability(event.target.value as FleetReachabilityFilter)}
+            >
+              <option value="ALL">All members</option>
+              <option value="REACHABLE">Reachable</option>
+              <option value="UNREACHABLE">Unreachable</option>
+            </select>
+          </label>
+          <label className="search-field">
+            <span className="sr-only">Role or label filter</span>
+            <input
+              aria-label="Fleet role or label filter"
+              value={roleQuery}
+              onChange={(event) => setRoleQuery(event.target.value)}
+              placeholder="Filter by role or label"
+            />
+          </label>
+          <small>Last fleet probe: {formatProbeAge(projection.probedAt)}</small>
+        </div>
+      )}
       {projection && !loading && (
-        projection.members.length ? (
+        filteredMembers.length ? (
           <div className="incident-grid">
-            {projection.members.map((member) => (
+            {filteredMembers.map((member) => (
               <article className="incident-card" key={member.id}>
                 <header>
                   <div>
@@ -886,6 +928,7 @@ function Fleet({ snapshot }: { snapshot: MissionSnapshot }) {
                   <div><dt>Readiness</dt><dd>{member.readiness}</dd></div>
                   <div><dt>Primary agent (observed)</dt><dd>{member.primaryAgent}</dd></div>
                   <div><dt>Freshness</dt><dd>{member.freshness}</dd></div>
+                  <div><dt>Last probe age</dt><dd>{formatProbeAge(member.probedAt)}</dd></div>
                   <div><dt>Authority</dt><dd>{member.authority}</dd></div>
                 </dl>
                 <div className="incident-resolution">
@@ -897,8 +940,14 @@ function Fleet({ snapshot }: { snapshot: MissionSnapshot }) {
           </div>
         ) : (
           <EmptyState
-            title="No fleet members"
-            detail={projection.enabled ? "Fleet mode is on but no members were returned." : "Fleet mode is disabled."}
+            title={projection.members.length ? "No members match filters" : "No fleet members"}
+            detail={
+              projection.members.length
+                ? "Adjust reachability or role filters."
+                : projection.enabled
+                  ? "Fleet mode is on but no members were returned."
+                  : "Fleet mode is disabled."
+            }
           />
         )
       )}

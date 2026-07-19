@@ -39,6 +39,12 @@ export default defineConfig({
   ],
   projects: [
     { name: "live-desktop", testMatch: /live\.spec\.ts/, use: { ...devices["Desktop Chrome"], baseURL: "http://127.0.0.1:3201" } },
+    {
+      name: "live-v3",
+      testMatch: /v3-surfaces\.spec\.ts/,
+      timeout: 90_000,
+      use: { ...devices["Desktop Chrome"], baseURL: "http://127.0.0.1:3201", video: "off", trace: "on-first-retry" },
+    },
     { name: "live-keyboard", testMatch: /keyboard\.spec\.ts/, use: { ...devices["Desktop Chrome"], baseURL: "http://127.0.0.1:3201" } },
     { name: "live-a11y", testMatch: /a11y\.spec\.ts/, use: { ...devices["Desktop Chrome"], baseURL: "http://127.0.0.1:3201" } },
     { name: "live-mobile", testMatch: /mobile\.spec\.ts/, use: { ...devices["Pixel 7"], baseURL: "http://127.0.0.1:3201" } },

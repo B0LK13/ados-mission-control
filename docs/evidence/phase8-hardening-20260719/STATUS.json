@@ -1,0 +1,32 @@
+{
+  "classification": "MISSION_CONTROL_V3_PHASE8_HARDENING_COMPLETE",
+  "taskIds": [
+    "ados-mission-control-v2-roadmap-phase8-001",
+    "ados-mission-control-v2-roadmap-phase8-002",
+    "ados-mission-control-v2-roadmap-phase8-003",
+    "ados-mission-control-v2-roadmap-phase8-004",
+    "ados-mission-control-v2-roadmap-phase8-005"
+  ],
+  "authorizedAt": "2026-07-19",
+  "authorization": "docs/authorizations/phase8-hardening-20260719.md",
+  "roadmap": "docs/09-PHASE-ROADMAP-V3.md",
+  "delivered": {
+    "adr": "docs/adr/ADR-002-sse-bounded-delta-protocol.md",
+    "performance": "docs/evidence/phase8-hardening-20260719/PERF-NOTES.md",
+    "fleetPolish": ["lib/fleet-filters.ts", "/fleet filters + probe age", "parallel probes in lib/fleet.ts"],
+    "threatModel": ["SECURITY.md", "docs/security/V3-THREAT-MODEL.md"],
+    "e2e": ["tests/e2e/v3-surfaces.spec.ts", "playwright.v3.config.ts", "npm run test:e2e:v3"]
+  },
+  "invariants": [
+    "SSE full-snapshot fallback retained; deltas not implemented",
+    "Fleet remains NON_AUTHORITATIVE",
+    "No authority/freshness regressions from performance work"
+  ],
+  "qualityGates": {
+    "typecheck": "pass",
+    "unitTests": "89/89 pass",
+    "verifyReadonly": "pass",
+    "e2eV3": "4/4 pass (playwright.v3.config.ts)"
+  },
+  "nextRecommendedTask": null
+}

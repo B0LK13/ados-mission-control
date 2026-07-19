@@ -59,4 +59,6 @@ An owner can open Mission Control and, within seconds, know who holds the lease,
 
 **Roadmap MVP closeout:** Phases 1–4 for Mission Control V2 are complete. V3 Phases 5–7 complete.
 
-**V3 roadmap: AUTHORIZED (2026-07-19)** — Phases 5–7 complete; Phase 8 remains (platform hardening). See `docs/09-PHASE-ROADMAP-V3.md` and `docs/authorizations/v3-roadmap-20260719.md`. Next task `ados-mission-control-v2-roadmap-phase8-001`.
+**Phase 8 hardening: COMPLETE (2026-07-19)** — ADR-002 (SSE deltas deferred), fleet filter/probe-age polish, parallel fleet probes, V3 threat model, Playwright V3 surface coverage.
+
+**V3 roadmap: AUTHORIZED (2026-07-19)** — Phases 5–8 complete. See `docs/09-PHASE-ROADMAP-V3.md` and `docs/authorizations/v3-roadmap-20260719.md`.

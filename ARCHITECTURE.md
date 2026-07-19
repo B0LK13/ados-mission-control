@@ -64,7 +64,7 @@ All lists use truthful empty/unavailable states. Tasks, approvals, timeline, han
 
 REST and SSE share an in-process snapshot fan-out for the configured refresh window (`lib/broker/snapshot-cache.ts`) so each connected client does not rebuild the full read model independently. SSE frames include monotonic `id:` values so browsers can send `Last-Event-ID` on reconnect; resume still emits the latest full snapshot (never fabricated deltas).
 
-**SSE delta resume decision (wont-fix for Phase-1 MVP):** true `Last-Event-ID` event-delta replay is intentionally not implemented. The read model is a coherent full snapshot; inventing missed per-event deltas would risk fabricated chronology. Operators should expect a full snapshot on reconnect (comment on resume is observational only). Revisit only if a bounded, test-proven delta protocol is designed that never fabricates gaps.
+**SSE delta resume decision (ADR-002 Accepted — defer implementation):** true `Last-Event-ID` event-delta replay is intentionally not implemented. The read model is a coherent full snapshot; inventing missed per-event deltas would risk fabricated chronology. Operators should expect a full snapshot on reconnect (comment on resume is observational only). See `docs/adr/ADR-002-sse-bounded-delta-protocol.md`.
 
 A malformed or unsupported record produces a warning without crashing unrelated views. A successful live ingest atomically updates the redacted SQLite cache and watermarks. If the root or authoritative lease later disappears, the last snapshot is returned only as `STALE`, `BLOCKED`, `recoveredFromCache: true`; if no cache exists, a truthful empty `UNAVAILABLE` snapshot is returned.
 
@@ -126,7 +126,13 @@ When `MISSION_CONTROL_ALERTS=enabled`:
 
 ## V3 roadmap (authorized 2026-07-19)
 
-See `docs/09-PHASE-ROADMAP-V3.md`. Phases 5–7 complete. Next: Phase 8 hardening. Authorization: `docs/authorizations/v3-roadmap-20260719.md`.
+## Phase 8 hardening (authorized 2026-07-19)
+
+- ADR-002: SSE remains full-snapshot resume; bounded deltas deferred (`docs/adr/ADR-002-sse-bounded-delta-protocol.md`).
+- Fleet probes run in parallel; `/fleet` supports reachability/role filters and last-probe age.
+- Threat model: `docs/security/V3-THREAT-MODEL.md`.
+
+See `docs/09-PHASE-ROADMAP-V3.md`. V3 Phases 5–8 complete. Authorization: `docs/authorizations/v3-roadmap-20260719.md`.
 
 ## Phase 4 fleet + metrics (authorized 2026-07-19)
 

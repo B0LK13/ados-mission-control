@@ -148,6 +148,7 @@ const emptyFleet: FleetProjection = {
   configured: false,
   members: [],
   warnings: [],
+  probedAt: null,
 };
 
 test("alerts flag is fail-closed by default", () => {
@@ -216,9 +217,11 @@ test("rules evaluate readiness heartbeat dead-letter fleet and critical safety",
           freshness: "UNAVAILABLE",
           detail: "down",
           authority: "NON_AUTHORITATIVE",
+          probedAt: "2026-07-19T12:00:00.000Z",
         },
       ],
       warnings: [],
+      probedAt: "2026-07-19T12:00:00.000Z",
     },
   });
 

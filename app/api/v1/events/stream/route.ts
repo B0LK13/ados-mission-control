@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
   let streamController: ReadableStreamDefaultController<Uint8Array> | undefined;
   // Last-Event-ID: acknowledged for reconnect observability, but resume is full-snapshot only.
-  // True event-delta replay is wont-fix for Phase-1 MVP (see ARCHITECTURE.md) — never invent gaps.
+  // Bounded delta protocol deferred — see docs/adr/ADR-002-sse-bounded-delta-protocol.md (never invent gaps).
   const lastEventId = request.headers.get("last-event-id")?.trim() || "";
 
   const close = () => {

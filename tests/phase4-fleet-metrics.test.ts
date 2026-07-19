@@ -48,6 +48,8 @@ test("fleet projection probes configured members without claiming authority", as
       assert.ok(local);
       assert.equal(local?.authority, "NON_AUTHORITATIVE");
       assert.equal(local?.reachable, true);
+      assert.ok(local?.probedAt);
+      assert.ok(projection.probedAt);
       assert.equal(missing?.reachable, false);
       assert.equal(missing?.freshness, "UNAVAILABLE");
     },
