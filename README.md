@@ -106,6 +106,7 @@ Copy `.env.example` to `.env.local` only when the default `D:\` paths need to ch
 - Mission Control never writes `state/**` from Next.js handlers; Phase 2 mutations go only through allowlisted `scripts/ados-tools/*`.
 - Lease transfer, Cursor PRIMARY, push/merge/deploy remain forbidden. Phase 3 approved-only prepare/queue is opt-in via `MISSION_CONTROL_PHASE3_COMMANDS=enabled`.
 - Approve/reject/withdraw and signed owner-gate decide are opt-in behind `MISSION_CONTROL_PHASE2_COMMANDS=enabled` (see `docs/authorizations/phase2-owner-commands-20260719.md`).
+- Fleet observation and Prometheus scrapes are opt-in behind `MISSION_CONTROL_FLEET_MODE=enabled` (see `docs/authorizations/phase4-fleet-metrics-20260719.md`). Fleet rows never inherit PRIMARY authority.
 - Cursor dispatch is modeled from the existing synchronous `Invoke-CursorAgent.ps1` protocol: task contract in `handoffs\cursor\inbox`, live acknowledgement/completion sentinels, result in `handoffs\cursor\completed`.
 - Cursor cannot independently certify its own output; the checker remains a separate agent.
 
@@ -128,9 +129,13 @@ Copy `.env.example` to `.env.local` only when the default `D:\` paths need to ch
 
 ## API
 
-`snapshot`, `health`, `agents`, `approvals`, `tasks`, `handoffs`, `worktrees`, `evidence`, `events`, `events/stream`, `safety/alerts`, `workflow`, `campaigns`, `owner-gates`, `replay`, `evidence-diff`, `dead-letter`, and `support-bundle` are available below `/api/v1`.
+`snapshot`, `health`, `agents`, `approvals`, `tasks`, `handoffs`, `worktrees`, `evidence`, `events`, `events/stream`, `safety/alerts`, `workflow`, `campaigns`, `owner-gates`, `replay`, `evidence-diff`, `dead-letter`, `fleet`, `metrics`, and `support-bundle` are available below `/api/v1`.
 
 When Phase 2 commands are enabled: `POST /api/v1/approvals/:id/{approve|reject|withdraw}` and `POST /api/v1/owner-gates/:id/{challenge|decide}`.
+
+When Phase 3 commands are enabled: `POST /api/v1/operations/dispatch` and `POST /api/v1/operations/campaign-control` (approved-only).
+
+When fleet mode is enabled: `GET /api/v1/fleet` returns non-authoritative member probes. `GET /api/v1/metrics` is always available (auth-exempt Prometheus text).
 
 ### Evidence diff (run compare)
 

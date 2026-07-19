@@ -1,0 +1,23 @@
+{
+  "classification": "MISSION_CONTROL_V2_PHASE4_FLEET_METRICS_COMPLETE",
+  "taskId": "ados-mission-control-v2-roadmap-phase4-001",
+  "authorizedAt": "2026-07-19",
+  "authorization": "docs/authorizations/phase4-fleet-metrics-20260719.md",
+  "adr": "docs/adr/ADR-001-fleet-and-prometheus.md",
+  "delivered": {
+    "fleetModeFlag": "MISSION_CONTROL_FLEET_MODE=enabled",
+    "fleetConfig": "MISSION_CONTROL_FLEET_CONFIG",
+    "api": ["GET /api/v1/fleet", "GET /api/v1/metrics"],
+    "ui": "/fleet",
+    "grafana": "docs/grafana/mission-control-overview.json",
+    "fixture": "tests/fixtures/fleet/fleet-members.json"
+  },
+  "invariants": [
+    "Fleet member rows are NON_AUTHORITATIVE",
+    "Metrics never imply PRIMARY authority",
+    "Fleet and metrics features default disabled / counters-only",
+    "No cross-member mutation, approve, or dispatch from fleet view",
+    "Cursor cannot take PRIMARY lease via Mission Control"
+  ],
+  "tests": ["tests/phase4-fleet-metrics.test.ts"]
+}

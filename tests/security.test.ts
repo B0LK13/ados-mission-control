@@ -85,6 +85,10 @@ test("basic authentication fails closed, protects UI and APIs, and exempts healt
     response = middleware(new NextRequest("http://localhost/api/health"));
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("x-middleware-next"), "1");
+
+    response = middleware(new NextRequest("http://localhost/api/v1/metrics"));
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("x-middleware-next"), "1");
   } finally {
     if (previous.mode === undefined) delete process.env.MISSION_CONTROL_AUTH_MODE;
     else process.env.MISSION_CONTROL_AUTH_MODE = previous.mode;

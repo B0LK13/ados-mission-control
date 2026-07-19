@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { timingSafeEqualString } from "@/lib/security/timing-safe";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
-const AUTH_EXEMPT_PATHS = new Set(["/api/health", "/api/v1/health"]);
+const AUTH_EXEMPT_PATHS = new Set(["/api/health", "/api/v1/health", "/api/v1/metrics"]);
 
 const PHASE2_POST_ROUTES = [
   /^\/api\/v1\/approvals\/[^/]+\/(approve|reject|withdraw)$/,

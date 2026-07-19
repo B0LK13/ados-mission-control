@@ -72,6 +72,7 @@ export const dashboardViews = [
   "routing-incidents",
   "dead-letter",
   "operations",
+  "fleet",
   "replay",
   "evidence-diff",
 ] as const;
@@ -94,6 +95,7 @@ const navigation: Array<{ view: DashboardView; label: string; icon: typeof Gauge
   { view: "routing-incidents", label: "Routing incidents", icon: Waypoints },
   { view: "dead-letter", label: "Dead letter", icon: OctagonAlert },
   { view: "operations", label: "Operations", icon: Play },
+  { view: "fleet", label: "Fleet", icon: Network },
   { view: "replay", label: "Replay", icon: History },
   { view: "evidence-diff", label: "Evidence diff", icon: FileDiff },
 ];
@@ -115,8 +117,9 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   "routing-incidents": { eyebrow: "Containment register / 14", title: "Routing incidents", description: "Cross-project mistakes, repository containment, owner disposition, and recorded resolution." },
   "dead-letter": { eyebrow: "Failure backlog / 15", title: "Dead letter", description: "Repeated failures, blocked tasks, worker-unavailable handoffs, and routing containment still needing owner disposition — derived only, never invented." },
   operations: { eyebrow: "Controlled ops / 16", title: "Controlled operations", description: "Phase 3 approved-only dispatch prepare/queue and campaign pause/resume via ADOS tools. Impossible without APPROVED disposition. Cursor cannot take PRIMARY lease here." },
-  replay: { eyebrow: "Run chronology / 17", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
-  "evidence-diff": { eyebrow: "Run compare / 18", title: "Evidence diff", description: "GET-only comparison of two supervisor runs under one campaign. Missing runs stay UNAVAILABLE — never a fabricated diff." },
+  fleet: { eyebrow: "Fleet observe / 17", title: "Fleet", description: "Opt-in multi-member observation only. Rows are NON_AUTHORITATIVE and never inherit this cockpit's PRIMARY lease. Metrics: GET /api/v1/metrics." },
+  replay: { eyebrow: "Run chronology / 18", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
+  "evidence-diff": { eyebrow: "Run compare / 19", title: "Evidence diff", description: "GET-only comparison of two supervisor runs under one campaign. Missing runs stay UNAVAILABLE — never a fabricated diff." },
 };
 
 function formatTimestamp(value?: string | null, compact = false): string {
@@ -468,6 +471,115 @@ function RoutingIncidents({ snapshot }: { snapshot: MissionSnapshot }) {
   return (
     <Panel code="ROUTING / CONTAINMENT" title="Cross-project incident register" meta={`${snapshot.routingIncidents.length} recorded`}>
       {snapshot.routingIncidents.length ? <div className="incident-grid">{snapshot.routingIncidents.map((incident) => <article className="incident-card" key={incident.incidentId}><header><div><Waypoints size={18} /><span>{incident.incidentId}</span></div><StatusBadge value={incident.containmentStatus} /></header><dl><div><dt>Intended project</dt><dd>{incident.intendedProject}</dd></div><div><dt>Incorrect repository</dt><dd title={incident.incorrectRepository}>{compactPath(incident.incorrectRepository, 58)}</dd></div><div><dt>Branch / commit</dt><dd>{incident.branch || "UNAVAILABLE"} · {incident.commit?.slice(0, 12) || "UNAVAILABLE"}</dd></div><div><dt>Owner disposition</dt><dd>{incident.ownerDispositionRequired ? "REQUIRED" : "NOT CURRENTLY REQUIRED"}</dd></div></dl><div className="incident-resolution"><span>FINAL RESOLUTION / CURRENT RECORD</span><p>{incident.resolution}</p></div><VerificationBadge value={incident.verification} /></article>)}</div> : <EmptyState title="No routing incident record" detail="No cross-project repository mistake was derived from current authoritative state." />}
+    </Panel>
+  );
+}
+
+type FleetApiMember = {
+  id: string;
+  label: string;
+  role: string;
+  reachable: boolean;
+  readiness: string;
+  primaryAgent: string;
+  freshness: string;
+  detail: string;
+  authority: string;
+};
+
+type FleetApiResponse = {
+  enabled: boolean;
+  configured: boolean;
+  members: FleetApiMember[];
+  warnings: string[];
+  authority?: string;
+  note?: string;
+};
+
+function Fleet({ snapshot }: { snapshot: MissionSnapshot }) {
+  const fleetMode = snapshot.capabilities?.fleetMode === true;
+  const [projection, setProjection] = useState<FleetApiResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetch("/api/v1/fleet")
+      .then(async (response) => {
+        const payload = (await response.json()) as FleetApiResponse & { error?: { message?: string } };
+        if (!response.ok) throw new Error(payload.error?.message || "Fleet probe failed");
+        if (!cancelled) setProjection(payload);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Fleet probe failed");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [fleetMode]);
+
+  return (
+    <Panel code="FLEET / PHASE-4" title="Fleet observation" meta={fleetMode ? "FLEET MODE ENABLED" : "FLEET MODE DISABLED"}>
+      <div className="readonly-banner">
+        <Network size={16} />
+        <strong>{fleetMode ? "NON-AUTHORITATIVE PROBES" : "FLEET OFF"}</strong>
+        <span>
+          {fleetMode
+            ? "Member health never grants PRIMARY lease, approve, or dispatch authority to this cockpit. Prometheus counters: GET /api/v1/metrics."
+            : "Set MISSION_CONTROL_FLEET_MODE=enabled and MISSION_CONTROL_FLEET_CONFIG to activate observation."}
+        </span>
+      </div>
+      {loading && <EmptyState title="Probing fleet members" detail="Loading configured member status…" />}
+      {error && <div className="source-notice tone-critical" role="status"><strong>FLEET ERROR</strong><span>{error}</span></div>}
+      {projection?.warnings?.length ? (
+        <div className="source-notice tone-warning" role="status">
+          <strong>FLEET WARNINGS</strong>
+          <span>{projection.warnings.join(" · ")}</span>
+        </div>
+      ) : null}
+      {projection && !loading && (
+        projection.members.length ? (
+          <div className="incident-grid">
+            {projection.members.map((member) => (
+              <article className="incident-card" key={member.id}>
+                <header>
+                  <div>
+                    <Network size={18} />
+                    <span>{member.label}</span>
+                  </div>
+                  <StatusBadge value={member.reachable ? "REACHABLE" : "UNREACHABLE"} />
+                </header>
+                <dl>
+                  <div><dt>Member ID</dt><dd>{member.id}</dd></div>
+                  <div><dt>Role</dt><dd>{member.role}</dd></div>
+                  <div><dt>Readiness</dt><dd>{member.readiness}</dd></div>
+                  <div><dt>Primary agent (observed)</dt><dd>{member.primaryAgent}</dd></div>
+                  <div><dt>Freshness</dt><dd>{member.freshness}</dd></div>
+                  <div><dt>Authority</dt><dd>{member.authority}</dd></div>
+                </dl>
+                <div className="incident-resolution">
+                  <span>PROBE DETAIL</span>
+                  <p>{member.detail}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No fleet members"
+            detail={projection.enabled ? "Fleet mode is on but no members were returned." : "Fleet mode is disabled."}
+          />
+        )
+      )}
+      <div className="incident-resolution">
+        <span>DOCS</span>
+        <p>Grafana stub: docs/grafana/mission-control-overview.json · ADR: docs/adr/ADR-001-fleet-and-prometheus.md</p>
+      </div>
     </Panel>
   );
 }
@@ -1561,6 +1673,7 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
     if (view === "timeline") return <Timeline snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
     if (view === "dead-letter") return <DeadLetter snapshot={snapshot} />;
     if (view === "operations") return <Operations snapshot={snapshot} />;
+    if (view === "fleet") return <Fleet snapshot={snapshot} />;
     if (view === "replay") return <Replay />;
     if (view === "evidence-diff") return <EvidenceDiff />;
     return <RoutingIncidents snapshot={snapshot} />;
@@ -1603,11 +1716,13 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
         <footer className="application-footer">
           <span><ShieldCheck size={14} /> Mission Control V2 provides authenticated, resilient visibility.</span>
           <span>
-            {snapshot.capabilities?.phase3Commands
-              ? "Phase 3 controlled operations enabled (approved-only). Cursor cannot take PRIMARY lease here."
-              : snapshot.capabilities?.phase2Commands
-                ? "Phase 2 owner commands are enabled via allowlisted ADOS tools. Enable Phase 3 separately for dispatch."
-                : "It does not authorize, approve, dispatch, or mutate ADOS operations."}
+            {snapshot.capabilities?.fleetMode
+              ? "Phase 4 fleet observation enabled (non-authoritative). Metrics at /api/v1/metrics never imply PRIMARY authority."
+              : snapshot.capabilities?.phase3Commands
+                ? "Phase 3 controlled operations enabled (approved-only). Cursor cannot take PRIMARY lease here."
+                : snapshot.capabilities?.phase2Commands
+                  ? "Phase 2 owner commands are enabled via allowlisted ADOS tools. Enable Phase 3 separately for dispatch."
+                  : "It does not authorize, approve, dispatch, or mutate ADOS operations."}
           </span>
           <a className="support-bundle-link" href="/api/v1/support-bundle" download>
             Download support bundle

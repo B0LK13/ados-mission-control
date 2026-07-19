@@ -1,6 +1,6 @@
 # Phase Roadmap — ADOS Mission Control
 
-> Release note: application version 2.0 ships read-only resilience, opt-in Phase 2 owner commands, and opt-in Phase 3 approved-only controlled operations (`MISSION_CONTROL_PHASE3_COMMANDS=enabled`). Phase 4 fleet remains deferred.
+> Release note: application version 2.0 ships read-only resilience, opt-in Phase 2 owner commands, opt-in Phase 3 approved-only controlled operations (`MISSION_CONTROL_PHASE3_COMMANDS=enabled`), and opt-in Phase 4 fleet observation + Prometheus/Grafana hooks (`MISSION_CONTROL_FLEET_MODE=enabled`).
 
 ## Phase 1 — Read-only observability (current spec package)
 
@@ -32,17 +32,21 @@
 
 **Exit gate:** Dispatch remains impossible without owner approval; Cursor still cannot hold orchestrator lease.
 
-## Phase 4 — Advanced automation
+## Phase 4 — Advanced automation (fleet + metrics shipped 2026-07-19)
 
+Shipped behind flags:
+- Cross-project fleet observation UI (`/fleet`, `GET /api/v1/fleet`)
+- Prometheus text exposition (`GET /api/v1/metrics`)
+- Grafana dashboard JSON (`docs/grafana/mission-control-overview.json`)
+- Design ADR (`docs/adr/ADR-001-fleet-and-prometheus.md`)
+
+Still deferred / non-goals for this slice:
 - Automated conflict detection upgrades
-- Risk scoring
-- Intelligent approval summaries
-- Workflow replay / recovery assistant
-- Cross-project fleet dashboard
+- Risk scoring / intelligent approval summaries
 - Mobile alerts
-- Grafana / Prometheus integration
+- Bundled Grafana server
 
-**Exit gate:** Fleet mode does not weaken single-project authority invariants.
+**Exit gate:** Fleet mode does not weaken single-project authority invariants (met: NON_AUTHORITATIVE probes only; default off).
 
 ## Non-goals across phases (unless contract changes)
 

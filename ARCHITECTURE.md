@@ -103,3 +103,13 @@ When `MISSION_CONTROL_PHASE3_COMMANDS=enabled`:
 - POST `/api/v1/operations/campaign-control` pause/resume with matching APPROVED approval.
 - Cursor PRIMARY / lease transfer remains impossible through Mission Control.
 - UI surface: `/operations`.
+
+## Phase 4 fleet + metrics (authorized 2026-07-19)
+
+When `MISSION_CONTROL_FLEET_MODE=enabled` and `MISSION_CONTROL_FLEET_CONFIG` points at a member registry:
+
+- GET `/api/v1/fleet` probes configured members (local `controlPlaneRoot` or remote `healthUrl`).
+- GET `/api/v1/metrics` exports Prometheus text counters (auth-exempt, non-authoritative).
+- UI surface: `/fleet`. Rows are always `NON_AUTHORITATIVE`.
+- Grafana dashboard JSON: `docs/grafana/mission-control-overview.json` (not a bundled Grafana server).
+- ADR: `docs/adr/ADR-001-fleet-and-prometheus.md`.

@@ -49,4 +49,8 @@ An owner can open Mission Control and, within seconds, know who holds the lease,
 
 **Phase 2 owner commands MVP: COMPLETE (2026-07-19)** — approve/reject/withdraw + signed owner-gate workflow via allowlisted ADOS tools when `MISSION_CONTROL_PHASE2_COMMANDS=enabled`.
 
-**Phase 3 controlled operations: AUTHORIZED (2026-07-19)** — approved-only dispatch prepare/queue + campaign pause/resume when `MISSION_CONTROL_PHASE3_COMMANDS=enabled`. See `docs/authorizations/phase3-controlled-operations-20260719.md`. Cursor cannot take PRIMARY lease via Mission Control.
+**Phase 3 controlled operations MVP: COMPLETE (2026-07-19)** — approved-only dispatch prepare/queue + campaign pause/resume when `MISSION_CONTROL_PHASE3_COMMANDS=enabled`. See `docs/authorizations/phase3-controlled-operations-20260719.md`. Cursor cannot take PRIMARY lease via Mission Control.
+
+**Phase 4 fleet + metrics MVP: COMPLETE (2026-07-19)** — opt-in fleet observation (`MISSION_CONTROL_FLEET_MODE=enabled`) + Prometheus `/api/v1/metrics` + Grafana JSON stub. See `docs/authorizations/phase4-fleet-metrics-20260719.md` and `docs/adr/ADR-001-fleet-and-prometheus.md`. Fleet never inherits PRIMARY authority.
+
+**Roadmap MVP closeout:** Phases 1–4 for Mission Control V2 are complete. Further work needs a new backlog item + owner authorization.

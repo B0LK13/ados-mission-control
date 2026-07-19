@@ -1,5 +1,6 @@
 import { isPhase2CommandsEnabled, isPhase3CommandsEnabled } from "@/lib/commands/ados-bridge";
 import { getMissionControlConfig } from "@/lib/config";
+import { isFleetModeEnabled } from "@/lib/fleet";
 import { missionResponse } from "@/lib/http";
 import { getMetricsSnapshot, incrementMetric } from "@/lib/metrics";
 
@@ -11,6 +12,7 @@ export async function GET() {
   const config = getMissionControlConfig();
   const phase2Commands = isPhase2CommandsEnabled();
   const phase3Commands = isPhase3CommandsEnabled();
+  const fleetMode = isFleetModeEnabled();
   return missionResponse((snapshot) => ({
     status: snapshot.systemHealth.readiness === "UNAVAILABLE" ? "degraded" : "ok",
     version: config.applicationVersion,
@@ -25,6 +27,7 @@ export async function GET() {
     readOnly: !phase2Commands && !phase3Commands,
     phase2Commands,
     phase3Commands,
+    fleetMode,
     ownerSigningConfigured: Boolean(process.env.MISSION_CONTROL_OWNER_PUBKEY_PATH?.trim()),
     metrics: getMetricsSnapshot(),
   }));

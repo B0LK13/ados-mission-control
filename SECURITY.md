@@ -2,13 +2,13 @@
 
 ## Read-only guarantee
 
-Mission Control V2 is a GET-only observability cockpit by default. Owner-authorized Phase 2 command routes may approve/reject/withdraw and close owner gates only through allowlisted ADOS tools — never via raw `state/**` writes from Next.js, and Phase 3 approved-only operations are opt-in via MISSION_CONTROL_PHASE3_COMMANDS=enabled and still cannot grant Cursor PRIMARY/lease.
+Mission Control V2 is a GET-only observability cockpit by default. Owner-authorized Phase 2 command routes may approve/reject/withdraw and close owner gates only through allowlisted ADOS tools — never via raw `state/**` writes from Next.js. Phase 3 approved-only operations are opt-in via `MISSION_CONTROL_PHASE3_COMMANDS=enabled` and still cannot grant Cursor PRIMARY/lease. Phase 4 fleet observation and Prometheus metrics (`MISSION_CONTROL_FLEET_MODE`, `GET /api/v1/metrics`) are non-authoritative and default off.
 
 The guarantee is enforced in layers:
 
 - `npm run verify:readonly` fails on ADOS write primitives, child-process launchers, or known dispatch adapters in `app`, `components`, and `lib`. Write/spawn exceptions: `lib/read-model/sqlite-store.ts` (app-owned cache) and `lib/commands/ados-bridge.ts` (argv-only allowlisted tool spawn).
 - `middleware.ts` rejects unsafe methods below `/api/*` with `405 READ_ONLY_V2`, except the Phase 2 POST allowlist when `MISSION_CONTROL_PHASE2_COMMANDS=enabled`.
-- Runtime promotion and lease transfer routes do not exist. Phase 3 dispatch is prepare/queue only behind `MISSION_CONTROL_PHASE3_COMMANDS=enabled` and requires an APPROVED disposition.
+- Runtime promotion and lease transfer routes do not exist. Phase 3 dispatch is prepare/queue only behind `MISSION_CONTROL_PHASE3_COMMANDS=enabled` and requires an APPROVED disposition. Fleet probes never approve, dispatch, or transfer lease.
 - The container mounts ADOS `state`, `handoffs`, and `evidence` with `:ro`; a separate named volume is writable only at `/var/lib/mission-control`.
 - The hardened container runs as UID/GID 1001, with all Linux capabilities dropped, `no-new-privileges`, a read-only root filesystem, and only small temporary filesystems for runtime cache.
 
@@ -39,7 +39,7 @@ The same recursive redaction runs before a snapshot is serialized to SQLite. Cac
 
 ## Authentication
 
-Set `MISSION_CONTROL_AUTH_MODE=basic`, `MISSION_CONTROL_AUTH_USER`, and a strong `MISSION_CONTROL_AUTH_SECRET`. When Basic mode is enabled but the secret is absent, protected requests fail closed with `503 AUTH_NOT_CONFIGURED`. Missing or invalid credentials receive `401` and a Basic challenge. `GET /api/health` and `GET /api/v1/health` are exempt so container probes remain possible; neither endpoint exposes secrets or paths.
+Set `MISSION_CONTROL_AUTH_MODE=basic`, `MISSION_CONTROL_AUTH_USER`, and a strong `MISSION_CONTROL_AUTH_SECRET`. When Basic mode is enabled but the secret is absent, protected requests fail closed with `503 AUTH_NOT_CONFIGURED`. Missing or invalid credentials receive `401` and a Basic challenge. `GET /api/health`, `GET /api/v1/health`, and `GET /api/v1/metrics` are exempt so probes/scrapers remain possible; none expose secrets or paths.
 
 Basic credentials are encrypted only by the transport. V2 staging therefore remains loopback-only over HTTP. Any broader exposure requires HTTPS plus a separately approved identity and network authorization design.
 

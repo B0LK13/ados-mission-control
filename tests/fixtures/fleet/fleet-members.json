@@ -1,0 +1,16 @@
+{
+  "members": [
+    {
+      "id": "fixture-local",
+      "label": "Fixture ADOS control plane",
+      "role": "primary-local",
+      "controlPlaneRoot": "tests/fixtures/ados"
+    },
+    {
+      "id": "missing-root",
+      "label": "Missing member",
+      "role": "spare",
+      "controlPlaneRoot": "tests/fixtures/does-not-exist"
+    }
+  ]
+}

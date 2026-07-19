@@ -1,0 +1,55 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Health requests",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "mission_control_health_requests_total",
+          "legendFormat": "health",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "stat",
+      "title": "Source unavailable events",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "mission_control_source_unavailable_events_total",
+          "legendFormat": "unavailable",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Mission Control counters (non-authoritative)",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        { "expr": "mission_control_health_requests_total", "legendFormat": "health", "refId": "A" },
+        { "expr": "mission_control_ingest_warning_events_total", "legendFormat": "warnings", "refId": "B" },
+        { "expr": "mission_control_metrics_scrapes_total", "legendFormat": "scrapes", "refId": "C" }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["ados", "mission-control", "non-authoritative"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "ADOS Mission Control (observed metrics)",
+  "uid": "ados-mc-observed",
+  "version": 1,
+  "description": "Scrapes GET /api/v1/metrics. Counters are process-local and never imply ADOS PRIMARY authority."
+}
