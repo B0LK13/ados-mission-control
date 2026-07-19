@@ -42,3 +42,7 @@ A single operational cockpit that:
 ## Success
 
 An owner can open Mission Control and, within seconds, know who holds the lease, what is pending, and whether the system is NOMINAL—without opening raw JSON files.
+
+## MVP PoC status (2026-07-19)
+
+**Phase 1 MVP proof of concept: COMPLETE** — classification `MISSION_CONTROL_V2_PHASE1_MVP_POC_COMPLETE` (see `docs/evidence/mvp-poc-20260719/STATUS.json`). Mutation, signing, and dispatch remain Phase 2+ and require explicit owner authorization.

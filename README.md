@@ -39,7 +39,7 @@ ADOS_CONTROL_PLANE_ROOT=./tests/fixtures/ados \
 ## Local development
 
 ```powershell
-Set-Location -LiteralPath 'D:\ADOS Mission Control'
+Set-Location -LiteralPath 'D:\ados-mission-control'
 npm install
 npm run dev
 ```
@@ -47,10 +47,28 @@ npm run dev
 Or launch with:
 
 ```powershell
-& 'D:\ADOS Mission Control\scripts\Start-MissionControl.ps1' -Mode auto -Port 3000
+& 'D:\ados-mission-control\scripts\Start-MissionControl.ps1' -Mode auto -Port 3000
 ```
 
 Open `http://localhost:3000`.
+
+### WSL + `/mnt/d` native-FS workaround
+
+Next.js (Turbopack/webpack) and native addons such as `lightningcss` frequently hang or crash when the project lives on the Windows drive mounted at `/mnt/d/...` (9p/DrvFs). Prefer one of:
+
+```bash
+# Option A — work on a Linux-native clone (recommended)
+rsync -a --exclude node_modules --exclude .next /mnt/d/ados-mission-control/ ~/src/ados-mission-control/
+cd ~/src/ados-mission-control
+npm ci
+npm run dev
+
+# Option B — build in /tmp then copy artifacts back if needed
+cp -a /mnt/d/ados-mission-control /tmp/ados-mission-control
+cd /tmp/ados-mission-control && rm -rf node_modules .next && npm ci && npm run build
+```
+
+If `lightningcss` / native binding errors appear after moving trees, delete `node_modules` and reinstall on the Linux filesystem (`npm ci`) so the correct platform binary is fetched. Prefer Windows-native `pwsh` + `D:\ados-mission-control` when you need the control-plane scripts that expect Windows paths.
 
 ## Internal staging
 

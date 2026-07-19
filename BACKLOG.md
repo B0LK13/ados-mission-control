@@ -9,7 +9,7 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Primary language:** TypeScript
 - **Classification status:** confirmed
 - **Maturity:** strong (overall score 3.6/5) → target: advanced
-- **Summary:** Phase-1++ read-only cockpit: CI (Node 22 + Playwright incl. axe a11y), support-bundle, PATH-REGISTRY, SSE fan-out, campaigns/owner-gates/replay. Deep analysis 2026-07-19 found Phase-1 screen gaps (workflow/handoffs/worktrees/evidence dedicated views), thin approval consequences, and owner-gated Phase 2+ items.
+- **Summary:** Phase-1 MVP PoC complete (2026-07-19): read-only Command Deck with full module surface, dead-letter, deps graph, evidence-diff, budget burn, high-risk redaction allowlist, keyboard e2e, WSL DX notes. Remaining open work is Phase 2/3 OWNER-GATED + Phase 4 deferred.
 
 ## Open Tasks (4)
 

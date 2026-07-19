@@ -11,8 +11,8 @@ export async function GET(request: Request) {
   let snapshotTimer: ReturnType<typeof setInterval> | undefined;
   let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
   let streamController: ReadableStreamDefaultController<Uint8Array> | undefined;
-  // FBL-UX-001: EventSource reconnects send Last-Event-ID. This stream is full-snapshot,
-  // so resume always pushes the latest shared snapshot — never invented deltas.
+  // Last-Event-ID: acknowledged for reconnect observability, but resume is full-snapshot only.
+  // True event-delta replay is wont-fix for Phase-1 MVP (see ARCHITECTURE.md) — never invent gaps.
   const lastEventId = request.headers.get("last-event-id")?.trim() || "";
 
   const close = () => {

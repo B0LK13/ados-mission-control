@@ -18,14 +18,20 @@ The ADOS source root is server configuration, never a browser parameter. All der
 
 ## Redaction
 
-Redaction is applied recursively to normalized data and again to JSON responses. It covers:
+Redaction is applied recursively to normalized data and again to JSON responses (`lib/redaction.ts`). It covers:
 
 - bearer/basic authorization values;
 - API keys and common access-token formats;
-- password, token, secret, authorization, cookie, and private-key object keys;
+- force-redacted object keys (password/token/secret/authorization/cookie/private-key and common affixes such as `clientSecret`, `refresh_token`);
 - private-key blocks and password-bearing connection strings;
 - secret-like query parameters;
 - user-profile segments in Windows paths.
+
+**High-risk envelopes** (support-bundle and similar diagnostics) additionally use structured field allowlisting via `redactHighRiskEnvelope`:
+
+- Containers such as `credentials`, `headers`, `secrets`, `env`, `tokens`, and `cookies` are treated as high-risk.
+- Inside those containers, only an explicit allowlist of diagnostic field names may retain values (still pattern-redacted).
+- Unlisted fields become `[REDACTED_UNLISTED_FIELD]` so novel secret shapes cannot pass a regex-only filter.
 
 Structured logs contain only counts, modes, safe event names, and health transitions. Raw approval/evidence contents are not logged. Evidence files are represented by bounded metadata, not served as arbitrary content.
 

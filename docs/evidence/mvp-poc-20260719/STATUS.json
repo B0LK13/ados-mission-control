@@ -1,0 +1,56 @@
+{
+  "classification": "MISSION_CONTROL_V2_PHASE1_MVP_POC_COMPLETE",
+  "recordedAt": "2026-07-19T10:53:30.000Z",
+  "product": "ADOS Mission Control V2 (The Black Agency Command Deck)",
+  "mvpDefinition": {
+    "source": ["PRODUCT_BRIEF.md", "docs/01-PRD-PHASE-1.md", "docs/08-PHASE-ROADMAP.md"],
+    "inScope": [
+      "Read-only brokered cockpit answering nine operational questions",
+      "Module views: agents, workflow, approvals (preview), tasks+deps, handoffs, worktrees, evidence, timeline, safety, campaigns, owner-gates, replay, evidence-diff, dead-letter, routing-incidents",
+      "GET-only APIs + SSE full-snapshot stream with reconnect",
+      "Freshness honesty, redaction (incl. high-risk allowlist), support-bundle, Basic-auth staging",
+      "Keyboard + axe a11y coverage on key views"
+    ],
+    "outOfScope": [
+      "Phase 2 approve/reject/withdraw (OWNER-GATED)",
+      "Phase 2 owner-gate signing UI (OWNER-GATED)",
+      "Phase 3 controlled dispatch from MC (OWNER-GATED)",
+      "Phase 4 fleet/Prometheus (deferred)"
+    ]
+  },
+  "backlogCloseout": {
+    "completedThisLoop": [
+      "ados-mission-control-v2-security-002",
+      "ados-mission-control-v2-testing-003",
+      "ados-mission-control-v2-dx-001",
+      "ados-mission-control-v2-sse-002"
+    ],
+    "remainingOpenOwnerGatedOrDeferred": [
+      "ados-mission-control-v2-roadmap-phase2-001",
+      "ados-mission-control-v2-roadmap-phase2-002",
+      "ados-mission-control-v2-roadmap-phase3-001",
+      "ados-mission-control-v2-roadmap-phase4-001"
+    ]
+  },
+  "qualityGates": {
+    "typecheck": "pass",
+    "unitTests": "56/56 pass",
+    "verifyReadonly": "pass",
+    "keyboardE2e": "2/2 pass (live-keyboard, Linux-native build)"
+  },
+  "successCriteriaMet": [
+    "Owner can open Command Deck and see lease, pending approvals, blockers, and readiness without raw JSON",
+    "No mutation APIs; READ_ONLY_V2 on unsafe methods",
+    "Truthy empty/unavailable states; no fabricated SSE deltas or evidence diffs"
+  ],
+  "autonomousLoop": {
+    "iterations": [
+      { "id": 1, "task": "security-002", "result": "redactHighRiskEnvelope + force-redact keys" },
+      { "id": 2, "task": "testing-003", "result": "keyboard.spec.ts + live-keyboard project; nav aria-label fix" },
+      { "id": 3, "task": "dx-001", "result": "README/DEPLOYMENT WSL native-FS workaround" },
+      { "id": 4, "task": "sse-002", "result": "wont-fix full-snapshot resume documented" },
+      { "id": 5, "task": "mvp-proof", "result": "STATUS.json + backlog closeout" }
+    ],
+    "nextRecommendation": "Stop Phase-1 MVP work. Await explicit owner authorization before Phase 2 mutation/signing."
+  }
+}

@@ -3,7 +3,7 @@ import path from "node:path";
 import type { MissionSnapshot } from "@/lib/contracts";
 import { getMissionControlConfig } from "@/lib/config";
 import { getMetricsSnapshot } from "@/lib/metrics";
-import { redactValue } from "@/lib/redaction";
+import { redactHighRiskEnvelope } from "@/lib/redaction";
 
 export interface SupportBundle {
   schemaVersion: "1.0.0";
@@ -112,5 +112,5 @@ export function buildSupportBundle(snapshot: MissionSnapshot, generatedAt = new 
     warnings,
   };
 
-  return redactValue(bundle) as SupportBundle;
+  return redactHighRiskEnvelope(bundle) as SupportBundle;
 }

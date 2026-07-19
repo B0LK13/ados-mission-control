@@ -18,6 +18,10 @@ No public DNS, Cloudflare, tunnel, OAuth, external ingress, Docker socket, privi
 - Read access to the ADOS `state`, `handoffs`, and `evidence` directories
 - A generated `.mission-control-auth.env` credential file
 
+### WSL note
+
+Building from `/mnt/d/ados-mission-control` can hang Next.js or mis-resolve `lightningcss` native binaries. Clone or rsync to a Linux filesystem (`~/src/...` or `/tmp/...`), run `npm ci` there, or build/run on Windows under `D:\ados-mission-control`. See README § WSL + `/mnt/d` native-FS workaround.
+
 ## Configuration
 
 The server accepts `ADOS_CONTROL_PLANE_ROOT` (preferred) or the legacy `ADOS_ORCHESTRATOR_ROOT`. Browser requests cannot override these values.

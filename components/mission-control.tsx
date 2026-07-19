@@ -1312,10 +1312,10 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
         {snapshot.primaryLease.heartbeatAgeSeconds != null ? ` (${snapshot.primaryLease.heartbeatAgeSeconds}s)` : " (age unavailable)"}
         {" · "}Not the foundation mock at agent-development-os-mission-control
       </div>
-      <aside className="command-rail" aria-label="Mission Control navigation">
+      <aside className="command-rail">
         <Link className="brand-mark" href="/overview" aria-label="Mission Control overview"><Hexagon size={34} /><span>MC</span></Link>
         <div className="brand-copy"><strong>THE BLACK AGENCY</strong><span>ADOS MISSION CONTROL</span></div>
-        <nav>{navigation.map(({ view: itemView, label, icon: Icon }) => <Link href={`/${itemView}`} key={itemView} aria-current={view === itemView ? "page" : undefined} className={view === itemView ? "active" : ""}><Icon size={17} /><span>{label}</span></Link>)}</nav>
+        <nav aria-label="Mission Control navigation">{navigation.map(({ view: itemView, label, icon: Icon }) => <Link href={`/${itemView}`} key={itemView} aria-current={view === itemView ? "page" : undefined} className={view === itemView ? "active" : ""}><Icon size={17} /><span>{label}</span></Link>)}</nav>
         <div className="rail-status"><div><Radio size={14} /><span>DATA SOURCE</span><strong>{snapshot.source.mode}</strong></div><div><ShieldCheck size={14} /><span>AUTHORITY</span><strong>READ ONLY</strong></div></div>
       </aside>
 
