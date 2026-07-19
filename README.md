@@ -109,7 +109,7 @@ Copy `.env.example` to `.env.local` only when the default `D:\` paths need to ch
 
 ## API
 
-`snapshot`, `health`, `agents`, `approvals`, `tasks`, `handoffs`, `worktrees`, `evidence`, `events`, `events/stream`, `safety/alerts`, `workflow`, `campaigns`, `owner-gates`, `replay`, `evidence-diff`, and `support-bundle` are available below `/api/v1`.
+`snapshot`, `health`, `agents`, `approvals`, `tasks`, `handoffs`, `worktrees`, `evidence`, `events`, `events/stream`, `safety/alerts`, `workflow`, `campaigns`, `owner-gates`, `replay`, `evidence-diff`, `dead-letter`, and `support-bundle` are available below `/api/v1`.
 
 ### Evidence diff (run compare)
 

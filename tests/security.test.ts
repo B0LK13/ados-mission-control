@@ -25,6 +25,7 @@ test("all API mutations are rejected before route handling", async () => {
     "http://localhost/api/v1/owner-gates",
     "http://localhost/api/v1/replay?campaignId=c&runId=r",
     "http://localhost/api/v1/evidence-diff?campaignId=c&leftRunId=a&rightRunId=b",
+    "http://localhost/api/v1/dead-letter",
     "http://localhost/api/v1/support-bundle",
   ]) {
     for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {

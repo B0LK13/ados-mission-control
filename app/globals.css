@@ -683,6 +683,38 @@ td .status-badge, td .verification-badge { display: inline-flex; margin-right: 4
   letter-spacing: 0.08em;
 }
 .workflow-protocol dd { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+.dependency-edge-list {
+  list-style: none;
+  margin: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dependency-edge-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.dependency-edge-list svg { color: var(--cyan); }
+.dependency-unresolved {
+  padding: 12px 16px 18px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.dependency-unresolved > span {
+  color: var(--faint);
+  font: 600 0.57rem/1 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  width: 100%;
+}
 .budget-panel-stack { display: flex; flex-direction: column; gap: 14px; padding: 16px; }
 .budget-campaign-card { background: var(--surface-2); border: 1px solid var(--line); }
 .budget-campaign-card > header {
@@ -734,6 +766,33 @@ td .status-badge, td .verification-badge { display: inline-flex; margin-right: 4
   .budget-lane:last-child { border-bottom: 0; }
 }
 
+.dead-letter-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.dead-letter-summary span {
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font: 700 0.56rem/1 "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.dead-letter-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0 14px 14px;
+  font: 600 0.68rem/1.4 "Cascadia Mono", monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.dead-letter-links a { color: var(--cyan); text-decoration: none; }
+.dead-letter-links a:hover { color: var(--lime); text-decoration: underline; }
 .evidence-diff-form { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
 .evidence-diff-list { display: grid; gap: 12px; }
 .evidence-diff-entry {

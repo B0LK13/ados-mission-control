@@ -24,6 +24,7 @@ import {
   ListFilter,
   Moon,
   Network,
+  OctagonAlert,
   Radio,
   Search,
   ShieldAlert,
@@ -47,9 +48,11 @@ import type {
   WorktreeNode,
 } from "@/lib/contracts";
 import { buildCampaignBudgetPanel } from "@/lib/campaign-budgets";
+import { buildDeadLetterProjection, type DeadLetterItem } from "@/lib/dead-letter";
 import { freshnessFromSnapshot } from "@/lib/data-quality";
 import type { EvidenceDiffProjection } from "@/lib/evidence-diff";
 import type { ReplayEvent, ReplayProjection } from "@/lib/replay";
+import { buildTaskDependencyGraph } from "@/lib/task-dependency-graph";
 
 export const dashboardViews = [
   "overview",
@@ -66,6 +69,7 @@ export const dashboardViews = [
   "safety",
   "timeline",
   "routing-incidents",
+  "dead-letter",
   "replay",
   "evidence-diff",
 ] as const;
@@ -86,6 +90,7 @@ const navigation: Array<{ view: DashboardView; label: string; icon: typeof Gauge
   { view: "safety", label: "Safety", icon: Siren },
   { view: "timeline", label: "Evidence & audit", icon: Activity },
   { view: "routing-incidents", label: "Routing incidents", icon: Waypoints },
+  { view: "dead-letter", label: "Dead letter", icon: OctagonAlert },
   { view: "replay", label: "Replay", icon: History },
   { view: "evidence-diff", label: "Evidence diff", icon: FileDiff },
 ];
@@ -105,8 +110,9 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   safety: { eyebrow: "Safety monitor / 12", title: "Safety", description: "Active safety signals and severity. Detectors are read-model derived; Mission Control never clears alerts." },
   timeline: { eyebrow: "Trust timeline / 13", title: "Evidence & audit timeline", description: "A filterable chronology separating authoritative results, direct verification, reported claims, and diagnostics." },
   "routing-incidents": { eyebrow: "Containment register / 14", title: "Routing incidents", description: "Cross-project mistakes, repository containment, owner disposition, and recorded resolution." },
-  replay: { eyebrow: "Run chronology / 15", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
-  "evidence-diff": { eyebrow: "Run compare / 16", title: "Evidence diff", description: "GET-only comparison of two supervisor runs under one campaign. Missing runs stay UNAVAILABLE — never a fabricated diff." },
+  "dead-letter": { eyebrow: "Failure backlog / 15", title: "Dead letter", description: "Repeated failures, blocked tasks, worker-unavailable handoffs, and routing containment still needing owner disposition — derived only, never invented." },
+  replay: { eyebrow: "Run chronology / 16", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
+  "evidence-diff": { eyebrow: "Run compare / 17", title: "Evidence diff", description: "GET-only comparison of two supervisor runs under one campaign. Missing runs stay UNAVAILABLE — never a fabricated diff." },
 };
 
 function formatTimestamp(value?: string | null, compact = false): string {
@@ -293,14 +299,52 @@ function Agents({ snapshot }: { snapshot: MissionSnapshot }) {
   );
 }
 
+function TaskDependencyGraphPanel({ snapshot }: { snapshot: MissionSnapshot }) {
+  const graph = useMemo(() => buildTaskDependencyGraph(snapshot.tasks), [snapshot.tasks]);
+  return (
+    <Panel code="MISSION / DEPS" title="Task dependency graph" meta={`${graph.edges.length} edge${graph.edges.length === 1 ? "" : "s"} · ${graph.unresolvedDependencyIds.length} unresolved`}>
+      <div className="readonly-banner">
+        <GitBranch size={16} />
+        <strong>SNAPSHOT EDGES ONLY</strong>
+        <span>Edges come from task.dependencies. Missing dependency IDs are listed as unresolved — never invented as tasks.</span>
+      </div>
+      {graph.edges.length ? (
+        <>
+          <ul className="dependency-edge-list" aria-label="Task dependency edges">
+            {graph.edges.map((edge) => (
+              <li key={`${edge.fromTaskId}->${edge.toTaskId}`}>
+                <code>{edge.fromTaskId}</code>
+                <ChevronRight size={16} aria-hidden />
+                <code>{edge.toTaskId}</code>
+                <StatusBadge value={edge.resolved ? "RESOLVED" : "UNRESOLVED"} />
+              </li>
+            ))}
+          </ul>
+          {graph.unresolvedDependencyIds.length > 0 && (
+            <div className="dependency-unresolved" aria-label="Unresolved dependency ids">
+              <span>UNRESOLVED DEPENDENCY IDS</span>
+              {graph.unresolvedDependencyIds.map((id) => <code key={id}>{id}</code>)}
+            </div>
+          )}
+        </>
+      ) : (
+        <EmptyState title="No dependency edges" detail="No task.dependencies were present in the current snapshot." />
+      )}
+    </Panel>
+  );
+}
+
 function Tasks({ snapshot, query, setQuery, status, setStatus }: { snapshot: MissionSnapshot; query: string; setQuery: (value: string) => void; status: string; setStatus: (value: string) => void }) {
   const statuses = [...new Set(snapshot.tasks.map((task) => task.status))];
   const items = snapshot.tasks.filter((task) => (status === "ALL" || task.status === status) && `${task.taskId} ${task.project} ${task.owner} ${task.objective}`.toLowerCase().includes(query.toLowerCase()));
   return (
-    <Panel code="MISSION / QUEUE" title="Task contracts & executions" meta={`${items.length} of ${snapshot.tasks.length}`}>
-      <FilterBar query={query} onQuery={setQuery} status={status} onStatus={setStatus} statuses={statuses} label="Search task, project, agent, or objective" />
-      {items.length ? <TableFrame><table><thead><tr><th>Task / project</th><th>Agent / status</th><th>Approval / launches</th><th>Protocol / result</th><th>Evidence</th><th>Next permitted action</th></tr></thead><tbody>{items.map((task) => <tr key={task.taskId}><td><strong>{task.taskId}</strong><span>{task.project}</span><small>{task.objective}</small></td><td><strong>{task.owner}</strong><StatusBadge value={task.status} /><small>{task.role || "ROLE UNVERIFIED"}</small></td><td><code>{task.approvalRef || "NO APPROVAL REF"}</code><span>{task.launchCount} launch{task.launchCount === 1 ? "" : "es"}</span><small>{formatTimestamp(task.startedAt, true)} → {formatTimestamp(task.completedAt, true)}</small></td><td><strong>{task.protocolStatus.replaceAll("_", " ")}</strong><span>{task.exitResult || "NOT REPORTED"}</span><VerificationBadge value={task.verification} /></td><td>{task.evidencePaths.length ? task.evidencePaths.map((item) => <code key={item} title={item}>{compactPath(item, 30)}</code>) : <span>UNAVAILABLE</span>}</td><td>{task.nextPermittedAction}</td></tr>)}</tbody></table></TableFrame> : <EmptyState title="No matching tasks" detail="Adjust the task search or status filter." />}
-    </Panel>
+    <>
+      <Panel code="MISSION / QUEUE" title="Task contracts & executions" meta={`${items.length} of ${snapshot.tasks.length}`}>
+        <FilterBar query={query} onQuery={setQuery} status={status} onStatus={setStatus} statuses={statuses} label="Search task, project, agent, or objective" />
+        {items.length ? <TableFrame><table><thead><tr><th>Task / project</th><th>Agent / status</th><th>Approval / launches</th><th>Protocol / result</th><th>Evidence</th><th>Next permitted action</th></tr></thead><tbody>{items.map((task) => <tr key={task.taskId}><td><strong>{task.taskId}</strong><span>{task.project}</span><small>{task.objective}</small></td><td><strong>{task.owner}</strong><StatusBadge value={task.status} /><small>{task.role || "ROLE UNVERIFIED"}</small></td><td><code>{task.approvalRef || "NO APPROVAL REF"}</code><span>{task.launchCount} launch{task.launchCount === 1 ? "" : "es"}</span><small>{formatTimestamp(task.startedAt, true)} → {formatTimestamp(task.completedAt, true)}</small></td><td><strong>{task.protocolStatus.replaceAll("_", " ")}</strong><span>{task.exitResult || "NOT REPORTED"}</span><VerificationBadge value={task.verification} /></td><td>{task.evidencePaths.length ? task.evidencePaths.map((item) => <code key={item} title={item}>{compactPath(item, 30)}</code>) : <span>UNAVAILABLE</span>}</td><td>{task.nextPermittedAction}</td></tr>)}</tbody></table></TableFrame> : <EmptyState title="No matching tasks" detail="Adjust the task search or status filter." />}
+      </Panel>
+      <TaskDependencyGraphPanel snapshot={snapshot} />
+    </>
   );
 }
 
@@ -376,6 +420,76 @@ function RoutingIncidents({ snapshot }: { snapshot: MissionSnapshot }) {
   return (
     <Panel code="ROUTING / CONTAINMENT" title="Cross-project incident register" meta={`${snapshot.routingIncidents.length} recorded`}>
       {snapshot.routingIncidents.length ? <div className="incident-grid">{snapshot.routingIncidents.map((incident) => <article className="incident-card" key={incident.incidentId}><header><div><Waypoints size={18} /><span>{incident.incidentId}</span></div><StatusBadge value={incident.containmentStatus} /></header><dl><div><dt>Intended project</dt><dd>{incident.intendedProject}</dd></div><div><dt>Incorrect repository</dt><dd title={incident.incorrectRepository}>{compactPath(incident.incorrectRepository, 58)}</dd></div><div><dt>Branch / commit</dt><dd>{incident.branch || "UNAVAILABLE"} · {incident.commit?.slice(0, 12) || "UNAVAILABLE"}</dd></div><div><dt>Owner disposition</dt><dd>{incident.ownerDispositionRequired ? "REQUIRED" : "NOT CURRENTLY REQUIRED"}</dd></div></dl><div className="incident-resolution"><span>FINAL RESOLUTION / CURRENT RECORD</span><p>{incident.resolution}</p></div><VerificationBadge value={incident.verification} /></article>)}</div> : <EmptyState title="No routing incident record" detail="No cross-project repository mistake was derived from current authoritative state." />}
+    </Panel>
+  );
+}
+
+function DeadLetter({ snapshot }: { snapshot: MissionSnapshot }) {
+  const projection = useMemo(() => buildDeadLetterProjection(snapshot), [snapshot]);
+  return (
+    <Panel
+      code="FAILURE / DEAD-LETTER"
+      title="Dead letter & repeated failures"
+      meta={`${projection.items.length} derived · ${projection.summary.repeatedFailures} repeated · freshness ${projection.freshness}`}
+    >
+      <div className="readonly-banner">
+        <OctagonAlert size={16} />
+        <strong>DERIVED ONLY</strong>
+        <span>Built from existing task/handoff/routing projections. Mission Control never invents failures or clears them. Also available at GET /api/v1/dead-letter.</span>
+      </div>
+      <div className="dead-letter-summary" aria-label="Dead letter summary">
+        <span>Repeated {projection.summary.repeatedFailures}</span>
+        <span>Terminal {projection.summary.terminalFailures}</span>
+        <span>Blocked {projection.summary.blocked}</span>
+        <span>Worker unavailable {projection.summary.workerUnavailable}</span>
+        <span>Routing disposition {projection.summary.routingContainment}</span>
+      </div>
+      {projection.items.length ? (
+        <div className="incident-grid" aria-label="Dead letter items">
+          {projection.items.map((item: DeadLetterItem) => (
+            <article className="incident-card" key={item.id}>
+              <header>
+                <div><OctagonAlert size={18} /><span>{item.title}</span></div>
+                <StatusBadge value={item.kind} />
+              </header>
+              <dl>
+                <div><dt>Source</dt><dd>{item.source}</dd></div>
+                <div><dt>Status / launches</dt><dd>{item.status || "UNAVAILABLE"} · {item.launchCount == null ? "LAUNCHES UNAVAILABLE" : `${item.launchCount} launch(es)`}</dd></div>
+                <div><dt>Project / task</dt><dd>{item.project || "PROJECT UNAVAILABLE"} · {item.taskId || "NO TASK ID"}</dd></div>
+                <div><dt>Owner action</dt><dd>{item.ownerActionRequired ? "REQUIRED" : "NOT CURRENTLY REQUIRED"}</dd></div>
+              </dl>
+              <div className="incident-resolution">
+                <span>SUMMARY / NEXT</span>
+                <p>{item.summary}</p>
+                <p>{item.nextPermittedAction}</p>
+              </div>
+              {item.evidencePaths.length > 0 && (
+                <div className="record-list">
+                  {item.evidencePaths.map((pathValue) => (
+                    <div className="record-row" key={pathValue}>
+                      <div className="record-dot tone-critical" />
+                      <div>
+                        <strong>Evidence</strong>
+                        <span title={pathValue}>{compactPath(pathValue, 48)}</span>
+                      </div>
+                      <Link href="/evidence">Open evidence</Link>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {item.taskId && (
+                <div className="dead-letter-links">
+                  <Link href={`/tasks?q=${encodeURIComponent(item.taskId)}`}>View task</Link>
+                  <Link href="/replay">Open replay</Link>
+                </div>
+              )}
+              <VerificationBadge value={item.verification} />
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="No dead-letter records" detail="No repeated failures, blocked tasks, worker-unavailable handoffs, or owner-disposition routing incidents were derived." />
+      )}
     </Panel>
   );
 }
@@ -1182,6 +1296,7 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
     if (view === "evidence") return <EvidenceBrowser snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
     if (view === "safety") return <Safety snapshot={snapshot} />;
     if (view === "timeline") return <Timeline snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
+    if (view === "dead-letter") return <DeadLetter snapshot={snapshot} />;
     if (view === "replay") return <Replay />;
     if (view === "evidence-diff") return <EvidenceDiff />;
     return <RoutingIncidents snapshot={snapshot} />;

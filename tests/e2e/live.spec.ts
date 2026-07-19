@@ -87,6 +87,25 @@ test("phase-1 surface views render workflow handoffs worktrees evidence safety",
   await expect(page.getByRole("heading", { name: "Safety", exact: true })).toBeVisible();
 });
 
+test("dead letter surface lists repeated failures from fixture projections", async ({ page }) => {
+  await page.goto("/dead-letter");
+  await expect(page.getByRole("heading", { name: "Dead letter", exact: true })).toBeVisible();
+  await expect(page.getByText("DERIVED ONLY")).toBeVisible();
+  await expect(page.getByLabel("Dead letter items")).toBeVisible();
+  await expect(page.getByText("TASK-E2E-DEAD-001", { exact: true })).toBeVisible();
+  await expect(page.getByText("REPEATED FAILURE").first()).toBeVisible();
+});
+
+test("tasks view shows dependency graph edges from fixture declarations", async ({ page }) => {
+  await page.goto("/tasks");
+  await expect(page.getByRole("heading", { name: "Tasks & executions", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Task dependency graph", exact: true })).toBeVisible();
+  await expect(page.getByText("SNAPSHOT EDGES ONLY")).toBeVisible();
+  await expect(page.getByLabel("Task dependency edges")).toBeVisible();
+  await expect(page.getByText("TASK-E2E-ROOT", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("TASK-E2E-001", { exact: true }).first()).toBeVisible();
+});
+
 test("evidence diff UI compares two supervisor runs without fabricating missing sides", async ({ page }) => {
   await page.goto("/evidence-diff?campaignId=campaign-replay-001&leftRunId=run-replay-001&rightRunId=run-replay-002");
   await expect(page.getByRole("heading", { name: "Evidence diff", exact: true })).toBeVisible();

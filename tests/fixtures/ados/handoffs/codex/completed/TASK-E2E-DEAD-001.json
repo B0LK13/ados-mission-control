@@ -1,0 +1,13 @@
+{
+  "taskId": "TASK-E2E-DEAD-001",
+  "status": "FAILED",
+  "verdict": "FAIL",
+  "protocolStatus": "FAILED",
+  "exitCode": 1,
+  "exitResult": "Adapter exited non-zero on third launch",
+  "launchCount": 3,
+  "startedAt": "2026-07-17T13:00:00.000Z",
+  "completedAt": "2026-07-17T13:08:00.000Z",
+  "evidencePath": "evidence/e2e/manifest.json",
+  "head": "deadletter001"
+}

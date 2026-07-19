@@ -56,6 +56,7 @@ Live Command Deck routes (`components/mission-control.tsx` → `dashboardViews`)
 - `/routing-incidents`
 - `/replay`
 - `/evidence-diff` — GET `/api/v1/evidence-diff` compare two supervisor runs (never fabricates when a side is UNAVAILABLE)
+- `/dead-letter` — GET `/api/v1/dead-letter` derived repeated failures / blocked / worker-unavailable / owner-disposition routing (never invents)
 
 All lists use truthful empty/unavailable states. Tasks, approvals, timeline, handoffs, and evidence have client-side search and normalized-state/category filters.
 

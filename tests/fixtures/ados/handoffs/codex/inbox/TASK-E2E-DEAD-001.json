@@ -1,0 +1,14 @@
+{
+  "taskId": "TASK-E2E-DEAD-001",
+  "mission": "Repeated failure fixture for dead-letter surface.",
+  "status": "FAILED",
+  "assignedAgent": "codex",
+  "projectId": "ADOS Mission Control",
+  "workspace": "D:\\ADOS Mission Control",
+  "ownerApprovalRef": "approval-e2e-deploy",
+  "launchCount": 3,
+  "dispatchStatus": "FAILED",
+  "startedAt": "2026-07-17T13:00:00.000Z",
+  "allowedPaths": ["D:\\ADOS Mission Control"],
+  "prohibitedPaths": ["D:\\agent-development-os-orchestrator\\state\\**"]
+}
