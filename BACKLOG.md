@@ -11,12 +11,12 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Maturity:** strong (overall score 3.7/5) → target: advanced
 - **Summary:** Phases 1–4 MVP complete (2026-07-19): read-only Command Deck, opt-in Phase 2/3 commands, opt-in Phase 4 fleet/metrics. V3 roadmap AUTHORIZED: operator intelligence, controlled-ops completeness, alerting, and platform hardening (docs/09-PHASE-ROADMAP-V3.md).
 
-## Open Tasks (32)
+## Open Tasks (33)
 
 | Priority | Count |
 |---|---|
 | High | 6 |
-| Medium | 16 |
+| Medium | 17 |
 | Low | 10 |
 
 ### `ados-mission-control-v2-roadmap-phase5-001` — Phase 5: conflict detection upgrades (dual-primary, path, stale-lease)
@@ -550,6 +550,34 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 
 **Labels:** phase-8, v3, e2e, authorized
 
+### `ados-mission-control-v2-api-003` — Add primary-lease and entity detail GET routes
+
+- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Medium | **Phase:** Hardening | **Status:** Open
+- **Category:** api / read-model
+- **Owner role:** fullstack-engineer
+
+**Current state:** Collection GETs only; no /leases/primary; no /{id} detail handlers.
+
+**Target state:** GET leases/primary + detail routes with NOT_FOUND/UNAVAILABLE honesty and redaction.
+
+**Gap:** docs/04-API-DESIGN.md detail/lease endpoints unimplemented.
+
+**Acceptance criteria:**
+- [ ] leases/primary from authoritative lease file
+- [ ] 404/UNAVAILABLE not fabricated for missing entities
+- [ ] Redaction on detail payloads
+
+**Validation steps:**
+1. Unit/API tests for missing ids
+2. Security: mutations still 405 by default
+
+**Source evidence:**
+- docs/04-API-DESIGN.md
+- docs/03-DATA-MODEL.md
+- docs/audits/MC-V2-GAP-ANALYSIS-2026-07-19.md
+
+**Labels:** api, prd, gap-analysis-2026-07-19
+
 ### `ados-mission-control-v2-security-003` — CSRF hardening for browser Phase 2/3/6 mutation POSTs
 
 - **Priority:** Medium | **Severity:** High | **Effort:** M | **Risk:** High | **Phase:** Hardening | **Status:** Open
@@ -924,15 +952,16 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 
 Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md).
 
-**Verdict:** Phases 1–4 complete. **V3 roadmap (Phases 5–8) AUTHORIZED** — see [`docs/09-PHASE-ROADMAP-V3.md`](docs/09-PHASE-ROADMAP-V3.md) and [`docs/authorizations/v3-roadmap-20260719.md`](docs/authorizations/v3-roadmap-20260719.md).
+**Verdict:** Phases 1–4 complete. **V3 roadmap (Phases 5–8) AUTHORIZED**. Residual PRD/API/security gaps loaded 2026-07-19 — see [`docs/audits/MC-V2-GAP-ANALYSIS-2026-07-19.md`](docs/audits/MC-V2-GAP-ANALYSIS-2026-07-19.md), [`docs/09-PHASE-ROADMAP-V3.md`](docs/09-PHASE-ROADMAP-V3.md), and [`docs/authorizations/v3-roadmap-20260719.md`](docs/authorizations/v3-roadmap-20260719.md).
 
 ### Recommended next
 
 1. ~~**Phases 1–4**~~ — done 2026-07-19.
-2. **Start V3 Phase 5** — `ados-mission-control-v2-roadmap-phase5-001` (conflict detection upgrades), then 5-002…5-006 in order.
-3. **Phase 6** only after Phase 5 exit gate (or explicit owner override) — `MISSION_CONTROL_PHASE6_COMMANDS`.
-4. **Phase 7** alerting after conflict signals exist — `MISSION_CONTROL_ALERTS`.
-5. **Phase 8** hardening may overlap late Phase 6/7; SSE deltas need ADR acceptance first.
+2. **Start V3 Phase 5** — `roadmap-phase5-001` (conflict detection), then 5-002…5-006.
+3. **Parallel polish (low risk):** `ui-008/009`, `docs-005`, `ux-004`, `api-003`.
+4. **Phase 6** after Phase 5 exit gate — `MISSION_CONTROL_PHASE6_COMMANDS` (`phase6-001`…).
+5. **Phase 7** alerting after conflict signals — `MISSION_CONTROL_ALERTS`; **Phase 8** may overlap (SSE needs ADR first).
+6. **Security residuals:** `security-003` (CSRF), `security-004` (schemas), `security-005` (SSO design).
 
 ### Completed earlier (keep for history)
 
