@@ -27,6 +27,7 @@ import { logMissionEvent } from "@/lib/logging";
 import { getReadModelStore } from "@/lib/read-model/sqlite-store";
 import { disabledReadModelStatus, type IngestWatermark } from "@/lib/read-model/store";
 import { isPhase2CommandsEnabled, isPhase3CommandsEnabled } from "@/lib/commands/ados-bridge";
+import { buildConflictProjection } from "@/lib/conflicts";
 import { isFleetModeEnabled } from "@/lib/fleet";
 import { redactValue, safeSummary } from "@/lib/redaction";
 import {
@@ -51,6 +52,36 @@ function snapshotCapabilities(): MissionSnapshot["capabilities"] {
     fleetMode,
     ownerSigningConfigured,
     mutationsEnabled: phase2Commands || phase3Commands,
+  };
+}
+
+function emptyConflictSummary(): MissionSnapshot["conflictSummary"] {
+  return {
+    total: 0,
+    critical: 0,
+    warning: 0,
+    dualPrimary: 0,
+    staleLease: 0,
+    pathConflict: 0,
+    worktreeDrift: 0,
+    overviewAnswer: "NONE OBSERVED",
+  };
+}
+
+function attachConflicts(
+  snapshot: Omit<MissionSnapshot, "conflicts" | "conflictSummary" | "freshness"> & { freshness?: MissionSnapshot["freshness"] },
+): Omit<MissionSnapshot, "freshness"> & { freshness?: MissionSnapshot["freshness"] } {
+  const projection = buildConflictProjection({
+    primaryLease: snapshot.primaryLease,
+    agents: snapshot.agents,
+    worktrees: snapshot.worktrees,
+    projects: snapshot.projects,
+    routingIncidents: snapshot.routingIncidents,
+  });
+  return {
+    ...snapshot,
+    conflicts: projection.conflicts,
+    conflictSummary: { ...projection.summary, overviewAnswer: projection.overviewAnswer },
   };
 }
 
@@ -928,7 +959,7 @@ async function loadFixture(): Promise<MissionSnapshot> {
     runtimePromotionPending: false,
   })) as unknown as AgentCard[];
   const timeline = buildAuditTimeline(events, [], collections.tasks, [], []);
-  return withFreshness({
+  return withFreshness(attachConflicts({
     schemaVersion: "2.0.0",
     snapshotAt: checkedAt,
     productName: "ADOS Mission Control",
@@ -986,7 +1017,7 @@ async function loadFixture(): Promise<MissionSnapshot> {
       outboxProtocolCreated: false,
     },
     capabilities: snapshotCapabilities(),
-  });
+  }));
 }
 
 function persistenceErrorStatus(config: ReturnType<typeof getMissionControlConfig>): MissionSnapshot["readModel"] {
@@ -1001,7 +1032,7 @@ function unavailableSnapshot(
   readModel = persistenceErrorStatus(config),
 ): MissionSnapshot {
   const checkedAt = new Date().toISOString();
-  return withFreshness({
+  return withFreshness(attachConflicts({
     schemaVersion: "2.0.0",
     snapshotAt: checkedAt,
     productName: "ADOS Mission Control",
@@ -1049,7 +1080,7 @@ function unavailableSnapshot(
       outboxProtocolCreated: false,
     },
     capabilities: snapshotCapabilities(),
-  });
+  }));
 }
 
 async function cachedOrUnavailable(
@@ -1062,8 +1093,9 @@ async function cachedOrUnavailable(
     const cached = store.loadLatest();
     if (!cached) return unavailableSnapshot(config, warning, store.getStatus());
     const checkedAt = new Date().toISOString();
-    return withFreshness({
-      ...cached.snapshot,
+    const { conflicts: _cachedConflicts, conflictSummary: _cachedConflictSummary, freshness: _cachedFreshness, ...cachedBase } = cached.snapshot;
+    return withFreshness(attachConflicts({
+      ...cachedBase,
       schemaVersion: "2.0.0",
       snapshotAt: checkedAt,
       campaigns: cached.snapshot.campaigns ?? [],
@@ -1097,7 +1129,7 @@ async function cachedOrUnavailable(
         stale: true,
       },
       capabilities: snapshotCapabilities(),
-    });
+    }));
   } catch {
     logMissionEvent("error", "read_model_failure", { operation: "cache_recovery" });
     return unavailableSnapshot(config, warning);
@@ -1231,7 +1263,7 @@ export async function getMissionSnapshot(): Promise<MissionSnapshot> {
   if (warnings.length) logMissionEvent("warn", "parsing_failure", { warningCount: warnings.length });
   logMissionEvent("info", "state_refresh", { sourceReachable: true, warningCount: warnings.length, taskCount: tasks.length, approvalCount: approvals.length });
 
-  const snapshot: MissionSnapshot = withFreshness({
+  const snapshot: MissionSnapshot = withFreshness(attachConflicts({
     schemaVersion: "2.0.0",
     snapshotAt: checkedAt,
     productName: "ADOS Mission Control",
@@ -1292,7 +1324,7 @@ export async function getMissionSnapshot(): Promise<MissionSnapshot> {
       outboxProtocolCreated: false,
     },
     capabilities: snapshotCapabilities(),
-  });
+  }));
 
   if (config.persistenceMode === "sqlite") {
     try {

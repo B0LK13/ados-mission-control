@@ -341,6 +341,37 @@ export interface SafetyAlert {
   message: string;
 }
 
+export type ConflictKind =
+  | "DUAL_PRIMARY"
+  | "CURSOR_PRIMARY"
+  | "STALE_LEASE"
+  | "EXPIRED_LEASE"
+  | "PATH_CONFLICT"
+  | "CROSS_WORKTREE_DRIFT"
+  | "DIRTY_WORKTREE";
+
+export interface ConflictSignal {
+  conflictId: string;
+  kind: ConflictKind;
+  severity: Severity;
+  title: string;
+  detail: string;
+  evidenceRefs: string[];
+  freshness: Extract<FreshnessLabel, "INFERRED" | "UNAVAILABLE">;
+  ownerAttentionRequired: boolean;
+}
+
+export interface ConflictSummary {
+  total: number;
+  critical: number;
+  warning: number;
+  dualPrimary: number;
+  staleLease: number;
+  pathConflict: number;
+  worktreeDrift: number;
+  overviewAnswer: string;
+}
+
 export interface MissionSnapshot {
   schemaVersion: string;
   snapshotAt: string;
@@ -354,6 +385,8 @@ export interface MissionSnapshot {
   recentEvents: EventItem[];
   auditTimeline: AuditEntry[];
   alerts: SafetyAlert[];
+  conflicts: ConflictSignal[];
+  conflictSummary: ConflictSummary;
   tasks: TaskNode[];
   handoffs: HandoffItem[];
   projects: ProjectCard[];

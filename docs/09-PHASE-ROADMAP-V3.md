@@ -16,18 +16,20 @@ V3 raises Mission Control from “complete cockpit” to **operator intelligence
 
 ## Phase 5 — Operator intelligence (read-only)
 
+**Status:** COMPLETE (2026-07-19) — `phase5-001`…`006` Done in backlog.
+
 **Goal:** Help the owner decide faster without granting new mutation power.
 
 | ID | Deliverable | Effort | Notes |
 |----|-------------|--------|-------|
-| P5-01 | Conflict detection upgrades | M | Dual-primary, path-conflict, stale-lease, cross-worktree drift signals on overview + safety |
-| P5-02 | Risk scoring (derived) | M | Deterministic risk bands for approvals/tasks/campaigns; label `INFERRED` when not from control-plane |
-| P5-03 | Intelligent approval summaries | M | Rule-based willDo/willNotDo/path impact digests; no cloud LLM required for MVP |
-| P5-04 | Agent detail drawer | S | Per-agent authority, protocol, last execution, promotion state |
-| P5-05 | Evidence hash verify UI | S | Recompute/compare hashes from metadata only; never ingest secret bodies |
-| P5-06 | Overview nine-question completeness | S | Explicit chips for all PRD home questions including dispatch/conflict/review-waiting |
+| P5-01 | Conflict detection upgrades | M | Done — `lib/conflicts.ts`; overview + `/safety` |
+| P5-02 | Risk scoring (derived) | M | Done — `lib/risk-scoring.ts`; tasks/approvals/campaigns |
+| P5-03 | Intelligent approval summaries | M | Done — `lib/approval-summary.ts`; no cloud LLM |
+| P5-04 | Agent detail drawer | S | Done — read-only Agents detail panel |
+| P5-05 | Evidence hash verify UI | S | Done — `GET /api/v1/evidence/verify` metadata only |
+| P5-06 | Overview nine-question completeness | S | Done — nine chips + conflict overviewAnswer |
 
-**Exit gate:** All P5 surfaces remain GET-only; inferred scores never render as `AUTHORITATIVE`.
+**Exit gate:** All P5 surfaces remain GET-only; inferred scores never render as `AUTHORITATIVE`. ✅
 
 **Flag:** none (read-only enhancements always on once shipped).
 

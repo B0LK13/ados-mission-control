@@ -11,103 +11,13 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Maturity:** strong (overall score 3.7/5) → target: advanced
 - **Summary:** Phases 1–4 MVP complete (2026-07-19): read-only Command Deck, opt-in Phase 2/3 commands, opt-in Phase 4 fleet/metrics. V3 roadmap AUTHORIZED: operator intelligence, controlled-ops completeness, alerting, and platform hardening (docs/09-PHASE-ROADMAP-V3.md).
 
-## Open Tasks (33)
+## Open Tasks (27)
 
 | Priority | Count |
 |---|---|
-| High | 6 |
-| Medium | 17 |
+| High | 3 |
+| Medium | 14 |
 | Low | 10 |
-
-### `ados-mission-control-v2-roadmap-phase5-001` — Phase 5: conflict detection upgrades (dual-primary, path, stale-lease)
-
-- **Priority:** High | **Severity:** High | **Effort:** M | **Risk:** Medium | **Phase:** V3-Intelligence | **Status:** Open
-- **Category:** roadmap / phase-5
-- **Owner role:** fullstack-engineer
-
-**Current state:** Routing incidents and some safety alerts exist; conflict taxonomy is incomplete vs PRD nine questions.
-
-**Target state:** Deterministic conflict cards for dual-primary, path-conflict, stale-lease, and cross-worktree drift with truthful UNAVAILABLE when unknown.
-
-**Gap:** Operators cannot quickly see structural conflicts that block safe autonomy.
-
-**Acceptance criteria:**
-- [ ] Conflict signals derived only from control-plane/fixture state
-- [ ] Never invent a conflict when evidence is missing (UNAVAILABLE)
-- [ ] Overview or safety surfaces the new conflict cards
-- [ ] Unit tests cover positive and absent-signal cases
-
-**Validation steps:**
-1. npm run test:unit covering conflict projection
-2. Manual fixture check on /overview and /safety
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-5, v3, conflicts, authorized
-
-### `ados-mission-control-v2-roadmap-phase5-002` — Phase 5: derived risk scoring for approvals, tasks, and campaigns
-
-- **Priority:** High | **Severity:** Medium | **Effort:** M | **Risk:** Medium | **Phase:** V3-Intelligence | **Status:** Open
-- **Category:** roadmap / phase-5
-- **Owner role:** fullstack-engineer
-
-**Current state:** riskLevel fields exist sparsely; no consistent derived scoring model.
-
-**Target state:** lib/risk-scoring.ts produces LOW/MEDIUM/HIGH/CRITICAL bands with rationale; UI badges distinguish INFERRED vs control-plane risk.
-
-**Gap:** Owner lacks a consistent risk glance across approvals/tasks/campaigns.
-
-**Acceptance criteria:**
-- [ ] Scores are deterministic from known inputs
-- [ ] INFERRED label used when score is derived
-- [ ] Never upgrade freshness to AUTHORITATIVE based on score
-- [ ] Unit tests for scoring matrix edges
-
-**Validation steps:**
-1. Unit tests for risk matrix
-2. UI review on /approvals /tasks /campaigns
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-5, v3, risk, authorized
-
-### `ados-mission-control-v2-roadmap-phase5-003` — Phase 5: rule-based intelligent approval summaries
-
-- **Priority:** High | **Severity:** Medium | **Effort:** M | **Risk:** Low | **Phase:** V3-Intelligence | **Status:** Open
-- **Category:** roadmap / phase-5
-- **Owner role:** frontend-engineer
-
-**Current state:** Consequence panels list raw arrays; long approvals are hard to scan.
-
-**Target state:** Each approval card shows a rule-based summary (impact, blast radius, expiry, consumption) with UNAVAILABLE when inputs missing.
-
-**Gap:** Owner must manually synthesize approval consequences.
-
-**Acceptance criteria:**
-- [ ] No cloud LLM / no secret exfiltration path
-- [ ] Summary never invents willDo/willNotDo items
-- [ ] Works in fixture mode
-- [ ] Unit tests for summarizer
-
-**Validation steps:**
-1. Unit tests for summarizer
-2. Visual check on /approvals with fixture data
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-5, v3, approvals, authorized
 
 ### `ados-mission-control-v2-roadmap-phase6-001` — Phase 6: approved validator run via allowlisted ADOS tool
 
@@ -199,95 +109,6 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
 
 **Labels:** phase-6, v3, testing, authorized
-
-### `ados-mission-control-v2-roadmap-phase5-004` — Phase 5: agent detail drawer on Agents view
-
-- **Priority:** Medium | **Severity:** Low | **Effort:** S | **Risk:** Low | **Phase:** V3-Intelligence | **Status:** Open
-- **Category:** roadmap / phase-5
-- **Owner role:** frontend-engineer
-
-**Current state:** Agents view is card/table level without a focused detail surface.
-
-**Target state:** Selecting an agent opens a read-only drawer with authority invariants (Cursor NON-AUTHORITATIVE) and last protocol state.
-
-**Gap:** Operators cannot inspect a single agent without leaving context.
-
-**Acceptance criteria:**
-- [ ] Drawer is read-only (no promote/lease controls)
-- [ ] Cursor remains NON-AUTHORITATIVE in copy
-- [ ] Keyboard accessible open/close
-- [ ] Unavailable fields render UNAVAILABLE
-
-**Validation steps:**
-1. Manual /agents check
-2. Keyboard e2e or unit interaction smoke
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-5, v3, ui, authorized
-
-### `ados-mission-control-v2-roadmap-phase5-005` — Phase 5: evidence hash verify UI (metadata only)
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** S | **Risk:** Medium | **Phase:** V3-Intelligence | **Status:** Open
-- **Category:** roadmap / phase-5
-- **Owner role:** fullstack-engineer
-
-**Current state:** Evidence browser shows metadata; no verify action for hash consistency.
-
-**Target state:** UI action recomputes hash from allowed local metadata/path under control-plane root and reports MATCH/MISMATCH/UNAVAILABLE.
-
-**Gap:** Operators cannot confirm evidence integrity from Mission Control.
-
-**Acceptance criteria:**
-- [ ] No evidence body content returned to clients
-- [ ] Path traversal rejected
-- [ ] Secrets redacted in errors
-- [ ] Unit tests for MATCH/MISMATCH/UNAVAILABLE
-
-**Validation steps:**
-1. Unit tests for hash verify helper
-2. Manual /evidence verify on fixture manifest
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-5, v3, evidence, authorized
-
-### `ados-mission-control-v2-roadmap-phase5-006` — Phase 5: overview nine-question completeness panel
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** S | **Risk:** Low | **Phase:** V3-Intelligence | **Status:** Open
-- **Category:** roadmap / phase-5
-- **Owner role:** frontend-engineer
-
-**Current state:** Overview answers most questions implicitly; dispatch/conflict/review-waiting are not first-class chips.
-
-**Target state:** Overview shows nine labeled answers with freshness; missing data is UNAVAILABLE not invented.
-
-**Gap:** PRD home-question contract is only partially explicit in UI.
-
-**Acceptance criteria:**
-- [ ] All nine PRD questions visible as labeled answers
-- [ ] Uses existing snapshot fields; no fabricated counters
-- [ ] Fixture mode remains non-authoritative
-
-**Validation steps:**
-1. Compare overview chips to PRODUCT_BRIEF / PRD nine questions
-2. Fixture mode screenshot or e2e assertion
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-5, v3, overview, authorized
 
 ### `ados-mission-control-v2-roadmap-phase6-003` — Phase 6: bounded review pickup for already-approved work
 
@@ -945,26 +766,19 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - SECURITY.md
 
 **Labels:** security, sso, design, gap-analysis-2026-07-19
-
 <!-- END AUTO-GENERATED BACKLOG -->
 
 ## Deep analysis (2026-07-19)
 
 Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md).
 
-**Verdict:** Phases 1–4 complete. **V3 roadmap (Phases 5–8) AUTHORIZED**. Residual PRD/API/security gaps loaded 2026-07-19 — see [`docs/audits/MC-V2-GAP-ANALYSIS-2026-07-19.md`](docs/audits/MC-V2-GAP-ANALYSIS-2026-07-19.md), [`docs/09-PHASE-ROADMAP-V3.md`](docs/09-PHASE-ROADMAP-V3.md), and [`docs/authorizations/v3-roadmap-20260719.md`](docs/authorizations/v3-roadmap-20260719.md).
+**Verdict:** Phases 1–5 complete. V3 Phase 5 operator intelligence shipped. Phase 6+ remain open under `docs/authorizations/v3-roadmap-20260719.md`.
 
 ### Recommended next
 
-1. ~~**Phases 1–4**~~ — done 2026-07-19.
-2. **Start V3 Phase 5** — `roadmap-phase5-001` (conflict detection), then 5-002…5-006.
-3. **Parallel polish (low risk):** `ui-008/009`, `docs-005`, `ux-004`, `api-003`.
-4. **Phase 6** after Phase 5 exit gate — `MISSION_CONTROL_PHASE6_COMMANDS` (`phase6-001`…).
-5. **Phase 7** alerting after conflict signals — `MISSION_CONTROL_ALERTS`; **Phase 8** may overlap (SSE needs ADR first).
-6. **Security residuals:** `security-003` (CSRF), `security-004` (schemas), `security-005` (SSO design).
+1. ~~**Phases 1–5**~~ — done 2026-07-19.
+2. **Start V3 Phase 6** — `ados-mission-control-v2-roadmap-phase6-001` (`MISSION_CONTROL_PHASE6_COMMANDS`).
+3. Then Phase 7 alerts / Phase 8 hardening per sequencing in `docs/09-PHASE-ROADMAP-V3.md`.
 
-### Completed earlier (keep for history)
+**Classification:** `MISSION_CONTROL_V3_PHASE5_OPERATOR_INTELLIGENCE_COMPLETE`. Default remains GET-only; Phase 2/3/4/6/7 features are opt-in.
 
-G0–G7 clearance, lease reacq, CI Node 22, campaigns/owner-gates/replay, Docker CI, package schemas, secrets baseline, timing-safe auth, SSE fan-out, PATH-REGISTRY, support-bundle, axe a11y, dead-letter, deps graph, evidence-diff, budget burn, redaction allowlist, keyboard e2e, Phase 2 owner commands, Phase 3 controlled operations, Phase 4 fleet + metrics.
-
-**Classification:** `LIVE_UNSCOPED_AND_PUBLICATION_AUTHORIZED` (control-plane). Default remains GET-only; Phase 2/3/4/6/7 features are opt-in. V3 authorization: `MISSION_CONTROL_V3_ROADMAP_AUTHORIZED`.

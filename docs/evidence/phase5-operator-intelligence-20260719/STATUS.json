@@ -1,0 +1,34 @@
+{
+  "classification": "MISSION_CONTROL_V3_PHASE5_OPERATOR_INTELLIGENCE_COMPLETE",
+  "taskIds": [
+    "ados-mission-control-v2-roadmap-phase5-001",
+    "ados-mission-control-v2-roadmap-phase5-002",
+    "ados-mission-control-v2-roadmap-phase5-003",
+    "ados-mission-control-v2-roadmap-phase5-004",
+    "ados-mission-control-v2-roadmap-phase5-005",
+    "ados-mission-control-v2-roadmap-phase5-006"
+  ],
+  "authorizedAt": "2026-07-19",
+  "authorization": "docs/authorizations/v3-roadmap-20260719.md",
+  "roadmap": "docs/09-PHASE-ROADMAP-V3.md",
+  "delivered": {
+    "conflicts": ["lib/conflicts.ts", "snapshot.conflicts", "/overview", "/safety"],
+    "riskScoring": ["lib/risk-scoring.ts"],
+    "approvalSummaries": ["lib/approval-summary.ts"],
+    "agentDetailDrawer": "/agents",
+    "evidenceHashVerify": ["GET /api/v1/evidence/verify", "lib/evidence-hash.ts"],
+    "nineQuestions": "conflictSummary.overviewAnswer"
+  },
+  "invariants": [
+    "Conflict/risk/summary freshness is INFERRED or UNAVAILABLE — never AUTHORITATIVE",
+    "Evidence verify never returns file bodies (contentIngested: false)",
+    "Agent detail has no promote/lease controls",
+    "Cursor cannot take PRIMARY lease via Mission Control"
+  ],
+  "qualityGates": {
+    "typecheck": "pass",
+    "unitTests": "74/74 pass",
+    "verifyReadonly": "pass"
+  },
+  "nextRecommendedTask": "ados-mission-control-v2-roadmap-phase6-001"
+}

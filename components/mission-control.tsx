@@ -37,6 +37,7 @@ import {
   Workflow as WorkflowIcon,
 } from "lucide-react";
 import type {
+  AgentCard,
   ApprovalCard,
   AuditEntry,
   CampaignCard,
@@ -48,11 +49,13 @@ import type {
   VerificationLabel,
   WorktreeNode,
 } from "@/lib/contracts";
+import { summarizeApproval } from "@/lib/approval-summary";
 import { buildCampaignBudgetPanel } from "@/lib/campaign-budgets";
 import { buildDeadLetterProjection, type DeadLetterItem } from "@/lib/dead-letter";
 import { freshnessFromSnapshot } from "@/lib/data-quality";
 import type { EvidenceDiffProjection } from "@/lib/evidence-diff";
 import type { ReplayEvent, ReplayProjection } from "@/lib/replay";
+import { scoreApprovalRisk, scoreCampaignRisk, scoreTaskRisk } from "@/lib/risk-scoring";
 import { buildTaskDependencyGraph } from "@/lib/task-dependency-graph";
 
 export const dashboardViews = [
@@ -214,16 +217,25 @@ function Overview({ snapshot }: { snapshot: MissionSnapshot }) {
   const activeProject = snapshot.projects.find((project) => project.currentTask === activeTask?.taskId) || snapshot.projects.find((project) => project.classification === "ADOS_COMPONENT_REPOSITORY");
   const recentExecutions = snapshot.tasks.filter((task) => ["COMPLETED", "FAILED", "BLOCKED"].includes(task.status)).slice(0, 6);
   const blockedTasks = snapshot.tasks.filter((task) => task.status === "BLOCKED");
-  const dirtyTrees = snapshot.worktrees.filter((tree) => tree.dirty || (tree.untracked?.length ?? 0) > 0);
   const waitingReviews = snapshot.tasks.filter((task) => /REVIEW|AWAITING|CONDITIONAL/i.test(task.status) || /REVIEW|AWAITING/i.test(task.protocolStatus));
   const activeAgents = snapshot.agents.filter((agent) => !/OFFLINE|UNKNOWN|UNAVAILABLE/i.test(agent.availabilityState));
+  const conflictSummary = snapshot.conflictSummary || {
+    total: 0,
+    critical: 0,
+    warning: 0,
+    dualPrimary: 0,
+    staleLease: 0,
+    pathConflict: 0,
+    worktreeDrift: 0,
+    overviewAnswer: "NONE OBSERVED",
+  };
   const nineQuestions = [
     { q: "Active agents", a: activeAgents.length ? activeAgents.map((agent) => agent.displayName).join(", ") : "NONE OBSERVED" },
     { q: "Lease holder", a: `${snapshot.primaryLease.orchestrator} · ${snapshot.primaryLease.state}` },
     { q: "Current work", a: activeTask ? `${activeTask.taskId} · ${activeTask.owner}` : "NO ACTIVE TASK VERIFIED" },
     { q: "Blocked tasks", a: blockedTasks.length ? blockedTasks.map((task) => task.taskId).slice(0, 4).join(", ") : "NONE" },
     { q: "Owner attention", a: health.pendingApprovalCount ? `${health.pendingApprovalCount} pending approval(s)` : "NONE" },
-    { q: "Path / worktree conflicts", a: dirtyTrees.length || snapshot.routingIncidents.length ? `${dirtyTrees.length} dirty tree(s) · ${snapshot.routingIncidents.length} routing incident(s)` : "NONE OBSERVED" },
+    { q: "Path / worktree conflicts", a: conflictSummary.overviewAnswer },
     { q: "Reviews waiting", a: waitingReviews.length ? `${waitingReviews.length} task(s)` : "NONE" },
     { q: "Production dispatch", a: health.dispatchEnabled ? "ENABLED — VERIFY OWNER APPROVAL" : "DISABLED" },
     { q: "System health", a: `${health.severity} · ${health.readiness.replaceAll("_", " ")}` },
@@ -276,6 +288,30 @@ function Overview({ snapshot }: { snapshot: MissionSnapshot }) {
         </Panel>
       </div>
 
+      <Panel code="CONFLICT / INFERRED" title="Conflict detection" meta={`${conflictSummary.total} derived · never AUTHORITATIVE`}>
+        <div className="readonly-banner"><AlertTriangle size={16} /><strong>INFERRED SIGNALS</strong><span>Conflict cards are derived observations. Missing evidence stays UNAVAILABLE — never invented.</span></div>
+        {(snapshot.conflicts || []).length ? (
+          <div className="incident-grid">
+            {(snapshot.conflicts || []).slice(0, 6).map((conflict) => (
+              <article className="incident-card" key={conflict.conflictId}>
+                <header>
+                  <div><AlertTriangle size={18} /><span>{conflict.kind.replaceAll("_", " ")}</span></div>
+                  <StatusBadge value={conflict.severity} />
+                </header>
+                <dl>
+                  <div><dt>Title</dt><dd>{conflict.title}</dd></div>
+                  <div><dt>Freshness</dt><dd>{conflict.freshness}</dd></div>
+                  <div><dt>Owner attention</dt><dd>{conflict.ownerAttentionRequired ? "REQUIRED" : "OPTIONAL"}</dd></div>
+                </dl>
+                <div className="incident-resolution"><span>DETAIL</span><p>{conflict.detail}</p></div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="No conflicts observed" detail="Dual-primary, stale-lease, path, and worktree-drift detectors found no signals." />
+        )}
+      </Panel>
+
       <Panel code="TRUST / LATEST" title="Authoritative audit pulse" meta={`${snapshot.auditTimeline.length} entries indexed`}>
         <div className="timeline-list compact">{snapshot.auditTimeline.slice(0, 7).map((entry) => <div className="timeline-entry" key={entry.id}><time>{formatTimestamp(entry.timestamp, true)}</time><span className={`timeline-node tone-${stateTone(entry.severity)}`} /><div><div className="timeline-kicker"><b>{entry.category}</b><VerificationBadge value={entry.verification} /></div><strong>{entry.title.replaceAll("_", " ")}</strong><p>{entry.summary}</p></div></div>)}</div>
       </Panel>
@@ -292,17 +328,44 @@ function Projects({ snapshot }: { snapshot: MissionSnapshot }) {
 }
 
 function Agents({ snapshot }: { snapshot: MissionSnapshot }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected: AgentCard | null = snapshot.agents.find((agent) => agent.agentId === selectedId) || null;
   return (
+    <>
     <div className="card-grid">
-      {snapshot.agents.map((agent) => <article className={`agent-card tone-${stateTone(agent.availabilityState)}`} key={agent.agentId}>
+      {snapshot.agents.map((agent) => <article className={`agent-card tone-${stateTone(agent.availabilityState)}`} key={agent.agentId} role="button" tabIndex={0} onClick={() => setSelectedId(agent.agentId)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedId(agent.agentId); } }}>
         <header><div className="agent-glyph"><Bot size={22} /></div><div><span>{agent.role}</span><h2>{agent.displayName}</h2></div><StatusBadge value={agent.availabilityState} /></header>
         <div className="agent-authority"><Fingerprint size={15} /><span>{agent.authority}</span><VerificationBadge value={agent.verificationState} /></div>
         <dl><div><dt>Runtime status</dt><dd>{agent.status.replaceAll("_", " ")}</dd></div><div><dt>Current task</dt><dd>{agent.currentTask || "NO CURRENT TASK"}</dd></div><div><dt>Last execution</dt><dd>{formatTimestamp(agent.lastExecution, true)}</dd></div><div><dt>Result</dt><dd>{agent.executionResult || "NOT REPORTED"}</dd></div><div><dt>Evidence</dt><dd title={agent.evidenceReference || undefined}>{compactPath(agent.evidenceReference, 34)}</dd></div><div><dt>Promotion</dt><dd>{agent.runtimePromotionPending ? "PENDING — NO UI ACTION" : "NOT PENDING"}</dd></div></dl>
         {agent.blockers.length > 0 && <div className="agent-blocker"><ShieldAlert size={15} />{agent.blockers[0]}</div>}
-        <footer><span>{agent.cannotAcquireOrchestratorLease ? "LEASE ACQUISITION PROHIBITED" : "PRIMARY LEASE HOLDER"}</span></footer>
+        <footer><span>{agent.cannotAcquireOrchestratorLease ? "LEASE ACQUISITION PROHIBITED" : "PRIMARY LEASE HOLDER"}</span><small>Open detail</small></footer>
       </article>)}
       {!snapshot.agents.length && <EmptyState title="Runtime registry unavailable" detail="No agent sessions were derived from the configured source." />}
     </div>
+    {selected && (
+      <Panel code="AGENT / DETAIL" title={`${selected.displayName} detail`} meta="READ-ONLY DRAWER">
+        <div className="readonly-banner">
+          <Bot size={16} />
+          <strong>NO PROMOTE / LEASE CONTROLS</strong>
+          <span>{selected.agentId === "cursor" ? "Cursor remains NON-AUTHORITATIVE and cannot acquire PRIMARY lease." : "Detail view is observation only."}</span>
+          <button type="button" onClick={() => setSelectedId(null)} aria-label="Close agent detail">Close</button>
+        </div>
+        <dl className="approval-meta">
+          <div><dt>Agent ID</dt><dd>{selected.agentId}</dd></div>
+          <div><dt>Role / authority</dt><dd>{selected.role} · {selected.authority}</dd></div>
+          <div><dt>Protocol / status</dt><dd>{selected.status} · {selected.availabilityState}</dd></div>
+          <div><dt>Session</dt><dd>{selected.sessionIdentity || "UNAVAILABLE"}</dd></div>
+          <div><dt>Registration</dt><dd>{selected.registration || "UNAVAILABLE"}</dd></div>
+          <div><dt>Worktree / branch</dt><dd>{selected.worktree || "UNAVAILABLE"} · {selected.branch || "UNAVAILABLE"}</dd></div>
+          <div><dt>Last execution</dt><dd>{formatTimestamp(selected.lastExecution)} · {selected.executionResult || "NOT REPORTED"}</dd></div>
+          <div><dt>Promotion</dt><dd>{selected.runtimePromotionPending ? "PENDING — NO UI ACTION" : "NOT PENDING"}</dd></div>
+          <div><dt>Heartbeat label</dt><dd>{selected.heartbeatLabel || "UNAVAILABLE"}</dd></div>
+          <div><dt>Permitted</dt><dd>{selected.permittedActions.join(", ") || "NONE LISTED"}</dd></div>
+          <div><dt>Prohibited</dt><dd>{selected.prohibitedActions.join(", ") || "NONE LISTED"}</dd></div>
+        </dl>
+      </Panel>
+    )}
+    </>
   );
 }
 
@@ -348,7 +411,72 @@ function Tasks({ snapshot, query, setQuery, status, setStatus }: { snapshot: Mis
     <>
       <Panel code="MISSION / QUEUE" title="Task contracts & executions" meta={`${items.length} of ${snapshot.tasks.length}`}>
         <FilterBar query={query} onQuery={setQuery} status={status} onStatus={setStatus} statuses={statuses} label="Search task, project, agent, or objective" />
-        {items.length ? <TableFrame><table><thead><tr><th>Task / project</th><th>Agent / status</th><th>Approval / launches</th><th>Protocol / result</th><th>Evidence</th><th>Next permitted action</th></tr></thead><tbody>{items.map((task) => <tr key={task.taskId}><td><strong>{task.taskId}</strong><span>{task.project}</span><small>{task.objective}</small></td><td><strong>{task.owner}</strong><StatusBadge value={task.status} /><small>{task.role || "ROLE UNVERIFIED"}</small></td><td><code>{task.approvalRef || "NO APPROVAL REF"}</code><span>{task.launchCount} launch{task.launchCount === 1 ? "" : "es"}</span><small>{formatTimestamp(task.startedAt, true)} → {formatTimestamp(task.completedAt, true)}</small></td><td><strong>{task.protocolStatus.replaceAll("_", " ")}</strong><span>{task.exitResult || "NOT REPORTED"}</span><VerificationBadge value={task.verification} /></td><td>{task.evidencePaths.length ? task.evidencePaths.map((item) => <code key={item} title={item}>{compactPath(item, 30)}</code>) : <span>UNAVAILABLE</span>}</td><td>{task.nextPermittedAction}</td></tr>)}</tbody></table></TableFrame> : <EmptyState title="No matching tasks" detail="Adjust the task search or status filter." />}
+        {items.length ? (
+          <TableFrame>
+            <table>
+              <thead>
+                <tr>
+                  <th>Task / project</th>
+                  <th>Agent / status / risk</th>
+                  <th>Approval / launches</th>
+                  <th>Protocol / result</th>
+                  <th>Evidence</th>
+                  <th>Next permitted action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((task) => {
+                  const risk = scoreTaskRisk(task);
+                  return (
+                    <tr key={task.taskId}>
+                      <td>
+                        <strong>{task.taskId}</strong>
+                        <span>{task.project}</span>
+                        <small>{task.objective}</small>
+                      </td>
+                      <td>
+                        <strong>{task.owner}</strong>
+                        <StatusBadge value={task.status} />
+                        <small>{task.role || "ROLE UNVERIFIED"}</small>
+                        <small>
+                          Risk {risk.band} ({risk.freshness})
+                        </small>
+                      </td>
+                      <td>
+                        <code>{task.approvalRef || "NO APPROVAL REF"}</code>
+                        <span>
+                          {task.launchCount} launch{task.launchCount === 1 ? "" : "s"}
+                        </span>
+                        <small>
+                          {formatTimestamp(task.startedAt, true)} → {formatTimestamp(task.completedAt, true)}
+                        </small>
+                      </td>
+                      <td>
+                        <strong>{task.protocolStatus.replaceAll("_", " ")}</strong>
+                        <span>{task.exitResult || "NOT REPORTED"}</span>
+                        <VerificationBadge value={task.verification} />
+                      </td>
+                      <td>
+                        {task.evidencePaths.length ? (
+                          task.evidencePaths.map((item) => (
+                            <code key={item} title={item}>
+                              {compactPath(item, 30)}
+                            </code>
+                          ))
+                        ) : (
+                          <span>UNAVAILABLE</span>
+                        )}
+                      </td>
+                      <td>{task.nextPermittedAction}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </TableFrame>
+        ) : (
+          <EmptyState title="No matching tasks" detail="Adjust the task search or status filter." />
+        )}
       </Panel>
       <TaskDependencyGraphPanel snapshot={snapshot} />
     </>
@@ -424,10 +552,21 @@ function Approvals({ snapshot, query, setQuery, status, setStatus }: { snapshot:
               </header>
               <dl className="approval-meta">
                 <div><dt>Filed vs ledger</dt><dd>Filed · {approval.fileStatus} · Ledger · {approval.authoritativeDisposition}</dd></div>
-                <div><dt>Risk / consumption</dt><dd>{approval.riskLevel || "RISK UNRATED"} · {approval.consumed ? "CONSUMED" : "UNCONSUMED"} ({approval.consumptionCount}/{approval.executionLimit ?? "∞"})</dd></div>
+                <div><dt>Risk / consumption</dt><dd>{(() => { const risk = scoreApprovalRisk(approval); return `${risk.band} (${risk.freshness}${risk.fromControlPlane ? " · control-plane" : " · derived"})`; })()} · {approval.consumed ? "CONSUMED" : "UNCONSUMED"} ({approval.consumptionCount}/{approval.executionLimit ?? "∞"})</dd></div>
                 <div><dt>Issue / expiry</dt><dd>{formatTimestamp(approval.issuedAt)} → {formatTimestamp(approval.expiresAt)}</dd></div>
                 <div><dt>Scope</dt><dd>{approval.scopeSummary || "SCOPE UNAVAILABLE"}{approval.ownerActionRequired ? " · OWNER ACTION REQUIRED" : ""}</dd></div>
               </dl>
+              {(() => {
+                const digest = summarizeApproval(approval);
+                return (
+                  <div className="incident-resolution" aria-label={`Approval summary ${approval.approvalId}`}>
+                    <span>INTELLIGENT SUMMARY · {digest.freshness}</span>
+                    <p><strong>{digest.headline}</strong></p>
+                    <p>Blast radius: {digest.blastRadius}</p>
+                    <ul>{digest.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
+                  </div>
+                );
+              })()}
               <div className="consequence-grid">
                 <div>
                   <span>Will do</span>
@@ -900,9 +1039,35 @@ function EvidenceBrowser({ snapshot, query, setQuery, status, setStatus }: { sna
     (status === "ALL" || item.trackedState === status)
     && `${item.evidenceId} ${item.path} ${item.relatedTaskId || ""} ${item.trustFlags.join(" ")}`.toLowerCase().includes(query.toLowerCase())
   ));
+  const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const verify = async (item: EvidenceItem) => {
+    setBusyId(item.evidenceId);
+    setVerifyMessage(null);
+    try {
+      const params = new URLSearchParams({
+        path: item.path,
+        sha256: item.sha256 || "",
+      });
+      const response = await fetch(`/api/v1/evidence/verify?${params.toString()}`);
+      const payload = await response.json();
+      setVerifyMessage(
+        response.ok
+          ? `${item.evidenceId}: ${payload.status} · ${payload.detail} (contentIngested=${payload.contentIngested})`
+          : payload?.error?.message || "Verify request failed",
+      );
+    } catch (error) {
+      setVerifyMessage(error instanceof Error ? error.message : "Verify failed");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <Panel code="EVIDENCE / TRUST" title="Evidence metadata browser" meta={`${items.length} of ${snapshot.evidence.length}`}>
-      <div className="readonly-banner"><FileSearch size={16} /><strong>METADATA ONLY</strong><span>Bodies are not ingested (`contentIngested: false`). Hash values are observational — no write-back verify.</span></div>
+      <div className="readonly-banner"><FileSearch size={16} /><strong>METADATA ONLY</strong><span>Bodies are never returned. Hash verify recomputes digests under the control-plane root and reports MATCH / MISMATCH / UNAVAILABLE.</span></div>
+      {verifyMessage && <div className="source-notice tone-warning" role="status"><strong>HASH VERIFY</strong><span>{verifyMessage}</span></div>}
       <FilterBar query={query} onQuery={setQuery} status={status} onStatus={setStatus} statuses={states} label="Search evidence id, path, or task" />
       {items.length ? (
         <TableFrame label="Scrollable evidence table">
@@ -925,7 +1090,12 @@ function EvidenceBrowser({ snapshot, query, setQuery, status, setStatus }: { sna
                   <td><code>{item.sha256 ? item.sha256.slice(0, 16) : "HASH UNAVAILABLE"}</code><span>{item.sizeBytes != null ? `${item.sizeBytes} B` : "SIZE UNAVAILABLE"}</span></td>
                   <td><StatusBadge value={item.trackedState} />{item.trustFlags.length ? item.trustFlags.map((flag) => <span key={flag}>{flag}</span>) : <span>NO TRUST FLAGS</span>}</td>
                   <td><span>{item.relatedTaskId || "NO TASK"}</span><small>{item.relatedApprovalId || item.relatedLeaseId || "NO APPROVAL/LEASE"}</small></td>
-                  <td><VerificationBadge value={item.verification} /></td>
+                  <td>
+                    <VerificationBadge value={item.verification} />
+                    <button type="button" disabled={busyId === item.evidenceId || !item.sha256} onClick={() => verify(item)}>
+                      Verify hash
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -940,7 +1110,9 @@ function EvidenceBrowser({ snapshot, query, setQuery, status, setStatus }: { sna
 
 function Safety({ snapshot }: { snapshot: MissionSnapshot }) {
   const severities = ["CRITICAL", "BLOCKED", "ATTENTION", "NOTICE", "NOMINAL"] as const;
+  const conflicts = snapshot.conflicts || [];
   return (
+    <>
     <Panel code="SENTRY / SAFETY" title="Safety monitor" meta={`${snapshot.alerts.length} active · system ${snapshot.systemHealth.severity}`}>
       <div className="readonly-banner"><Siren size={16} /><strong>OBSERVATION ONLY</strong><span>Mission Control never acknowledges or clears safety alerts.</span></div>
       <div className="detector-legend" aria-label="Severity legend">
@@ -963,6 +1135,30 @@ function Safety({ snapshot }: { snapshot: MissionSnapshot }) {
         <EmptyState title="No safety signals" detail="The current read model did not derive an active alert." />
       )}
     </Panel>
+    <Panel code="CONFLICT / DETECTORS" title="Conflict detection" meta={`${conflicts.length} inferred`}>
+      <div className="readonly-banner"><AlertTriangle size={16} /><strong>INFERRED ONLY</strong><span>Dual-primary, stale-lease, path-conflict, and worktree-drift detectors. Never AUTHORITATIVE.</span></div>
+      {conflicts.length ? (
+        <div className="incident-grid">
+          {conflicts.map((conflict) => (
+            <article className="incident-card" key={conflict.conflictId}>
+              <header>
+                <div><AlertTriangle size={18} /><span>{conflict.kind.replaceAll("_", " ")}</span></div>
+                <StatusBadge value={conflict.severity} />
+              </header>
+              <dl>
+                <div><dt>Title</dt><dd>{conflict.title}</dd></div>
+                <div><dt>Freshness</dt><dd>{conflict.freshness}</dd></div>
+                <div><dt>Owner attention</dt><dd>{conflict.ownerAttentionRequired ? "REQUIRED" : "OPTIONAL"}</dd></div>
+              </dl>
+              <div className="incident-resolution"><span>DETAIL</span><p>{conflict.detail}</p></div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="No conflicts observed" detail="Detectors found no dual-primary, stale-lease, path, or worktree-drift signals." />
+      )}
+    </Panel>
+    </>
   );
 }
 
@@ -1042,7 +1238,9 @@ function Campaigns({ snapshot }: { snapshot: MissionSnapshot }) {
                 </tr>
               </thead>
               <tbody>
-                {snapshot.campaigns.map((campaign: CampaignCard) => (
+                {snapshot.campaigns.map((campaign: CampaignCard) => {
+                  const risk = scoreCampaignRisk(campaign);
+                  return (
                   <tr key={campaign.campaignId}>
                     <td>
                       <code className="full-id">{campaign.campaignId}</code>
@@ -1052,6 +1250,7 @@ function Campaigns({ snapshot }: { snapshot: MissionSnapshot }) {
                     <td>
                       <StatusBadge value={campaign.status} />
                       <span>{campaign.primaryRuntime} → {campaign.reviewRuntime}</span>
+                      <small>Risk {risk.band} ({risk.freshness}{risk.fromControlPlane ? " · control-plane" : " · derived"})</small>
                       <small>{formatTimestamp(campaign.expiresAt, true)}</small>
                     </td>
                     <td>
@@ -1063,7 +1262,8 @@ function Campaigns({ snapshot }: { snapshot: MissionSnapshot }) {
                     <td>{campaign.ownerOnlyGates.length ? campaign.ownerOnlyGates.map((gate) => <span key={gate}>{gate}</span>) : <span>NONE DECLARED</span>}</td>
                     <td>{campaign.nextAction}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </TableFrame>
