@@ -123,7 +123,8 @@ Ordered against `ados-mission-control-update-package/04-CURSOR-MASTER-INSTRUCTIO
 13. ~~Kill switches / service recovery / pilot (U8)~~ — remotes pushed; BL-G2 ensure; shadow + **controlled Cursor-primary (fixture)** active. LIVE_UNSCOPED Cursor + publication still DENY.
 20. ~~BL-G2 Windows service / Task Scheduler recovery~~ — task `ADOS_LeaseHolder_Ensure` registered; Windows `kill`→Stop-Process hazard fixed; ensure tests 4/4.
 21. ~~Standing shadow pilot (feature flags 1–2)~~ — active.
-22. ~~Controlled Cursor-primary + flags 3–6~~ — gate `gate-ea0dad36625d416f` → `VERIFIED_CURSOR_PRIMARY_FIXTURE`; MC-PILOT expiry → 2026-07-26; MC V2 `.env.local` mode=live (`docs/evidence/controlled-cursor-primary-20260719/`).
+22. ~~Controlled Cursor-primary + flags 3–6~~ — gate `gate-ea0dad36625d416f` → fixture primary verified; MC-PILOT → 2026-07-26.
+23. ~~Rollout flags 7–8~~ — cockpit auto-open + Cursor-first default (`gate-b61b459ce39e4f82`); supervisor-source `384e32f`; completion report `docs/COMPLETION-REPORT-2026-07-19.md`.
 
 ### Reliability / security (MC-local)
 
@@ -135,4 +136,4 @@ Ordered against `ados-mission-control-update-package/04-CURSOR-MASTER-INSTRUCTIO
 19. ~~Support-bundle exporter (FBL-OPS-003)~~ (done — `GET /api/v1/support-bundle` + footer download).
 
 **Handoff report:** `ados-mission-control-update-package/docs/COMPLETION-REPORT-2026-07-18.md`  
-**Classification:** `CONTROLLED_CURSOR_PRIMARY_ACTIVE` (flags 1–6 on, Cursor-primary=`FIXTURE_CONTROLLED`; LIVE_UNSCOPED + publication still DENY; evidence `docs/evidence/controlled-cursor-primary-20260719/`)
+**Classification:** `ADOS_CURSOR_FIRST_SUPERVISOR_V1_ROLLOUT_COMPLETE_CONTROLLED` (flags 1–8 on; Cursor-first default; Headless cockpit auto-open; LIVE_UNSCOPED + publication still DENY; see `docs/COMPLETION-REPORT-2026-07-19.md` + `docs/evidence/rollout-complete-controlled-20260719/`)
