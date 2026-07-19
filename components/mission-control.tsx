@@ -142,8 +142,12 @@ function EmptyState({ title, detail }: { title: string; detail: string }) {
   return <div className="empty-state"><Archive size={24} /><div><strong>{title}</strong><span>{detail}</span></div></div>;
 }
 
-function TableFrame({ children }: { children: ReactNode }) {
-  return <div className="table-frame">{children}</div>;
+function TableFrame({ children, label = "Scrollable data table" }: { children: ReactNode; label?: string }) {
+  return (
+    <div className="table-frame" tabIndex={0} role="region" aria-label={label}>
+      {children}
+    </div>
+  );
 }
 
 function FilterBar({ query, onQuery, status, onStatus, statuses, label = "Search records" }: {

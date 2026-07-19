@@ -118,9 +118,10 @@ Mutation routes are intentionally absent. The roadmap Phase 2 brokered approval 
 ```powershell
 npm run verify
 npm run test:e2e
+npm run test:a11y
 ```
 
-The verification runner executes schema validation, the read-only source audit, lint, type checking, 24 unit/security tests, and a production build as separate argv-based subprocesses. The independent Playwright command adds six desktop/mobile/authentication integration checks against deterministic live and unavailable-source fixtures.
+The verification runner executes schema validation, the read-only source audit, lint, type checking, 24 unit/security tests, and a production build as separate argv-based subprocesses. The independent Playwright command adds desktop/mobile/authentication integration checks plus an axe-core accessibility project (`live-a11y`) that fails on serious/critical WCAG violations for overview, tasks, campaigns, and replay.
 
 ## Documentation
 
