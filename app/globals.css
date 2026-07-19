@@ -20,6 +20,10 @@
   --shadow: rgba(0, 0, 0, 0.44);
   --grid: rgba(184, 244, 93, 0.035);
   --rail: #090e0c;
+  /* Rail stays dark in both themes — keep AA contrast independent of --muted/--faint. */
+  --rail-text: #eef5ef;
+  --rail-muted: #a7b6ae;
+  --rail-faint: #8f9f96;
 }
 
 :root[data-theme="light"] {
@@ -93,7 +97,7 @@ code {
   height: 100vh;
   padding: 26px 20px 20px;
   background: var(--rail);
-  color: #eef5ef;
+  color: var(--rail-text);
   border-right: 1px solid #28372f;
   display: flex;
   flex-direction: column;
@@ -120,7 +124,7 @@ code {
 .brand-mark span { font: 700 0.84rem/1 "Cascadia Mono", monospace; letter-spacing: 0.08em; }
 .brand-copy { display: flex; flex-direction: column; padding-bottom: 25px; border-bottom: 1px solid #28372f; }
 .brand-copy strong { font-family: "Bahnschrift Condensed", "Aptos Display", sans-serif; font-size: 1.04rem; letter-spacing: 0.13em; }
-.brand-copy span { color: #788b80; font: 600 0.64rem/1.5 "Cascadia Mono", monospace; letter-spacing: 0.12em; }
+.brand-copy span { color: var(--rail-faint); font: 600 0.64rem/1.5 "Cascadia Mono", monospace; letter-spacing: 0.12em; }
 .command-rail nav { display: grid; gap: 6px; margin: 24px 0; }
 .command-rail nav a {
   position: relative;
@@ -129,21 +133,21 @@ code {
   gap: 12px;
   min-height: 43px;
   padding: 0 12px;
-  color: #84978c;
+  color: var(--rail-muted);
   border: 1px solid transparent;
   border-radius: 3px;
   font-size: 0.83rem;
   transition: 160ms ease;
 }
-.command-rail nav a:hover { color: #eef5ef; background: #121b17; border-color: #26382f; }
+.command-rail nav a:hover { color: var(--rail-text); background: #121b17; border-color: #26382f; }
 .command-rail nav a.active { color: #f5faef; background: #17221c; border-color: #3b503f; }
 .command-rail nav a.active::before { content: ""; position: absolute; left: -21px; width: 3px; height: 22px; background: var(--lime); }
 .command-rail nav a.active svg { color: var(--lime); }
 .rail-status { margin-top: auto; border-top: 1px solid #28372f; padding-top: 16px; display: grid; gap: 12px; }
 .rail-status div { display: grid; grid-template-columns: 18px 1fr; align-items: center; }
 .rail-status svg { grid-row: span 2; color: var(--lime); }
-.rail-status span { color: #64776c; font: 600 0.57rem/1.3 "Cascadia Mono", monospace; letter-spacing: 0.11em; }
-.rail-status strong { font: 600 0.66rem/1.4 "Cascadia Mono", monospace; color: #ced9d2; }
+.rail-status span { color: var(--rail-faint); font: 600 0.57rem/1.3 "Cascadia Mono", monospace; letter-spacing: 0.11em; }
+.rail-status strong { font: 600 0.66rem/1.4 "Cascadia Mono", monospace; color: var(--rail-text); }
 
 .mission-main { min-width: 0; display: flex; flex-direction: column; min-height: 100vh; }
 .topbar {
