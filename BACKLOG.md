@@ -44,9 +44,9 @@ Ordered against `ados-mission-control-update-package/04-CURSOR-MASTER-INSTRUCTIO
 
 ### Additional features (post-authorization)
 
-11. ~~Supervisor Shadow queue/FSM (U3), Cursor loop with Fake CLI (U4), Claude review dispatcher (U5)~~ — landed in supervisor-source closeout (`LOCAL_CLOSEOUT_READY_AWAITING_PUSH_MERGE_AUTH`); lease healthy — activation awaits owner commit/push/merge gates.
-12. ~~Four-pane WT cockpit + live event broker (U6)~~ — source closeout evidence present; runtime activation awaits owner commit/push gates.
-13. Kill switches / service recovery / pilot (U8) → stop at `OWNER_ACTION_REQUIRED: Authorize local commit` (controls exist in source; pilot activation awaits owner commit authorization).
+11. ~~Supervisor Shadow queue/FSM (U3), Cursor loop with Fake CLI (U4), Claude review dispatcher (U5)~~ — supervisor-source local commit `ac87d19` under gate `gate-fd249903700b4c90` (`docs/evidence/supervisor-source-local-commit-20260719/`). **Push/merge still DENY** (no remotes configured).
+12. ~~Four-pane WT cockpit + live event broker (U6)~~ — source closeout committed; runtime already state-preserving-deployed; **push/merge still DENY**.
+13. ~~Kill switches / service recovery / pilot (U8)~~ — gate `gate-1d42d69aa9c544d7` APPROVED → local commit `59f054c` on MC pilot worktree. **Push/merge/deploy still DENY**; MC pilot has **no git remote** (`docs/evidence/mc-pilot-u8-20260719/`).
 
 ### Reliability / security (MC-local)
 
@@ -55,6 +55,7 @@ Ordered against `ados-mission-control-update-package/04-CURSOR-MASTER-INSTRUCTIO
 16. ~~Canonical tree / path registry (FBL-DX-001 / FBL-DOC-001)~~ (done — `docs/PATH-REGISTRY.md`).
 17. ~~Remove stale `Topics` relocation target from package README (FBL-DOC-002)~~ (done).
 18. ~~Playwright starts standalone server (matches `output: "standalone"`)~~ (done — `scripts/start-e2e-server.mjs`).
+19. ~~Support-bundle exporter (FBL-OPS-003)~~ (done — `GET /api/v1/support-bundle` + footer download).
 
 **Handoff report:** `ados-mission-control-update-package/docs/COMPLETION-REPORT-2026-07-18.md`  
-**Classification:** `ADOS_CURSOR_FIRST_SUPERVISOR_V1_PACKAGE_HANDOFF_READY` (package/planning only — control-plane implementation remains blocked pending owner gates; see `docs/COMPLETION-REPORT-2026-07-18.md`)
+**Classification:** `LOCAL_COMMIT_COMPLETE_PUSH_MERGE_DEPLOY_DENIED` (MC-PILOT-001 `59f054c` + supervisor-source `ac87d19`; push blocked: campaign DENY + **no git remotes**; see `docs/evidence/supervisor-source-local-commit-20260719/`)

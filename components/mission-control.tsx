@@ -668,7 +668,13 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
           {body}
         </main>
 
-        <footer className="application-footer"><span><ShieldCheck size={14} /> Mission Control V2 provides authenticated, resilient visibility.</span><span>It does not authorize, approve, dispatch, or mutate ADOS operations.</span></footer>
+        <footer className="application-footer">
+          <span><ShieldCheck size={14} /> Mission Control V2 provides authenticated, resilient visibility.</span>
+          <span>It does not authorize, approve, dispatch, or mutate ADOS operations.</span>
+          <a className="support-bundle-link" href="/api/v1/support-bundle" download>
+            Download support bundle
+          </a>
+        </footer>
       </div>
     </div>
   );

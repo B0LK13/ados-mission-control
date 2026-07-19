@@ -109,7 +109,7 @@ Copy `.env.example` to `.env.local` only when the default `D:\` paths need to ch
 
 ## API
 
-`snapshot`, `health`, `agents`, `approvals`, `tasks`, `handoffs`, `worktrees`, `evidence`, `events`, `events/stream`, `safety/alerts`, and `workflow` are available below `/api/v1`.
+`snapshot`, `health`, `agents`, `approvals`, `tasks`, `handoffs`, `worktrees`, `evidence`, `events`, `events/stream`, `safety/alerts`, `workflow`, `campaigns`, `owner-gates`, `replay`, and `support-bundle` are available below `/api/v1`.
 
 Mutation routes are intentionally absent. The roadmap Phase 2 brokered approval path remains a separately authorized future capability; release 2.0 does not cross that authority boundary.
 
