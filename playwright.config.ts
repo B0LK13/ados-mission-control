@@ -16,21 +16,21 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "npm run start -- --hostname 127.0.0.1 --port 3201",
+      command: "node scripts/start-e2e-server.mjs --port 3201",
       url: "http://127.0.0.1:3201/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
       env: { ...process.env, MISSION_CONTROL_MODE: "live", ADOS_CONTROL_PLANE_ROOT: fixtureRoot, MISSION_CONTROL_PERSISTENCE: "disabled", MISSION_CONTROL_AUTH_MODE: "disabled", BUILD_ID: "e2e-live" },
     },
     {
-      command: "npm run start -- --hostname 127.0.0.1 --port 3202",
+      command: "node scripts/start-e2e-server.mjs --port 3202",
       url: "http://127.0.0.1:3202/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
       env: { ...process.env, MISSION_CONTROL_MODE: "live", ADOS_CONTROL_PLANE_ROOT: unavailableRoot, MISSION_CONTROL_PERSISTENCE: "disabled", MISSION_CONTROL_AUTH_MODE: "disabled", BUILD_ID: "e2e-unavailable" },
     },
     {
-      command: "npm run start -- --hostname 127.0.0.1 --port 3203",
+      command: "node scripts/start-e2e-server.mjs --port 3203",
       url: "http://127.0.0.1:3203/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,

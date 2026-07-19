@@ -21,6 +21,24 @@
 - Control-plane supervisor writes into `D:\agent-development-os-orchestrator` beyond existing pilot norms
 - `commit` / `push` / `merge` / `deploy` (remain owner-gated / DENY per campaign)
 
+## Live lease renewal (2026-07-19) — COMPLETE
+
+Owner chat approval ("Approved, continue") → APPROVED disposition `approval-6372915cf7454516966e95695acddaf1` → execute `reacq-20260719a`.
+
+| Field | Value |
+|---|---|
+| New lease | `b2001bb2-675b-4c7f-9c86-5958278ca71f` |
+| Holder | PID alive; heartbeat advancing |
+| Follow-on | State-preserving runtime deploy (27 files) including U1 schemas + repaired v3 reacquire tool |
+
+Evidence: `docs/evidence/lease-reacq-request-20260719/COMPLETION.md`.
+
+## Path authority (FBL-DOC-002 / FBL-DX-001)
+
+- Canonical Mission Control V2: `D:\ados-mission-control` — see `../../docs/PATH-REGISTRY.md`.
+- Stale relocation target `D:\Topics\orchestrators\…` is **not present** and must not be used in new approvals or scripts.
+- Package `00-README.md` (local package tree) names the live-integration worktree and V2 paths instead of Topics.
+
 ## Operator note
 
 Re-run the Windows-native pilot script only as diagnostics:

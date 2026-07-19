@@ -1,16 +1,18 @@
-import { timingSafeEqual } from "node:crypto";
-
 /**
- * FBL-SEC-004: compare UTF-8 strings with crypto.timingSafeEqual.
- * Length mismatches return false after a same-buffer compare to avoid a pure early return.
+ * FBL-SEC-004: constant-time string compare for Basic-auth credentials.
+ *
+ * Mission Control middleware runs on the Edge runtime in Next.js 15.5, which
+ * cannot import `node:crypto`. This portable Uint8Array XOR compare keeps
+ * work proportional to max(length) and avoids early returns on first mismatch.
  */
 export function timingSafeEqualString(left: string, right: string): boolean {
   const encoder = new TextEncoder();
   const leftBytes = encoder.encode(left);
   const rightBytes = encoder.encode(right);
-  if (leftBytes.byteLength !== rightBytes.byteLength) {
-    timingSafeEqual(leftBytes, leftBytes);
-    return false;
+  const length = Math.max(leftBytes.byteLength, rightBytes.byteLength);
+  let difference = leftBytes.byteLength ^ rightBytes.byteLength;
+  for (let index = 0; index < length; index += 1) {
+    difference |= (leftBytes[index] ?? 0) ^ (rightBytes[index] ?? 0);
   }
-  return timingSafeEqual(leftBytes, rightBytes);
+  return difference === 0;
 }

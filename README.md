@@ -127,6 +127,7 @@ The verification runner executes schema validation, the read-only source audit, 
 - `ARCHITECTURE.md` — read-model boundaries, normalization, pages, and data flow
 - `SECURITY.md` — read-only enforcement, redaction, mount policy, and limitations
 - `DEPLOYMENT.md` — internal staging, health, restart, evidence, and rollback
+- `docs/PATH-REGISTRY.md` — canonical trees and path overrides (use before inventing roots)
 - `docs/` — detailed product and protocol specifications
 
 ## Package map
