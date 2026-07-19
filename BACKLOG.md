@@ -11,164 +11,12 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Maturity:** strong (overall score 3.7/5) → target: advanced
 - **Summary:** Phases 1–4 MVP complete (2026-07-19): read-only Command Deck, opt-in Phase 2/3 commands, opt-in Phase 4 fleet/metrics. V3 roadmap AUTHORIZED: operator intelligence, controlled-ops completeness, alerting, and platform hardening (docs/09-PHASE-ROADMAP-V3.md).
 
-## Open Tasks (27)
+## Open Tasks (22)
 
 | Priority | Count |
 |---|---|
-| High | 3 |
-| Medium | 14 |
+| Medium | 12 |
 | Low | 10 |
-
-### `ados-mission-control-v2-roadmap-phase6-001` — Phase 6: approved validator run via allowlisted ADOS tool
-
-- **Priority:** High | **Severity:** High | **Effort:** L | **Risk:** High | **Phase:** V3-ControlledOps | **Status:** Open
-- **Category:** roadmap / phase-6
-- **Owner role:** tech-lead
-
-**Current state:** Phase 3 covers dispatch prepare/queue and campaign pause/resume only.
-
-**Target state:** Owner can request a validator run for APPROVED scope; unapproved denied; ledger/consumption recorded.
-
-**Gap:** Validators cannot be triggered from Mission Control even when approved.
-
-**Acceptance criteria:**
-- [ ] MISSION_CONTROL_PHASE6_COMMANDS flag fail-closed by default
-- [ ] Unapproved/expired/consumed denied
-- [ ] No Cursor PRIMARY/lease path
-- [ ] Audit/consumption ledger updated on accept
-
-**Validation steps:**
-1. Negative unit tests for unapproved validate
-2. Positive fixture prepare/run via tool
-3. npm run verify:readonly
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-6, v3, owner-gated, authorized
-
-### `ados-mission-control-v2-roadmap-phase6-002` — Phase 6: approved integration request creation
-
-- **Priority:** High | **Severity:** High | **Effort:** L | **Risk:** High | **Phase:** V3-ControlledOps | **Status:** Open
-- **Category:** roadmap / phase-6
-- **Owner role:** tech-lead
-
-**Current state:** No MC path to open integration requests.
-
-**Target state:** Approved-only integration request creation with ledger trail and UI on /operations.
-
-**Gap:** Integration requests remain outside Mission Control.
-
-**Acceptance criteria:**
-- [ ] Requires APPROVED disposition scoped to integration
-- [ ] Fail-closed without Phase 6 flag
-- [ ] No raw state/** writes from Next.js
-- [ ] Unit tests for deny/accept
-
-**Validation steps:**
-1. Unit tests
-2. Fixture approval round-trip
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-6, v3, owner-gated, authorized
-
-### `ados-mission-control-v2-roadmap-phase6-005` — Phase 6: negative tests + audit evidence package
-
-- **Priority:** High | **Severity:** High | **Effort:** M | **Risk:** Medium | **Phase:** V3-ControlledOps | **Status:** Open
-- **Category:** roadmap / phase-6
-- **Owner role:** qa-engineer
-
-**Current state:** Phase 3 has deny tests; Phase 6 needs its own suite + evidence.
-
-**Target state:** tests/phase6-commands.test.ts covers validate/integration/pickup denies; docs/evidence/phase6-*/STATUS.json recorded.
-
-**Gap:** Phase 6 cannot close without proof of fail-closed behavior.
-
-**Acceptance criteria:**
-- [ ] Unapproved actions denied in automated tests
-- [ ] Evidence STATUS.json published
-- [ ] typecheck + unit + verify:readonly pass
-
-**Validation steps:**
-1. npm run test:unit
-2. npm run verify:readonly
-3. Review evidence package
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-6, v3, testing, authorized
-
-### `ados-mission-control-v2-roadmap-phase6-003` — Phase 6: bounded review pickup for already-approved work
-
-- **Priority:** Medium | **Severity:** High | **Effort:** M | **Risk:** High | **Phase:** V3-ControlledOps | **Status:** Open
-- **Category:** roadmap / phase-6
-- **Owner role:** fullstack-engineer
-
-**Current state:** Review pickups are external to MC.
-
-**Target state:** Approved-only review pickup action via allowlisted tool with audit trail.
-
-**Gap:** Owners cannot trigger bounded review pickup from the cockpit.
-
-**Acceptance criteria:**
-- [ ] Cannot run without APPROVED disposition
-- [ ] Does not enable silent production dispatch
-- [ ] Cursor still cannot hold PRIMARY lease
-- [ ] Ledger event recorded
-
-**Validation steps:**
-1. Negative + positive unit tests
-2. verify:readonly
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-6, v3, owner-gated, authorized
-
-### `ados-mission-control-v2-roadmap-phase6-004` — Phase 6: expand /operations UI for validate, integration, review pickup
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Medium | **Phase:** V3-ControlledOps | **Status:** Open
-- **Category:** roadmap / phase-6
-- **Owner role:** frontend-engineer
-
-**Current state:** /operations covers Phase 3 dispatch + campaign control only.
-
-**Target state:** UI sections for validate / integration / review pickup with disabled states when Phase 6 off.
-
-**Gap:** Even after tools exist, operators lack a cockpit surface.
-
-**Acceptance criteria:**
-- [ ] Actions disabled when flag off
-- [ ] Consequence preview shown before submit
-- [ ] Clear copy that Cursor cannot take PRIMARY
-- [ ] No mutation when disabled
-
-**Validation steps:**
-1. Manual UI with flag on/off
-2. Optional Playwright smoke
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-6, v3, ui, authorized
 
 ### `ados-mission-control-v2-roadmap-phase7-001` — Phase 7: local alert rule engine for readiness/heartbeat/dead-letter/fleet
 
@@ -773,13 +621,12 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 
 Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md).
 
-**Verdict:** Phases 1–5 complete. V3 Phase 5 operator intelligence shipped. Next is Phase 6 under `docs/authorizations/v3-roadmap-20260719.md`.
+**Verdict:** Phases 1–6 complete. Next is Phase 7 alerting under `docs/authorizations/v3-roadmap-20260719.md`.
 
 ### Recommended next
 
-1. ~~**Phases 1–5**~~ — done 2026-07-19.
-2. **Start V3 Phase 6** — `ados-mission-control-v2-roadmap-phase6-001` (`MISSION_CONTROL_PHASE6_COMMANDS`).
-3. Parallel polish / Phase 7–8 per `docs/09-PHASE-ROADMAP-V3.md`.
+1. ~~**Phases 1–6**~~ — done 2026-07-19.
+2. **Start V3 Phase 7** — `ados-mission-control-v2-roadmap-phase7-001` (`MISSION_CONTROL_ALERTS`).
+3. Parallel polish / Phase 8 per `docs/09-PHASE-ROADMAP-V3.md`.
 
-**Classification:** `MISSION_CONTROL_V3_PHASE5_OPERATOR_INTELLIGENCE_COMPLETE`.
-
+**Classification:** `MISSION_CONTROL_V3_PHASE6_CONTROLLED_OPS_COMPLETE`.

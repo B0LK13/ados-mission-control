@@ -1,0 +1,12 @@
+{
+  "approvalId": "approval-phase6-validate",
+  "action": "RUN_VALIDATOR",
+  "status": "PENDING",
+  "issuedAt": "2026-07-19T10:00:00.000Z",
+  "expiresAt": "2099-07-19T10:00:00.000Z",
+  "singleUse": false,
+  "executionCountLimit": 3,
+  "allowedOperations": ["VALIDATE", "RUN_VALIDATOR"],
+  "willDo": ["prepare approved validator run packet"],
+  "willNotDo": ["lease transfer", "Cursor PRIMARY", "silent dispatch enablement"]
+}

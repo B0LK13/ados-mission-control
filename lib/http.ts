@@ -15,7 +15,7 @@ export function missionJson(data: unknown, status = 200): Response {
 export function missionCommandJson(
   data: unknown,
   status = 200,
-  authority: "phase2-commands" | "phase3-commands" = "phase2-commands",
+  authority: "phase2-commands" | "phase3-commands" | "phase6-commands" = "phase2-commands",
 ): Response {
   return Response.json(redactValue(data), {
     status,

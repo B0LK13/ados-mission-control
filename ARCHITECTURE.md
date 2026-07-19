@@ -104,9 +104,19 @@ When `MISSION_CONTROL_PHASE3_COMMANDS=enabled`:
 - Cursor PRIMARY / lease transfer remains impossible through Mission Control.
 - UI surface: `/operations`.
 
+## Phase 6 controlled-ops completeness (authorized 2026-07-19)
+
+When `MISSION_CONTROL_PHASE6_COMMANDS=enabled`:
+
+- POST `/api/v1/operations/validate` prepares an approved validator run packet.
+- POST `/api/v1/operations/integration-request` files an approved integration request.
+- POST `/api/v1/operations/review-pickup` prepares bounded review pickup (no silent dispatch enablement).
+- Cursor PRIMARY / lease transfer remains impossible through Mission Control.
+- UI surface: `/operations` Phase 6 panel.
+
 ## V3 roadmap (authorized 2026-07-19)
 
-See `docs/09-PHASE-ROADMAP-V3.md`. Next implementation wave: Phase 5 operator intelligence (read-only), then Phase 6 (`MISSION_CONTROL_PHASE6_COMMANDS`), Phase 7 (`MISSION_CONTROL_ALERTS`), Phase 8 hardening. Authorization: `docs/authorizations/v3-roadmap-20260719.md`.
+See `docs/09-PHASE-ROADMAP-V3.md`. Phases 5–6 complete. Next: Phase 7 (`MISSION_CONTROL_ALERTS`), Phase 8 hardening. Authorization: `docs/authorizations/v3-roadmap-20260719.md`.
 
 ## Phase 4 fleet + metrics (authorized 2026-07-19)
 

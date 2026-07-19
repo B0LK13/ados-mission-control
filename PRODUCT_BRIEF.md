@@ -51,8 +51,10 @@ An owner can open Mission Control and, within seconds, know who holds the lease,
 
 **Phase 3 controlled operations MVP: COMPLETE (2026-07-19)** — approved-only dispatch prepare/queue + campaign pause/resume when `MISSION_CONTROL_PHASE3_COMMANDS=enabled`. See `docs/authorizations/phase3-controlled-operations-20260719.md`. Cursor cannot take PRIMARY lease via Mission Control.
 
+**Phase 6 controlled-ops completeness: COMPLETE (2026-07-19)** — approved validate / integration request / review pickup when `MISSION_CONTROL_PHASE6_COMMANDS=enabled`. See `docs/authorizations/phase6-controlled-ops-20260719.md`.
+
 **Phase 4 fleet + metrics MVP: COMPLETE (2026-07-19)** — opt-in fleet observation (`MISSION_CONTROL_FLEET_MODE=enabled`) + Prometheus `/api/v1/metrics` + Grafana JSON stub. See `docs/authorizations/phase4-fleet-metrics-20260719.md` and `docs/adr/ADR-001-fleet-and-prometheus.md`. Fleet never inherits PRIMARY authority.
 
 **Roadmap MVP closeout:** Phases 1–4 for Mission Control V2 are complete.
 
-**V3 roadmap: AUTHORIZED (2026-07-19)** — Phases 5–8 (operator intelligence, controlled-ops completeness, alerting, platform hardening). See `docs/09-PHASE-ROADMAP-V3.md` and `docs/authorizations/v3-roadmap-20260719.md`. Implementation not started; next task `ados-mission-control-v2-roadmap-phase5-001`.
+**V3 roadmap: AUTHORIZED (2026-07-19)** — Phases 5–6 complete; Phases 7–8 remain (alerting, platform hardening). See `docs/09-PHASE-ROADMAP-V3.md` and `docs/authorizations/v3-roadmap-20260719.md`. Next task `ados-mission-control-v2-roadmap-phase7-001`.

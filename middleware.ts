@@ -14,6 +14,12 @@ const PHASE3_POST_ROUTES = [
   /^\/api\/v1\/operations\/campaign-control$/,
 ];
 
+const PHASE6_POST_ROUTES = [
+  /^\/api\/v1\/operations\/validate$/,
+  /^\/api\/v1\/operations\/integration-request$/,
+  /^\/api\/v1\/operations\/review-pickup$/,
+];
+
 function phase2Enabled(): boolean {
   return process.env.MISSION_CONTROL_PHASE2_COMMANDS?.trim().toLowerCase() === "enabled";
 }
@@ -22,11 +28,22 @@ function phase3Enabled(): boolean {
   return process.env.MISSION_CONTROL_PHASE3_COMMANDS?.trim().toLowerCase() === "enabled";
 }
 
-function allowedMutation(pathname: string, method: string): "phase2" | "phase3" | null {
+function phase6Enabled(): boolean {
+  return process.env.MISSION_CONTROL_PHASE6_COMMANDS?.trim().toLowerCase() === "enabled";
+}
+
+function allowedMutation(pathname: string, method: string): "phase2" | "phase3" | "phase6" | null {
   if (method !== "POST") return null;
   if (phase2Enabled() && PHASE2_POST_ROUTES.some((pattern) => pattern.test(pathname))) return "phase2";
   if (phase3Enabled() && PHASE3_POST_ROUTES.some((pattern) => pattern.test(pathname))) return "phase3";
+  if (phase6Enabled() && PHASE6_POST_ROUTES.some((pattern) => pattern.test(pathname))) return "phase6";
   return null;
+}
+
+function authorityHeader(mutationClass: "phase2" | "phase3" | "phase6"): string {
+  if (mutationClass === "phase6") return "phase6-commands";
+  if (mutationClass === "phase3") return "phase3-commands";
+  return "phase2-commands";
 }
 
 function credentials(request: NextRequest): { username: string; password: string } | null {
@@ -66,7 +83,7 @@ export function middleware(request: NextRequest) {
   if (process.env.MISSION_CONTROL_AUTH_MODE?.trim().toLowerCase() !== "basic") {
     if (mutationClass) {
       const response = NextResponse.next();
-      response.headers.set("X-ADOS-Authority", mutationClass === "phase3" ? "phase3-commands" : "phase2-commands");
+      response.headers.set("X-ADOS-Authority", authorityHeader(mutationClass));
       return response;
     }
     return NextResponse.next();
@@ -89,7 +106,7 @@ export function middleware(request: NextRequest) {
 
   const response = NextResponse.next();
   if (mutationClass) {
-    response.headers.set("X-ADOS-Authority", mutationClass === "phase3" ? "phase3-commands" : "phase2-commands");
+    response.headers.set("X-ADOS-Authority", authorityHeader(mutationClass));
   }
   return response;
 }

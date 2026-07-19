@@ -1,0 +1,37 @@
+{
+  "classification": "MISSION_CONTROL_V3_PHASE6_CONTROLLED_OPS_COMPLETE",
+  "taskIds": [
+    "ados-mission-control-v2-roadmap-phase6-001",
+    "ados-mission-control-v2-roadmap-phase6-002",
+    "ados-mission-control-v2-roadmap-phase6-003",
+    "ados-mission-control-v2-roadmap-phase6-004",
+    "ados-mission-control-v2-roadmap-phase6-005"
+  ],
+  "authorizedAt": "2026-07-19",
+  "authorization": "docs/authorizations/phase6-controlled-ops-20260719.md",
+  "roadmap": "docs/09-PHASE-ROADMAP-V3.md",
+  "delivered": {
+    "flag": "MISSION_CONTROL_PHASE6_COMMANDS (fail-closed default)",
+    "tools": [
+      "scripts/ados-tools/run-approved-validator.mjs",
+      "scripts/ados-tools/create-integration-request.mjs",
+      "scripts/ados-tools/trigger-review-pickup.mjs",
+      "scripts/ados-tools/_lib/approval-gate.mjs"
+    ],
+    "routes": [
+      "POST /api/v1/operations/validate",
+      "POST /api/v1/operations/integration-request",
+      "POST /api/v1/operations/review-pickup"
+    ],
+    "ui": "/operations Phase 6 panel",
+    "tests": "tests/phase6-commands.test.ts"
+  },
+  "invariants": [
+    "Unapproved/expired/consumed/mismatched denied",
+    "No Cursor PRIMARY/lease path",
+    "No silent dispatch enablement",
+    "Audit + consumption ledger updated on accept",
+    "Next.js never writes state/** directly"
+  ],
+  "nextRecommendedTask": "ados-mission-control-v2-roadmap-phase7-001"
+}

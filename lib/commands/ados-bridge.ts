@@ -6,13 +6,19 @@ export type AdosToolName =
   | "set-owner-approval-disposition"
   | "set-owner-gate-decision"
   | "dispatch-approved-operation"
-  | "set-campaign-control";
+  | "set-campaign-control"
+  | "run-approved-validator"
+  | "create-integration-request"
+  | "trigger-review-pickup";
 
-const ALLOWED_TOOLS: Record<AdosToolName, { script: string; phase: 2 | 3 }> = {
+const ALLOWED_TOOLS: Record<AdosToolName, { script: string; phase: 2 | 3 | 6 }> = {
   "set-owner-approval-disposition": { script: "set-owner-approval-disposition.mjs", phase: 2 },
   "set-owner-gate-decision": { script: "set-owner-gate-decision.mjs", phase: 2 },
   "dispatch-approved-operation": { script: "dispatch-approved-operation.mjs", phase: 3 },
   "set-campaign-control": { script: "set-campaign-control.mjs", phase: 3 },
+  "run-approved-validator": { script: "run-approved-validator.mjs", phase: 6 },
+  "create-integration-request": { script: "create-integration-request.mjs", phase: 6 },
+  "trigger-review-pickup": { script: "trigger-review-pickup.mjs", phase: 6 },
 };
 
 export function isPhase2CommandsEnabled(): boolean {
@@ -21,6 +27,10 @@ export function isPhase2CommandsEnabled(): boolean {
 
 export function isPhase3CommandsEnabled(): boolean {
   return process.env.MISSION_CONTROL_PHASE3_COMMANDS?.trim().toLowerCase() === "enabled";
+}
+
+export function isPhase6CommandsEnabled(): boolean {
+  return process.env.MISSION_CONTROL_PHASE6_COMMANDS?.trim().toLowerCase() === "enabled";
 }
 
 export interface AdosToolResult {
@@ -55,7 +65,7 @@ function parseToolOutput(stdout: string, stderr: string): AdosToolResult {
 
 /**
  * Invoke an allowlisted ADOS tool via argv-only node spawn.
- * Phase 2/3 tools require their respective enablement flags.
+ * Phase 2/3/6 tools require their respective enablement flags.
  */
 export async function invokeAdosTool(
   tool: AdosToolName,
@@ -78,6 +88,14 @@ export async function invokeAdosTool(
       ok: false,
       code: "PHASE3_DISABLED",
       message: "MISSION_CONTROL_PHASE3_COMMANDS is not enabled.",
+      raw: "",
+    };
+  }
+  if (meta.phase === 6 && !isPhase6CommandsEnabled()) {
+    return {
+      ok: false,
+      code: "PHASE6_DISABLED",
+      message: "MISSION_CONTROL_PHASE6_COMMANDS is not enabled.",
       raw: "",
     };
   }

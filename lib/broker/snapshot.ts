@@ -26,7 +26,7 @@ import { validateInputRecords } from "@/lib/ingestion/schema-registry";
 import { logMissionEvent } from "@/lib/logging";
 import { getReadModelStore } from "@/lib/read-model/sqlite-store";
 import { disabledReadModelStatus, type IngestWatermark } from "@/lib/read-model/store";
-import { isPhase2CommandsEnabled, isPhase3CommandsEnabled } from "@/lib/commands/ados-bridge";
+import { isPhase2CommandsEnabled, isPhase3CommandsEnabled, isPhase6CommandsEnabled } from "@/lib/commands/ados-bridge";
 import { buildConflictProjection } from "@/lib/conflicts";
 import { isFleetModeEnabled } from "@/lib/fleet";
 import { redactValue, safeSummary } from "@/lib/redaction";
@@ -44,14 +44,16 @@ import { computeHeartbeatAge } from "./heartbeat";
 function snapshotCapabilities(): MissionSnapshot["capabilities"] {
   const phase2Commands = isPhase2CommandsEnabled();
   const phase3Commands = isPhase3CommandsEnabled();
+  const phase6Commands = isPhase6CommandsEnabled();
   const fleetMode = isFleetModeEnabled();
   const ownerSigningConfigured = Boolean(process.env.MISSION_CONTROL_OWNER_PUBKEY_PATH?.trim());
   return {
     phase2Commands,
     phase3Commands,
+    phase6Commands,
     fleetMode,
     ownerSigningConfigured,
-    mutationsEnabled: phase2Commands || phase3Commands,
+    mutationsEnabled: phase2Commands || phase3Commands || phase6Commands,
   };
 }
 

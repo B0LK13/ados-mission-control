@@ -108,7 +108,7 @@ Phases 5–8 are owner-authorized — see [`docs/09-PHASE-ROADMAP-V3.md`](docs/0
 - Claude remains the sole `PRIMARY` lease holder when the live lease says so.
 - Cursor is always rendered `NON-AUTHORITATIVE` and cannot acquire the orchestrator lease.
 - Mission Control never writes `state/**` from Next.js handlers; Phase 2 mutations go only through allowlisted `scripts/ados-tools/*`.
-- Lease transfer, Cursor PRIMARY, push/merge/deploy remain forbidden. Phase 3 approved-only prepare/queue is opt-in via `MISSION_CONTROL_PHASE3_COMMANDS=enabled`.
+- Lease transfer, Cursor PRIMARY, push/merge/deploy remain forbidden. Phase 3 approved-only prepare/queue is opt-in via `MISSION_CONTROL_PHASE3_COMMANDS=enabled`. Phase 6 validate/integration/review-pickup is opt-in via `MISSION_CONTROL_PHASE6_COMMANDS=enabled`.
 - Approve/reject/withdraw and signed owner-gate decide are opt-in behind `MISSION_CONTROL_PHASE2_COMMANDS=enabled` (see `docs/authorizations/phase2-owner-commands-20260719.md`).
 - Fleet observation and Prometheus scrapes are opt-in behind `MISSION_CONTROL_FLEET_MODE=enabled` (see `docs/authorizations/phase4-fleet-metrics-20260719.md`). Fleet rows never inherit PRIMARY authority.
 - Cursor dispatch is modeled from the existing synchronous `Invoke-CursorAgent.ps1` protocol: task contract in `handoffs\cursor\inbox`, live acknowledgement/completion sentinels, result in `handoffs\cursor\completed`.
@@ -138,6 +138,7 @@ Phases 5–8 are owner-authorized — see [`docs/09-PHASE-ROADMAP-V3.md`](docs/0
 When Phase 2 commands are enabled: `POST /api/v1/approvals/:id/{approve|reject|withdraw}` and `POST /api/v1/owner-gates/:id/{challenge|decide}`.
 
 When Phase 3 commands are enabled: `POST /api/v1/operations/dispatch` and `POST /api/v1/operations/campaign-control` (approved-only).
+When Phase 6 commands are enabled: `POST /api/v1/operations/validate`, `POST /api/v1/operations/integration-request`, and `POST /api/v1/operations/review-pickup` (approved-only).
 
 When fleet mode is enabled: `GET /api/v1/fleet` returns non-authoritative member probes. `GET /api/v1/metrics` is always available (auth-exempt Prometheus text).
 

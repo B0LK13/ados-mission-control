@@ -66,4 +66,4 @@ if (violations.length > 0) {
   process.exit(1);
 }
 
-console.log("Read-only source audit passed: no ADOS writers/dispatch adapters in app surfaces; SQLite cache + Phase-2/3 ados-bridge spawn are the only approved exceptions.");
+console.log("Read-only source audit passed: no ADOS writers/dispatch adapters in app surfaces; SQLite cache + Phase-2/3/6 ados-bridge spawn are the only approved exceptions.");

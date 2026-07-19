@@ -119,7 +119,7 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   timeline: { eyebrow: "Trust timeline / 13", title: "Evidence & audit timeline", description: "A filterable chronology separating authoritative results, direct verification, reported claims, and diagnostics." },
   "routing-incidents": { eyebrow: "Containment register / 14", title: "Routing incidents", description: "Cross-project mistakes, repository containment, owner disposition, and recorded resolution." },
   "dead-letter": { eyebrow: "Failure backlog / 15", title: "Dead letter", description: "Repeated failures, blocked tasks, worker-unavailable handoffs, and routing containment still needing owner disposition — derived only, never invented." },
-  operations: { eyebrow: "Controlled ops / 16", title: "Controlled operations", description: "Phase 3 approved-only dispatch prepare/queue and campaign pause/resume via ADOS tools. Impossible without APPROVED disposition. Cursor cannot take PRIMARY lease here." },
+  operations: { eyebrow: "Controlled ops / 16", title: "Controlled operations", description: "Phase 3 dispatch/campaign control and Phase 6 validate/integration/review-pickup via allowlisted ADOS tools. Impossible without APPROVED disposition. Cursor cannot take PRIMARY lease here." },
   fleet: { eyebrow: "Fleet observe / 17", title: "Fleet", description: "Opt-in multi-member observation only. Rows are NON_AUTHORITATIVE and never inherit this cockpit's PRIMARY lease. Metrics: GET /api/v1/metrics." },
   replay: { eyebrow: "Run chronology / 18", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
   "evidence-diff": { eyebrow: "Run compare / 19", title: "Evidence diff", description: "GET-only comparison of two supervisor runs under one campaign. Missing runs stay UNAVAILABLE — never a fabricated diff." },
@@ -725,54 +725,61 @@ function Fleet({ snapshot }: { snapshot: MissionSnapshot }) {
 
 function Operations({ snapshot }: { snapshot: MissionSnapshot }) {
   const phase3 = snapshot.capabilities?.phase3Commands === true;
+  const phase6 = snapshot.capabilities?.phase6Commands === true;
   const [approvalId, setApprovalId] = useState(snapshot.approvals.find((item) => item.status === "APPROVED")?.approvalId || "");
   const [taskId, setTaskId] = useState(snapshot.tasks[0]?.taskId || "");
   const [runtime, setRuntime] = useState<"cursor" | "codex" | "kimi">("codex");
   const [mode, setMode] = useState<"prepare" | "queue">("prepare");
   const [campaignId, setCampaignId] = useState(snapshot.campaigns[0]?.campaignId || "");
   const [campaignApprovalId, setCampaignApprovalId] = useState("");
+  const [validateApprovalId, setValidateApprovalId] = useState("");
+  const [validateTaskId, setValidateTaskId] = useState(snapshot.tasks[0]?.taskId || "");
+  const [integrationApprovalId, setIntegrationApprovalId] = useState("");
+  const [projectId, setProjectId] = useState(snapshot.projects[0]?.projectId || "");
+  const [integrationSummary, setIntegrationSummary] = useState("");
+  const [pickupApprovalId, setPickupApprovalId] = useState("");
+  const [pickupTaskId, setPickupTaskId] = useState(snapshot.tasks[0]?.taskId || "");
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const dispatch = async () => {
-    if (!phase3) return;
+  const postOp = async (path: string, body: Record<string, string | undefined>, okLabel: string) => {
     setBusy(true);
     setMessage(null);
     try {
-      const response = await fetch("/api/v1/operations/dispatch", {
+      const response = await fetch(path, {
         method: "POST",
-        headers: { "content-type": "application/json", "idempotency-key": `dispatch-${Date.now()}` },
-        body: JSON.stringify({ approvalId, taskId, runtime, mode }),
+        headers: { "content-type": "application/json", "idempotency-key": `${path}-${Date.now()}` },
+        body: JSON.stringify(body),
       });
       const payload = await response.json();
-      setMessage(response.ok ? `Dispatch ${mode} accepted: ${payload.tool?.operationId || "ok"}` : payload?.error?.message || "Dispatch denied");
+      setMessage(
+        response.ok
+          ? `${okLabel}: ${payload.tool?.operationId || "ok"}`
+          : payload?.error?.message || `${okLabel} denied`,
+      );
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Dispatch failed");
+      setMessage(error instanceof Error ? error.message : `${okLabel} failed`);
     } finally {
       setBusy(false);
     }
+  };
+
+  const dispatch = async () => {
+    if (!phase3) return;
+    await postOp("/api/v1/operations/dispatch", { approvalId, taskId, runtime, mode }, `Dispatch ${mode} accepted`);
   };
 
   const campaignControl = async (control: "PAUSE" | "RESUME") => {
     if (!phase3) return;
-    setBusy(true);
-    setMessage(null);
-    try {
-      const response = await fetch("/api/v1/operations/campaign-control", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ approvalId: campaignApprovalId, campaignId, control }),
-      });
-      const payload = await response.json();
-      setMessage(response.ok ? `Campaign ${control} recorded` : payload?.error?.message || "Control denied");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Control failed");
-    } finally {
-      setBusy(false);
-    }
+    await postOp(
+      "/api/v1/operations/campaign-control",
+      { approvalId: campaignApprovalId, campaignId, control },
+      `Campaign ${control} recorded`,
+    );
   };
 
   return (
+    <>
     <Panel code="OPS / PHASE-3" title="Approved-only controlled operations" meta={phase3 ? "PHASE 3 ENABLED" : "PHASE 3 DISABLED"}>
       <div className="readonly-banner">
         <Play size={16} />
@@ -829,6 +836,102 @@ function Operations({ snapshot }: { snapshot: MissionSnapshot }) {
         </div>
       </div>
     </Panel>
+
+    <Panel code="OPS / PHASE-6" title="Phase 6 controlled ops completeness" meta={phase6 ? "PHASE 6 ENABLED" : "PHASE 6 DISABLED"}>
+      <div className="readonly-banner">
+        <ShieldCheck size={16} />
+        <strong>{phase6 ? "APPROVED VALIDATE / INTEGRATION / REVIEW PICKUP" : "NO PHASE 6 ACTION"}</strong>
+        <span>
+          {phase6
+            ? "Each action requires a matching APPROVED disposition. Prepare/file packets only — no silent dispatch enablement, no Cursor PRIMARY/lease path."
+            : "Set MISSION_CONTROL_PHASE6_COMMANDS=enabled after owner authorization to use this surface."}
+        </span>
+      </div>
+
+      <div className="owner-gate-workflow" aria-label="Approved validator run">
+        <strong>Validator run (prepare)</strong>
+        <label className="search-field">
+          <span className="sr-only">Validate approval ID</span>
+          <input aria-label="Validate approval ID" value={validateApprovalId} onChange={(event) => setValidateApprovalId(event.target.value)} placeholder="approvalId (VALIDATE/VALIDATION)" disabled={!phase6} />
+        </label>
+        <label className="search-field">
+          <span className="sr-only">Validate task ID</span>
+          <input aria-label="Validate task ID" value={validateTaskId} onChange={(event) => setValidateTaskId(event.target.value)} placeholder="taskId (optional)" disabled={!phase6} />
+        </label>
+        <button
+          type="button"
+          disabled={!phase6 || busy || !validateApprovalId}
+          onClick={() =>
+            postOp(
+              "/api/v1/operations/validate",
+              { approvalId: validateApprovalId, ...(validateTaskId ? { taskId: validateTaskId } : {}) },
+              "Validator prepare accepted",
+            )
+          }
+        >
+          Request approved validate
+        </button>
+      </div>
+
+      <div className="owner-gate-workflow" aria-label="Approved integration request">
+        <strong>Integration request (file)</strong>
+        <label className="search-field">
+          <span className="sr-only">Integration approval ID</span>
+          <input aria-label="Integration approval ID" value={integrationApprovalId} onChange={(event) => setIntegrationApprovalId(event.target.value)} placeholder="approvalId (INTEGRATION)" disabled={!phase6} />
+        </label>
+        <label className="search-field">
+          <span className="sr-only">Project ID</span>
+          <input aria-label="Integration project ID" value={projectId} onChange={(event) => setProjectId(event.target.value)} placeholder="projectId" disabled={!phase6} />
+        </label>
+        <label className="search-field">
+          <span className="sr-only">Summary</span>
+          <input aria-label="Integration summary" value={integrationSummary} onChange={(event) => setIntegrationSummary(event.target.value)} placeholder="summary (optional)" disabled={!phase6} />
+        </label>
+        <button
+          type="button"
+          disabled={!phase6 || busy || !integrationApprovalId || !projectId}
+          onClick={() =>
+            postOp(
+              "/api/v1/operations/integration-request",
+              {
+                approvalId: integrationApprovalId,
+                projectId,
+                ...(integrationSummary ? { summary: integrationSummary } : {}),
+              },
+              "Integration request filed",
+            )
+          }
+        >
+          File approved integration request
+        </button>
+      </div>
+
+      <div className="owner-gate-workflow" aria-label="Approved review pickup">
+        <strong>Review pickup (bounded prepare)</strong>
+        <label className="search-field">
+          <span className="sr-only">Review pickup approval ID</span>
+          <input aria-label="Review pickup approval ID" value={pickupApprovalId} onChange={(event) => setPickupApprovalId(event.target.value)} placeholder="approvalId (REVIEW_PICKUP)" disabled={!phase6} />
+        </label>
+        <label className="search-field">
+          <span className="sr-only">Review pickup task ID</span>
+          <input aria-label="Review pickup task ID" value={pickupTaskId} onChange={(event) => setPickupTaskId(event.target.value)} placeholder="taskId" disabled={!phase6} />
+        </label>
+        <button
+          type="button"
+          disabled={!phase6 || busy || !pickupApprovalId || !pickupTaskId}
+          onClick={() =>
+            postOp(
+              "/api/v1/operations/review-pickup",
+              { approvalId: pickupApprovalId, taskId: pickupTaskId },
+              "Review pickup prepared",
+            )
+          }
+        >
+          Request approved review pickup
+        </button>
+      </div>
+    </Panel>
+    </>
   );
 }
 
@@ -1916,13 +2019,15 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
         <footer className="application-footer">
           <span><ShieldCheck size={14} /> Mission Control V2 provides authenticated, resilient visibility.</span>
           <span>
-            {snapshot.capabilities?.fleetMode
-              ? "Phase 4 fleet observation enabled (non-authoritative). Metrics at /api/v1/metrics never imply PRIMARY authority."
-              : snapshot.capabilities?.phase3Commands
-                ? "Phase 3 controlled operations enabled (approved-only). Cursor cannot take PRIMARY lease here."
-                : snapshot.capabilities?.phase2Commands
-                  ? "Phase 2 owner commands are enabled via allowlisted ADOS tools. Enable Phase 3 separately for dispatch."
-                  : "It does not authorize, approve, dispatch, or mutate ADOS operations."}
+            {snapshot.capabilities?.phase6Commands
+              ? "Phase 6 controlled ops enabled (validate/integration/review-pickup, approved-only). Cursor cannot take PRIMARY lease here."
+              : snapshot.capabilities?.fleetMode
+                ? "Phase 4 fleet observation enabled (non-authoritative). Metrics at /api/v1/metrics never imply PRIMARY authority."
+                : snapshot.capabilities?.phase3Commands
+                  ? "Phase 3 controlled operations enabled (approved-only). Cursor cannot take PRIMARY lease here."
+                  : snapshot.capabilities?.phase2Commands
+                    ? "Phase 2 owner commands are enabled via allowlisted ADOS tools. Enable Phase 3 separately for dispatch."
+                    : "It does not authorize, approve, dispatch, or mutate ADOS operations."}
           </span>
           <a className="support-bundle-link" href="/api/v1/support-bundle" download>
             Download support bundle

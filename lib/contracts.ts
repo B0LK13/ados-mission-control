@@ -424,6 +424,7 @@ export interface MissionSnapshot {
   capabilities: {
     phase2Commands: boolean;
     phase3Commands: boolean;
+    phase6Commands: boolean;
     fleetMode: boolean;
     ownerSigningConfigured: boolean;
     mutationsEnabled: boolean;

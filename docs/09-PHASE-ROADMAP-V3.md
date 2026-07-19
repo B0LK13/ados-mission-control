@@ -35,17 +35,19 @@ V3 raises Mission Control from “complete cockpit” to **operator intelligence
 
 ## Phase 6 — Controlled operations completeness
 
+**Status:** COMPLETE (2026-07-19) — `phase6-001`…`005` Done in backlog.
+
 **Goal:** Finish Phase 3 gaps that were intentionally deferred (validators, integration requests, review pickups).
 
 | ID | Deliverable | Effort | Notes |
 |----|-------------|--------|-------|
-| P6-01 | Approved validator run | L | POST via allowlisted ADOS tool; requires `APPROVED` disposition scoped to validate |
-| P6-02 | Approved integration request | L | Create integration request packet only after APPROVED approval |
-| P6-03 | Bounded review pickup | M | Trigger already-approved review pickup; no silent dispatch enablement |
-| P6-04 | Operations UI expansion | M | Extend `/operations` with the three actions + consequence previews |
-| P6-05 | Negative + audit tests | M | Unapproved/expired/consumed denied; ledger consumption asserted |
+| P6-01 | Approved validator run | L | Done — `POST /api/v1/operations/validate` |
+| P6-02 | Approved integration request | L | Done — `POST /api/v1/operations/integration-request` |
+| P6-03 | Bounded review pickup | M | Done — `POST /api/v1/operations/review-pickup` |
+| P6-04 | Operations UI expansion | M | Done — `/operations` Phase 6 panel |
+| P6-05 | Negative + audit tests | M | Done — `tests/phase6-commands.test.ts` + evidence package |
 
-**Exit gate:** Impossible without owner approval; Cursor still cannot hold orchestrator lease; full audit trail.
+**Exit gate:** Impossible without owner approval; Cursor still cannot hold orchestrator lease; full audit trail. ✅
 
 **Flag:** `MISSION_CONTROL_PHASE6_COMMANDS=enabled` (independent of Phase 2/3/4 flags).
 

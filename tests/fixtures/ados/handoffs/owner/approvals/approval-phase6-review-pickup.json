@@ -1,0 +1,12 @@
+{
+  "approvalId": "approval-phase6-review-pickup",
+  "action": "REVIEW_PICKUP",
+  "status": "PENDING",
+  "issuedAt": "2026-07-19T10:00:00.000Z",
+  "expiresAt": "2099-07-19T10:00:00.000Z",
+  "singleUse": false,
+  "executionCountLimit": 3,
+  "allowedOperations": ["REVIEW_PICKUP"],
+  "willDo": ["prepare bounded review pickup packet"],
+  "willNotDo": ["silent production dispatch enablement", "Cursor PRIMARY"]
+}

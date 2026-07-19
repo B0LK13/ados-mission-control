@@ -1,0 +1,12 @@
+{
+  "approvalId": "approval-phase6-integration",
+  "action": "CREATE_INTEGRATION_REQUEST",
+  "status": "PENDING",
+  "issuedAt": "2026-07-19T10:00:00.000Z",
+  "expiresAt": "2099-07-19T10:00:00.000Z",
+  "singleUse": false,
+  "executionCountLimit": 3,
+  "allowedOperations": ["INTEGRATION"],
+  "willDo": ["file approved integration request packet"],
+  "willNotDo": ["lease transfer", "raw state mutation from Next.js"]
+}
