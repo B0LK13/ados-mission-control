@@ -1,0 +1,3 @@
+{"timestamp":"2026-07-18T10:00:01Z","sequence":1,"actor":"supervisor","eventType":"START","severity":"INFO","summary":"first step"}
+{"timestamp":"2026-07-18T10:00:02Z","sequence":2,"actor":"supervisor","eventType":"STEP","severity":"INFO","summary":"second step revised token=sk-abcdefghijklmnopqrstuvwxyz"}
+{"timestamp":"2026-07-18T10:00:03Z","sequence":4,"actor":"supervisor","eventType":"COMPLETE","severity":"SUCCESS","summary":"run finished"}

@@ -45,7 +45,7 @@ Live Command Deck routes (`components/mission-control.tsx` → `dashboardViews`)
 - `/agents`
 - `/tasks`
 - `/approvals` — consequence panels; Approve/Reject disabled (Phase 2)
-- `/campaigns`
+- `/campaigns` — table + budget burn/forecast panel (`lib/campaign-budgets.ts`; burn UNAVAILABLE without issuedAt)
 - `/owner-gates`
 - `/workflow` — read-only graph from `workflowSummary` (GET `/api/v1/workflow`)
 - `/handoffs` — GET `/api/v1/handoffs`
@@ -55,6 +55,7 @@ Live Command Deck routes (`components/mission-control.tsx` → `dashboardViews`)
 - `/timeline`
 - `/routing-incidents`
 - `/replay`
+- `/evidence-diff` — GET `/api/v1/evidence-diff` compare two supervisor runs (never fabricates when a side is UNAVAILABLE)
 
 All lists use truthful empty/unavailable states. Tasks, approvals, timeline, handoffs, and evidence have client-side search and normalized-state/category filters.
 
@@ -68,7 +69,7 @@ V2 extends the read model for supervisor observation without becoming a control 
 
 - `lib/data-quality.ts` maps source/cache/stream state onto `LIVE|CACHED|MOCK|STALE|INFERRED|AUTHORITATIVE|UNAVAILABLE` (fixtures are always `MOCK`).
 - Snapshot projections include `campaigns`, `ownerGates`, and `freshness`.
-- GET `/api/v1/campaigns`, `/api/v1/owner-gates`, `/api/v1/replay`, and `/api/v1/support-bundle` are read-only.
+- GET `/api/v1/campaigns`, `/api/v1/owner-gates`, `/api/v1/replay`, `/api/v1/evidence-diff`, and `/api/v1/support-bundle` are read-only.
 - `GET /api/v1/support-bundle` returns a redacted diagnostics JSON download (no auth secrets, no mutation capability). The Command Deck footer exposes the same download for operators.
 - Canonical trees and override env vars are documented in `docs/PATH-REGISTRY.md` (control-plane root, evidence/handoffs mounts, MC data root). Prefer that registry over inventing new roots.
 - UI views `campaigns`, `owner-gates`, and `replay` show budgets, protected decisions, and GET-only supervisor-run chronology with explicit “no UI action” banners.

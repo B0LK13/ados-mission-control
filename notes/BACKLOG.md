@@ -9,14 +9,14 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Primary language:** TypeScript
 - **Classification status:** confirmed
 - **Maturity:** strong (overall score 3.6/5) → target: advanced
-- **Summary:** Phase-1++ read-only cockpit: CI (Node 22 + Playwright incl. axe a11y), support-bundle, PATH-REGISTRY, SSE fan-out, campaigns/owner-gates/replay. Deep analysis 2026-07-19 found Phase-1 screen gaps (workflow/handoffs/worktrees/evidence dedicated views), thin approval consequences, and owner-gated Phase 2+ items.
+- **Summary:** Phase-1++ read-only cockpit: CI (Node 22 + Playwright incl. axe a11y), support-bundle, PATH-REGISTRY, SSE fan-out, campaigns/owner-gates/replay. Phase-1 surfaces + evidence-diff + campaign budget burn shipped 2026-07-19; remaining open work is mainly Phase 2+ owner-gated and optimization tracks.
 
-## Open Tasks (13)
+## Open Tasks (10)
 
 | Priority | Count |
 |---|---|
 | High | 2 |
-| Medium | 7 |
+| Medium | 4 |
 | Low | 4 |
 
 ### `ados-mission-control-v2-roadmap-phase2-001` — [OWNER-GATED] Phase 2: approve/reject/withdraw via ADOS tools (no raw state writes)
@@ -101,60 +101,6 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 
 **Labels:** prd, tasks
 
-### `ados-mission-control-v2-feature-001` — Add evidence-diff viewer between runs or artifact versions
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Low | **Phase:** Optimization | **Status:** Open
-- **Category:** feature / evidence-diff
-- **Owner role:** fullstack-engineer
-
-**Current state:** Replay shows single-run chronology; no compare mode.
-
-**Target state:** Read-only diff of two evidence refs or two runIds with redaction and UNAVAILABLE honesty.
-
-**Gap:** Operators cannot see what changed between supervisor runs in-product.
-
-**Acceptance criteria:**
-- [ ] Compare two identifiers via GET
-- [ ] Redacted output
-- [ ] No fabricated diffs when missing
-
-**Validation steps:**
-1. Unit tests for ordering/redaction; UI empty states
-
-**Source evidence:**
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-- docs/05-SCREEN-INVENTORY.md
-- docs/08-PHASE-ROADMAP.md
-
-**Labels:** evidence, differentiator
-
-### `ados-mission-control-v2-feature-002` — Add campaign budget burn / forecast panel
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Low | **Phase:** Optimization | **Status:** Open
-- **Category:** feature / budgets
-- **Owner role:** frontend-engineer
-
-**Current state:** Campaigns table lists Cursor/Claude/Remediation used vs limit.
-
-**Target state:** Panel shows remaining budget, burn rate if timestamps allow, and truthful UNAVAILABLE when rate cannot be derived.
-
-**Gap:** Capacity risk is not visible until budgets are exhausted.
-
-**Acceptance criteria:**
-- [ ] Remaining capacity visible
-- [ ] No invented burn when timestamps missing
-- [ ] Read-only
-
-**Validation steps:**
-1. Fixture campaigns render forecast or UNAVAILABLE
-
-**Source evidence:**
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-- docs/05-SCREEN-INVENTORY.md
-- docs/08-PHASE-ROADMAP.md
-
-**Labels:** campaigns, ops
-
 ### `ados-mission-control-v2-feature-003` — Add dead-letter / repeated-failure incident surface
 
 - **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Low | **Phase:** Optimization | **Status:** Open
@@ -208,31 +154,6 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - docs/08-PHASE-ROADMAP.md
 
 **Labels:** security, redaction
-
-### `ados-mission-control-v2-operations-001` — Push or explicitly waive local main commits ahead of origin
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** XS | **Risk:** Low | **Phase:** Hardening | **Status:** Open
-- **Category:** operations / git
-- **Owner role:** tech-lead
-
-**Current state:** As of analysis, main can be ahead of origin/main with unpushed commits.
-
-**Target state:** origin/main includes intended commits or an owner waiver notes why push is deferred.
-
-**Gap:** Remote CI and collaborators do not see local completions.
-
-**Acceptance criteria:**
-- [ ] git status not ahead, or written waiver in docs/evidence
-
-**Validation steps:**
-1. git status -sb against origin/main
-
-**Source evidence:**
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-- docs/05-SCREEN-INVENTORY.md
-- docs/08-PHASE-ROADMAP.md
-
-**Labels:** git, owner-ops
 
 ### `ados-mission-control-v2-roadmap-phase3-001` — [OWNER-GATED] Phase 3: controlled operations (approved dispatch only)
 
@@ -376,10 +297,11 @@ Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-
 
 ### Recommended next (MC-local, not owner-gated)
 
-1. **ui-002…005** — Dedicated `/workflow`, `/handoffs`, `/worktrees`, `/evidence` views (APIs already exist).
-2. **ux-002 / ux-003** — Overview nine PRD questions + approval consequence panels (still read-only).
-3. **feature-001…003** — Evidence-diff, budget forecast, dead-letter/incident surface.
+1. ~~**ui-002…006 + ux-002/003 + docs-004**~~ — Dedicated workflow/handoffs/worktrees/evidence/safety views, nine-question overview, approval consequences, ARCHITECTURE sync (done 2026-07-19).
+2. ~~**feature-001 / feature-002**~~ — Evidence-diff viewer + campaign budget burn/forecast (done 2026-07-19).
+3. **feature-003** — Dead-letter / repeated-failure incident surface.
 4. **security-002 / testing-003 / dx-001 / operations-001** — Redaction allowlist, keyboard e2e, WSL build note, push local `main`.
+5. **ui-007** — Task dependency graph (optional Optimization).
 
 ### Owner-gated (do not implement without authorization)
 

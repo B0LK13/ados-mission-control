@@ -12,6 +12,7 @@ import {
   ChevronRight,
   CircleDot,
   FileCheck2,
+  FileDiff,
   FileSearch,
   Fingerprint,
   Flag,
@@ -45,7 +46,9 @@ import type {
   VerificationLabel,
   WorktreeNode,
 } from "@/lib/contracts";
+import { buildCampaignBudgetPanel } from "@/lib/campaign-budgets";
 import { freshnessFromSnapshot } from "@/lib/data-quality";
+import type { EvidenceDiffProjection } from "@/lib/evidence-diff";
 import type { ReplayEvent, ReplayProjection } from "@/lib/replay";
 
 export const dashboardViews = [
@@ -64,6 +67,7 @@ export const dashboardViews = [
   "timeline",
   "routing-incidents",
   "replay",
+  "evidence-diff",
 ] as const;
 export type DashboardView = (typeof dashboardViews)[number];
 
@@ -83,6 +87,7 @@ const navigation: Array<{ view: DashboardView; label: string; icon: typeof Gauge
   { view: "timeline", label: "Evidence & audit", icon: Activity },
   { view: "routing-incidents", label: "Routing incidents", icon: Waypoints },
   { view: "replay", label: "Replay", icon: History },
+  { view: "evidence-diff", label: "Evidence diff", icon: FileDiff },
 ];
 
 const viewCopy: Record<DashboardView, { eyebrow: string; title: string; description: string }> = {
@@ -101,6 +106,7 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   timeline: { eyebrow: "Trust timeline / 13", title: "Evidence & audit timeline", description: "A filterable chronology separating authoritative results, direct verification, reported claims, and diagnostics." },
   "routing-incidents": { eyebrow: "Containment register / 14", title: "Routing incidents", description: "Cross-project mistakes, repository containment, owner disposition, and recorded resolution." },
   replay: { eyebrow: "Run chronology / 15", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
+  "evidence-diff": { eyebrow: "Run compare / 16", title: "Evidence diff", description: "GET-only comparison of two supervisor runs under one campaign. Missing runs stay UNAVAILABLE — never a fabricated diff." },
 };
 
 function formatTimestamp(value?: string | null, compact = false): string {
@@ -581,53 +587,109 @@ function budgetLabel(used: number, limit: number): string {
   return `${used} / ${limit || "∞"}`;
 }
 
-function Campaigns({ snapshot }: { snapshot: MissionSnapshot }) {
+function CampaignBudgetBurnPanel({ campaigns }: { campaigns: CampaignCard[] }) {
+  const panels = campaigns.map((campaign) => buildCampaignBudgetPanel(campaign));
   return (
-    <Panel code="CAMPAIGN / AUTONOMY" title="Cursor-first campaigns" meta={`${snapshot.campaigns.length} visible · freshness ${snapshot.freshness}`}>
-      <div className="readonly-banner"><ShieldCheck size={16} /><strong>READ-ONLY V2</strong><span>Campaign pause, resume, and kill remain control-plane tools. Mission Control never mutates campaign state.</span></div>
-      {snapshot.campaigns.length ? (
-        <TableFrame>
-          <table>
-            <thead>
-              <tr>
-                <th>Campaign</th>
-                <th>Status / runtimes</th>
-                <th>Budgets</th>
-                <th>Push/merge/deploy</th>
-                <th>Owner gates</th>
-                <th>Next action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {snapshot.campaigns.map((campaign: CampaignCard) => (
-                <tr key={campaign.campaignId}>
-                  <td>
-                    <code className="full-id">{campaign.campaignId}</code>
-                    <small>{campaign.projectIds.join(", ") || "NO PROJECT IDS"}</small>
-                    <VerificationBadge value={campaign.verification} />
-                  </td>
-                  <td>
-                    <StatusBadge value={campaign.status} />
-                    <span>{campaign.primaryRuntime} → {campaign.reviewRuntime}</span>
-                    <small>{formatTimestamp(campaign.expiresAt, true)}</small>
-                  </td>
-                  <td>
-                    <span>Cursor {budgetLabel(campaign.budgets.cursorLaunches.used, campaign.budgets.cursorLaunches.limit)}</span>
-                    <span>Claude {budgetLabel(campaign.budgets.claudeReviews.used, campaign.budgets.claudeReviews.limit)}</span>
-                    <span>Remediation {budgetLabel(campaign.budgets.remediations.used, campaign.budgets.remediations.limit)}</span>
-                  </td>
-                  <td><StatusBadge value={campaign.pushMergeDeployPolicy} /></td>
-                  <td>{campaign.ownerOnlyGates.length ? campaign.ownerOnlyGates.map((gate) => <span key={gate}>{gate}</span>) : <span>NONE DECLARED</span>}</td>
-                  <td>{campaign.nextAction}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </TableFrame>
+    <Panel code="CAMPAIGN / BUDGET" title="Budget burn & forecast" meta={`${panels.length} campaign${panels.length === 1 ? "" : "s"}`}>
+      <div className="readonly-banner">
+        <ShieldCheck size={16} />
+        <strong>DERIVED ONLY</strong>
+        <span>Burn rate and exhaustion require a valid issuedAt. Missing timestamps report UNAVAILABLE — never invented.</span>
+      </div>
+      {panels.length ? (
+        <div className="budget-panel-stack">
+          {panels.map((panel) => (
+            <article className="budget-campaign-card" key={panel.campaignId} aria-label={`Budget panel ${panel.campaignId}`}>
+              <header>
+                <code className="full-id">{panel.campaignId}</code>
+                <small>Issued {formatTimestamp(panel.issuedAt, true)}</small>
+              </header>
+              <div className="budget-lane-grid">
+                {panel.lanes.map((lane) => (
+                  <div className="budget-lane" key={lane.id}>
+                    <div className="budget-lane-head">
+                      <strong>{lane.label}</strong>
+                      <span>{budgetLabel(lane.used, lane.limit)}</span>
+                    </div>
+                    <div
+                      className="budget-meter"
+                      role="meter"
+                      aria-label={`${lane.label} utilization`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={lane.utilizationPercent == null ? 0 : Math.round(lane.utilizationPercent)}
+                      aria-valuetext={lane.utilizationPercent == null ? "UNAVAILABLE" : `${Math.round(lane.utilizationPercent)} percent`}
+                    >
+                      <span style={{ width: `${lane.utilizationPercent ?? 0}%` }} />
+                    </div>
+                    <dl>
+                      <div><dt>Remaining</dt><dd>{lane.remainingLabel}</dd></div>
+                      <div><dt>Burn</dt><dd>{lane.burnLabel}</dd></div>
+                      <div><dt>Forecast exhaust</dt><dd title={lane.forecastExhaustionAt || undefined}>{lane.forecastLabel === "UNAVAILABLE" ? "UNAVAILABLE" : formatTimestamp(lane.forecastExhaustionAt, true)}</dd></div>
+                    </dl>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
       ) : (
-        <EmptyState title="No campaign records" detail="No campaign JSON/JSONL was derived from the configured ADOS source. Fixture and unavailable modes report this truthfully." />
+        <EmptyState title="No budget panels" detail="No campaign records were available to derive budget burn." />
       )}
     </Panel>
+  );
+}
+
+function Campaigns({ snapshot }: { snapshot: MissionSnapshot }) {
+  return (
+    <>
+      <Panel code="CAMPAIGN / AUTONOMY" title="Cursor-first campaigns" meta={`${snapshot.campaigns.length} visible · freshness ${snapshot.freshness}`}>
+        <div className="readonly-banner"><ShieldCheck size={16} /><strong>READ-ONLY V2</strong><span>Campaign pause, resume, and kill remain control-plane tools. Mission Control never mutates campaign state.</span></div>
+        {snapshot.campaigns.length ? (
+          <TableFrame>
+            <table>
+              <thead>
+                <tr>
+                  <th>Campaign</th>
+                  <th>Status / runtimes</th>
+                  <th>Budgets</th>
+                  <th>Push/merge/deploy</th>
+                  <th>Owner gates</th>
+                  <th>Next action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {snapshot.campaigns.map((campaign: CampaignCard) => (
+                  <tr key={campaign.campaignId}>
+                    <td>
+                      <code className="full-id">{campaign.campaignId}</code>
+                      <small>{campaign.projectIds.join(", ") || "NO PROJECT IDS"}</small>
+                      <VerificationBadge value={campaign.verification} />
+                    </td>
+                    <td>
+                      <StatusBadge value={campaign.status} />
+                      <span>{campaign.primaryRuntime} → {campaign.reviewRuntime}</span>
+                      <small>{formatTimestamp(campaign.expiresAt, true)}</small>
+                    </td>
+                    <td>
+                      <span>Cursor {budgetLabel(campaign.budgets.cursorLaunches.used, campaign.budgets.cursorLaunches.limit)}</span>
+                      <span>Claude {budgetLabel(campaign.budgets.claudeReviews.used, campaign.budgets.claudeReviews.limit)}</span>
+                      <span>Remediation {budgetLabel(campaign.budgets.remediations.used, campaign.budgets.remediations.limit)}</span>
+                    </td>
+                    <td><StatusBadge value={campaign.pushMergeDeployPolicy} /></td>
+                    <td>{campaign.ownerOnlyGates.length ? campaign.ownerOnlyGates.map((gate) => <span key={gate}>{gate}</span>) : <span>NONE DECLARED</span>}</td>
+                    <td>{campaign.nextAction}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableFrame>
+        ) : (
+          <EmptyState title="No campaign records" detail="No campaign JSON/JSONL was derived from the configured ADOS source. Fixture and unavailable modes report this truthfully." />
+        )}
+      </Panel>
+      <CampaignBudgetBurnPanel campaigns={snapshot.campaigns} />
+    </>
   );
 }
 
@@ -838,6 +900,192 @@ function Replay() {
   );
 }
 
+function EvidenceDiff() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [campaignId, setCampaignId] = useState(() => searchParams.get("campaignId") || "");
+  const [leftRunId, setLeftRunId] = useState(() => searchParams.get("leftRunId") || "");
+  const [rightRunId, setRightRunId] = useState(() => searchParams.get("rightRunId") || "");
+  const [projection, setProjection] = useState<EvidenceDiffProjection | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const requestedCampaignId = searchParams.get("campaignId")?.trim() || "";
+  const requestedLeftRunId = searchParams.get("leftRunId")?.trim() || "";
+  const requestedRightRunId = searchParams.get("rightRunId")?.trim() || "";
+
+  useEffect(() => {
+    setCampaignId(requestedCampaignId);
+    setLeftRunId(requestedLeftRunId);
+    setRightRunId(requestedRightRunId);
+    if (!requestedCampaignId || !requestedLeftRunId || !requestedRightRunId) {
+      setProjection(null);
+      setFetchError(null);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setFetchError(null);
+
+    void fetch(
+      `/api/v1/evidence-diff?campaignId=${encodeURIComponent(requestedCampaignId)}&leftRunId=${encodeURIComponent(requestedLeftRunId)}&rightRunId=${encodeURIComponent(requestedRightRunId)}`,
+    )
+      .then(async (response) => {
+        const body = (await response.json()) as EvidenceDiffProjection;
+        if (cancelled) return;
+        setProjection(body);
+        if (!response.ok && body.freshness === "UNAVAILABLE") {
+          setFetchError(null);
+        } else if (!response.ok) {
+          setFetchError(`Evidence diff request failed with HTTP ${response.status}.`);
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setProjection(null);
+        setFetchError(error instanceof Error ? error.message : "Evidence diff request failed.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [requestedCampaignId, requestedLeftRunId, requestedRightRunId]);
+
+  const openDiff = (event: FormEvent) => {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    if (campaignId.trim()) params.set("campaignId", campaignId.trim());
+    if (leftRunId.trim()) params.set("leftRunId", leftRunId.trim());
+    if (rightRunId.trim()) params.set("rightRunId", rightRunId.trim());
+    const next = params.toString();
+    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+  };
+
+  const ready = Boolean(requestedCampaignId && requestedLeftRunId && requestedRightRunId);
+  const visibleEntries = (projection?.entries || []).filter((entry) => entry.kind !== "unchanged");
+
+  return (
+    <Panel
+      code="DIFF / EVIDENCE"
+      title="Supervisor run comparison"
+      meta={
+        ready
+          ? `${projection?.summary.added ?? 0} added · ${projection?.summary.removed ?? 0} removed · ${projection?.summary.changed ?? 0} changed · freshness ${projection?.freshness || "PENDING"}`
+          : "awaiting campaignId + leftRunId + rightRunId"
+      }
+    >
+      <div className="readonly-banner">
+        <FileDiff size={16} />
+        <strong>GET-ONLY DIFF</strong>
+        <span>Compares redacted supervisor-run chronologies. Missing runs report UNAVAILABLE — Mission Control never fabricates events.</span>
+      </div>
+
+      <form className="replay-form evidence-diff-form" onSubmit={openDiff}>
+        <label className="search-field">
+          <Flag size={16} />
+          <span className="sr-only">Campaign ID</span>
+          <input aria-label="Campaign ID" value={campaignId} onChange={(event) => setCampaignId(event.target.value)} placeholder="campaignId" autoComplete="off" />
+        </label>
+        <label className="search-field">
+          <TerminalSquare size={16} />
+          <span className="sr-only">Left run ID</span>
+          <input aria-label="Left run ID" value={leftRunId} onChange={(event) => setLeftRunId(event.target.value)} placeholder="leftRunId" autoComplete="off" />
+        </label>
+        <label className="search-field">
+          <TerminalSquare size={16} />
+          <span className="sr-only">Right run ID</span>
+          <input aria-label="Right run ID" value={rightRunId} onChange={(event) => setRightRunId(event.target.value)} placeholder="rightRunId" autoComplete="off" />
+        </label>
+        <button type="submit" className="replay-submit">Compare runs</button>
+      </form>
+
+      {loading && <EmptyState title="Loading evidence diff" detail="Fetching redacted left/right supervisor-run chronologies…" />}
+      {fetchError && <EmptyState title="Evidence diff failed" detail={fetchError} />}
+      {!loading && !fetchError && !ready && (
+        <EmptyState
+          title="No comparison selected"
+          detail="Enter a campaignId plus left and right runIds. Fixture example: campaign-replay-001 / run-replay-001 / run-replay-002."
+        />
+      )}
+      {!loading && !fetchError && projection && projection.freshness === "UNAVAILABLE" && (
+        <EmptyState title="Evidence diff unavailable" detail={projection.warnings[0] || "Both runs are unavailable under the configured control-plane root."} />
+      )}
+      {!loading && !fetchError && projection && projection.freshness !== "UNAVAILABLE" && (
+        <>
+          <div className="replay-meta">
+            <div><span>CAMPAIGN</span><strong>{projection.campaignId}</strong></div>
+            <div><span>LEFT</span><strong>{projection.leftRunId} · {projection.left.freshness}</strong></div>
+            <div><span>RIGHT</span><strong>{projection.rightRunId} · {projection.right.freshness}</strong></div>
+            <div><span>UNCHANGED</span><strong>{projection.summary.unchanged}</strong></div>
+          </div>
+          {projection.warnings.length > 0 && (
+            <div className="source-notice tone-warning" role="status">
+              <AlertTriangle size={18} />
+              <div>
+                <strong>DIFF WARNINGS</strong>
+                <span>{projection.warnings[0]}</span>
+              </div>
+              <StatusBadge value="WARNING" />
+            </div>
+          )}
+          {visibleEntries.length ? (
+            <div className="evidence-diff-list" aria-label="Evidence diff entries">
+              {visibleEntries.map((entry) => (
+                <article className={`evidence-diff-entry kind-${entry.kind}`} key={`${entry.kind}-${entry.key}`}>
+                  <header>
+                    <StatusBadge value={entry.kind.toUpperCase()} />
+                    <code>{entry.key}</code>
+                    {entry.changes?.length ? <small>{entry.changes.join(", ")}</small> : null}
+                  </header>
+                  <div className="evidence-diff-columns">
+                    <div>
+                      <span>Left</span>
+                      {entry.left ? (
+                        <>
+                          <strong>{entry.left.eventType}</strong>
+                          <p>{entry.left.summary}</p>
+                        </>
+                      ) : (
+                        <p>ABSENT</p>
+                      )}
+                    </div>
+                    <div>
+                      <span>Right</span>
+                      {entry.right ? (
+                        <>
+                          <strong>{entry.right.eventType}</strong>
+                          <p>{entry.right.summary}</p>
+                        </>
+                      ) : (
+                        <p>ABSENT</p>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No added, removed, or changed events"
+              detail={
+                projection.left.freshness === "UNAVAILABLE" || projection.right.freshness === "UNAVAILABLE"
+                  ? "One side is UNAVAILABLE, so no structural diff entries were emitted."
+                  : "Both runs are available and event keys match without field changes (unchanged events are hidden)."
+              }
+            />
+          )}
+        </>
+      )}
+    </Panel>
+  );
+}
+
 export function MissionControl({ initialSnapshot, view }: { initialSnapshot: MissionSnapshot; view: DashboardView }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -935,6 +1183,7 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
     if (view === "safety") return <Safety snapshot={snapshot} />;
     if (view === "timeline") return <Timeline snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
     if (view === "replay") return <Replay />;
+    if (view === "evidence-diff") return <EvidenceDiff />;
     return <RoutingIncidents snapshot={snapshot} />;
   }, [view, snapshot, query, status]);
 

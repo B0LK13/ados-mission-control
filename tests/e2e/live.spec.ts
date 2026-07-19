@@ -64,6 +64,8 @@ test("campaigns and owner gates render from live fixture projections", async ({ 
   await expect(page.getByRole("heading", { name: "Campaigns", exact: true })).toBeVisible();
   await expect(page.getByText("campaign-e2e-pilot-001", { exact: true })).toBeVisible();
   await expect(page.getByText("FRESHNESS", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Budget burn & forecast", exact: true })).toBeVisible();
+  await expect(page.getByText("DERIVED ONLY")).toBeVisible();
   await page.goto("/owner-gates");
   await expect(page.getByRole("heading", { name: "Owner gates", exact: true })).toBeVisible();
   await expect(page.getByText("gate-e2e-commit-001", { exact: true })).toBeVisible();
@@ -83,6 +85,18 @@ test("phase-1 surface views render workflow handoffs worktrees evidence safety",
   await expect(page.getByRole("heading", { name: "Evidence", exact: true })).toBeVisible();
   await page.goto("/safety");
   await expect(page.getByRole("heading", { name: "Safety", exact: true })).toBeVisible();
+});
+
+test("evidence diff UI compares two supervisor runs without fabricating missing sides", async ({ page }) => {
+  await page.goto("/evidence-diff?campaignId=campaign-replay-001&leftRunId=run-replay-001&rightRunId=run-replay-002");
+  await expect(page.getByRole("heading", { name: "Evidence diff", exact: true })).toBeVisible();
+  await expect(page.getByText("GET-ONLY DIFF")).toBeVisible();
+  await expect(page.getByLabel("Evidence diff entries")).toBeVisible();
+  await expect(page.getByText("ADDED", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("sk-abcdefghijklmnopqrstuvwxyz")).toHaveCount(0);
+
+  await page.goto("/evidence-diff?campaignId=campaign-replay-001&leftRunId=run-replay-001&rightRunId=missing-run");
+  await expect(page.getByText(/UNAVAILABLE|no fabricated|DIFF WARNINGS|No added/i).first()).toBeVisible();
 });
 
 test("replay UI loads chronological redacted supervisor-run events", async ({ page }) => {
