@@ -136,4 +136,4 @@ Ordered against `ados-mission-control-update-package/04-CURSOR-MASTER-INSTRUCTIO
 19. ~~Support-bundle exporter (FBL-OPS-003)~~ (done — `GET /api/v1/support-bundle` + footer download).
 
 **Handoff report:** `ados-mission-control-update-package/docs/COMPLETION-REPORT-2026-07-18.md`  
-**Classification:** `ADOS_CURSOR_FIRST_SUPERVISOR_V1_ROLLOUT_COMPLETE_CONTROLLED` (flags 1–8 on; Cursor-first default; Headless cockpit auto-open; LIVE_UNSCOPED + publication still DENY; see `docs/COMPLETION-REPORT-2026-07-19.md` + `docs/evidence/rollout-complete-controlled-20260719/`)
+**Classification:** `LIVE_UNSCOPED_AND_PUBLICATION_AUTHORIZED` (repos public; `dispatchEnabled=true` / `cursorPrimaryMode=LIVE_UNSCOPED`; unscoped launch without child-task still refused; evidence `docs/evidence/live-unscoped-publication-20260719/`)
