@@ -86,4 +86,10 @@ test("phase 2/3/4 opt-in surfaces stay disabled by default", async ({ page }) =>
   await page.goto("/safety");
   await expect(page.getByLabel("Detector legend")).toBeVisible();
   await expect(page.getByLabel("Source to severity")).toBeVisible();
+
+  await page.goto("/owner");
+  await expect(page.getByRole("heading", { name: "Owner action preview" })).toBeVisible();
+  await expect(page.getByText("PREVIEW ONLY")).toBeVisible();
+  await expect(page.getByText("Consequences").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "No UI action" }).first()).toBeDisabled();
 });

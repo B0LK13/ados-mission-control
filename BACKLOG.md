@@ -11,37 +11,11 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Maturity:** strong (overall score 3.7/5) → target: advanced
 - **Summary:** Phases 1–4 MVP complete (2026-07-19): read-only Command Deck, opt-in Phase 2/3 commands, opt-in Phase 4 fleet/metrics. V3 roadmap AUTHORIZED: operator intelligence, controlled-ops completeness, alerting, and platform hardening (docs/09-PHASE-ROADMAP-V3.md).
 
-## Open Tasks (4)
+## Open Tasks (1)
 
 | Priority | Count |
 |---|---|
-| Low | 4 |
-
-### `ados-mission-control-v2-api-002` — Implement cursor/limit pagination and ETag on list endpoints
-
-- **Priority:** Low | **Severity:** Low | **Effort:** M | **Risk:** Medium | **Phase:** Optimization | **Status:** Open
-- **Category:** api / pagination
-- **Owner role:** fullstack-engineer
-
-**Current state:** List endpoints return full arrays without cursor/ETag.
-
-**Target state:** Optional cursor/limit (default 50, max 200) + ETag/If-None-Match where practical.
-
-**Gap:** API design §1 conventions unmet for large control planes.
-
-**Acceptance criteria:**
-- [ ] limit capped at 200
-- [ ] Stable cursor semantics documented
-- [ ] 304 on matching ETag when implemented
-
-**Validation steps:**
-1. Unit tests for limit/cursor
-2. Docs updated
-
-**Source evidence:**
-- docs/04-API-DESIGN.md
-
-**Labels:** api, performance, gap-analysis-2026-07-19
+| Low | 1 |
 
 ### `ados-mission-control-v2-security-004` — Expand schema registry coverage beyond ledger/approval families
 
@@ -70,56 +44,6 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 
 **Labels:** security, schemas, gap-analysis-2026-07-19
 
-### `ados-mission-control-v2-ui-010` — Owner action preview surface (/owner) for disabled Phase-1 catalog
-
-- **Priority:** Low | **Severity:** Low | **Effort:** M | **Risk:** Medium | **Phase:** Optimization | **Status:** Open
-- **Category:** ui / owner
-- **Owner role:** frontend-engineer
-
-**Current state:** Approvals/owner-gates/operations are separate; no unified /owner preview catalog.
-
-**Target state:** /owner (or overview panel) listing preview cards with exact consequence text; actions gated by phase flags.
-
-**Gap:** S10 Owner preview surface missing.
-
-**Acceptance criteria:**
-- [ ] Preview cards never execute without flag
-- [ ] Consequence text present
-- [ ] Empty when none applicable
-
-**Validation steps:**
-1. UI e2e flag-off
-
-**Source evidence:**
-- docs/05-SCREEN-INVENTORY.md
-
-**Labels:** prd, owner, gap-analysis-2026-07-19
-
-### `ados-mission-control-v2-security-005` — Design multi-identity / SSO path (roles beyond single Basic user)
-
-- **Priority:** Low | **Severity:** Medium | **Effort:** M | **Risk:** Medium | **Phase:** Advanced | **Status:** Open
-- **Category:** security / auth
-- **Owner role:** security-engineer
-
-**Current state:** Single Basic user when auth enabled.
-
-**Target state:** Design ADR for roles (owner/operator/readonly) + SSO options; no Cursor PRIMARY via IdP.
-
-**Gap:** No path to multi-operator staging.
-
-**Acceptance criteria:**
-- [ ] ADR with threat model
-- [ ] Explicit non-goal: Cursor PRIMARY
-- [ ] Migration notes from Basic
-
-**Validation steps:**
-1. Doc review / owner sign-off
-
-**Source evidence:**
-- SECURITY.md
-
-**Labels:** security, sso, design, gap-analysis-2026-07-19
-
 <!-- END AUTO-GENERATED BACKLOG -->
 
 ## Deep analysis (2026-07-19)
@@ -131,7 +55,7 @@ Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-
 ### Recommended next
 
 1. ~~**V3 Phases 5–8**~~ — done 2026-07-19.
-2. ~~**Residual polish**~~ — `api-003`, `security-003`, `docs-005`, `ui-008/009`, `ux-004`, `testing-004`, `feature-004` closed 2026-07-19. Remaining open: `api-002`, `security-004/005`, `ui-010`.
+2. ~~**Residual polish**~~ — gap-analysis Medium/Low batch closed 2026-07-19 (`api-002/003`, `feature-004`, `docs-005`, `ui-008/009/010`, `ux-004`, `testing-004`, `security-003/005`). Remaining open: `security-004` (schema registry expansion).
 3. Optional future: amend ADR-002 to implement SSE deltas only if non-fabricating.
 
 **Classification:** `MISSION_CONTROL_V3_PHASES_5_TO_8_COMPLETE`.

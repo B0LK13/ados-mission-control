@@ -1,12 +1,10 @@
-import { missionResponse } from "@/lib/http";
+import { missionListResponse } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function GET() {
-  return missionResponse((snapshot) => ({
-    items: snapshot.ownerGates,
+export async function GET(request: Request) {
+  return missionListResponse(request, (snapshot) => snapshot.ownerGates, (snapshot) => ({
     freshness: snapshot.freshness,
-    snapshotAt: snapshot.snapshotAt,
   }));
 }

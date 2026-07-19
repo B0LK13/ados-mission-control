@@ -15,6 +15,7 @@ const serverDashboardViews: readonly DashboardView[] = [
   "approvals",
   "campaigns",
   "owner-gates",
+  "owner",
   "workflow",
   "handoffs",
   "worktrees",

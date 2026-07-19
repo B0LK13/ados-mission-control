@@ -71,6 +71,7 @@ export const dashboardViews = [
   "approvals",
   "campaigns",
   "owner-gates",
+  "owner",
   "workflow",
   "handoffs",
   "worktrees",
@@ -95,6 +96,7 @@ const navigation: Array<{ view: DashboardView; label: string; icon: typeof Gauge
   { view: "approvals", label: "Approvals", icon: FileCheck2 },
   { view: "campaigns", label: "Campaigns", icon: Flag },
   { view: "owner-gates", label: "Owner gates", icon: ShieldAlert },
+  { view: "owner", label: "Owner preview", icon: ShieldCheck },
   { view: "workflow", label: "Workflow", icon: WorkflowIcon },
   { view: "handoffs", label: "Handoffs", icon: GitBranch },
   { view: "worktrees", label: "Worktrees", icon: FolderGit2 },
@@ -118,6 +120,7 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   approvals: { eyebrow: "Owner gate / 05", title: "Approvals", description: "Filed status, authoritative disposition, consumption, expiry, and scope. Phase 2 can approve/reject/withdraw/request-evidence/request-corrections via allowlisted ADOS tools when enabled." },
   campaigns: { eyebrow: "Autonomy campaign / 06", title: "Campaigns", description: "Cursor-first campaign status, budgets, runtimes, and push/merge/deploy policy — observation only." },
   "owner-gates": { eyebrow: "Protected decision / 07", title: "Owner gates", description: "Open and historical owner-only decisions. Phase 2 uses challenge → external Ed25519 sign → ADOS tool decide. Agents cannot self-approve." },
+  owner: { eyebrow: "Owner catalog / 07b", title: "Owner action preview", description: "Phase-1 style catalog of owner actions with exact consequence text. Cards never execute without the matching phase flag; unavailable actions stay preview-only." },
   workflow: { eyebrow: "Protocol graph / 08", title: "Workflow", description: "Read-only Owner → agent → validation flow derived from the brokered workflow summary. No drag-to-dispatch." },
   handoffs: { eyebrow: "Handoff queue / 09", title: "Handoffs", description: "Per-agent handoff packets, lifecycle stepper, and from/to/lifecycle filters — observation only." },
   worktrees: { eyebrow: "Repo hygiene / 10", title: "Worktrees", description: "Registered worktrees, dirty/untracked signals, branch/HEAD, and owner agent — no cleanup actions. Alias: /repos → /worktrees." },
@@ -1840,6 +1843,221 @@ function OwnerGates({ snapshot }: { snapshot: MissionSnapshot }) {
   );
 }
 
+type OwnerPreviewGate = "phase2" | "phase3" | "phase6" | "never";
+
+const OWNER_ACTION_CATALOG: Array<{
+  id: string;
+  title: string;
+  gate: OwnerPreviewGate;
+  surface: string;
+  consequences: string[];
+}> = [
+  {
+    id: "approve",
+    title: "Approve",
+    gate: "phase2",
+    surface: "/approvals",
+    consequences: [
+      "Appends APPROVED disposition via allowlisted ADOS tool",
+      "Does not write state/* from Next.js",
+      "Does not grant Cursor PRIMARY lease",
+    ],
+  },
+  {
+    id: "reject",
+    title: "Reject",
+    gate: "phase2",
+    surface: "/approvals",
+    consequences: [
+      "Appends DENIED disposition via allowlisted ADOS tool",
+      "Leaves request file intact; ledger records owner denial",
+    ],
+  },
+  {
+    id: "request-evidence",
+    title: "Request evidence",
+    gate: "phase2",
+    surface: "/approvals",
+    consequences: [
+      "Non-terminal follow-up: EVIDENCE_REQUESTED + OWNER_APPROVAL_FOLLOWUP",
+      "Does not approve, deny, or revoke",
+      "Approval stays PENDING for a later decision",
+    ],
+  },
+  {
+    id: "request-corrections",
+    title: "Request corrections",
+    gate: "phase2",
+    surface: "/approvals",
+    consequences: [
+      "Non-terminal follow-up: CORRECTIONS_REQUESTED + OWNER_APPROVAL_FOLLOWUP",
+      "Does not approve, deny, or revoke",
+    ],
+  },
+  {
+    id: "withdraw",
+    title: "Withdraw approval",
+    gate: "phase2",
+    surface: "/approvals",
+    consequences: [
+      "Appends REVOKED disposition via allowlisted ADOS tool",
+      "Revokes prior APPROVED when still unconsumed",
+    ],
+  },
+  {
+    id: "owner-gate-decide",
+    title: "Decide owner gate",
+    gate: "phase2",
+    surface: "/owner-gates",
+    consequences: [
+      "Challenge → external Ed25519 sign → ADOS decide tool",
+      "Agents cannot self-approve; private keys never enter MC",
+    ],
+  },
+  {
+    id: "dispatch",
+    title: "Authorize worker dispatch",
+    gate: "phase3",
+    surface: "/operations",
+    consequences: [
+      "Prepare/queue only after APPROVED disposition",
+      "Impossible without Phase 3 flag + matching approval action",
+      "Does not silently enable dispatch or transfer lease",
+    ],
+  },
+  {
+    id: "validate",
+    title: "Run approved validator",
+    gate: "phase6",
+    surface: "/operations",
+    consequences: [
+      "Files validator prepare packet via allowlisted tool",
+      "Requires APPROVED disposition with matching action",
+    ],
+  },
+  {
+    id: "integration",
+    title: "Authorize FF integration request",
+    gate: "phase6",
+    surface: "/operations",
+    consequences: [
+      "Files integration request packets only",
+      "Does not fast-forward or merge without control-plane tools",
+    ],
+  },
+  {
+    id: "pause-agent",
+    title: "Pause agent",
+    gate: "never",
+    surface: "control-plane",
+    consequences: [
+      "Not exposed in Mission Control",
+      "Remains an ADOS control-plane / owner tool action",
+    ],
+  },
+  {
+    id: "freeze-task",
+    title: "Freeze task",
+    gate: "never",
+    surface: "control-plane",
+    consequences: [
+      "Not exposed in Mission Control",
+      "Remains an ADOS control-plane / owner tool action",
+    ],
+  },
+  {
+    id: "archive-workflow",
+    title: "Archive workflow",
+    gate: "never",
+    surface: "control-plane",
+    consequences: [
+      "Not exposed in Mission Control",
+      "Remains an ADOS control-plane / owner tool action",
+    ],
+  },
+];
+
+function OwnerPreview({ snapshot }: { snapshot: MissionSnapshot }) {
+  const phase2 = snapshot.capabilities?.phase2Commands === true;
+  const phase3 = snapshot.capabilities?.phase3Commands === true;
+  const phase6 = snapshot.capabilities?.phase6Commands === true;
+  const applicableApprovals = snapshot.pendingApprovals;
+  const applicableGates = snapshot.ownerGates.filter((gate) => gate.status === "OPEN");
+
+  const flagEnabled = (gate: OwnerPreviewGate): boolean => {
+    if (gate === "phase2") return phase2;
+    if (gate === "phase3") return phase3;
+    if (gate === "phase6") return phase6;
+    return false;
+  };
+
+  return (
+    <>
+      <Panel code="OWNER / PREVIEW" title="Owner action catalog" meta={`${OWNER_ACTION_CATALOG.length} catalogued`}>
+        <div className="readonly-banner">
+          <ShieldAlert size={16} />
+          <strong>PREVIEW ONLY</strong>
+          <span>Cards never execute from this surface. Matching phase flags enable actions on their real screens (/approvals, /owner-gates, /operations).</span>
+        </div>
+        <div className="owner-preview-grid">
+          {OWNER_ACTION_CATALOG.map((action) => {
+            const enabled = flagEnabled(action.gate);
+            const gateLabel = action.gate === "never" ? "NOT IN MC" : action.gate.toUpperCase();
+            return (
+              <article className="owner-preview-card" key={action.id} aria-label={`Owner action preview ${action.title}`}>
+                <header>
+                  <div>
+                    <strong>{action.title}</strong>
+                    <small>{action.surface}</small>
+                  </div>
+                  <StatusBadge value={enabled ? "FLAG ON" : gateLabel} />
+                </header>
+                <div className="incident-resolution">
+                  <span>Consequences</span>
+                  <ul>
+                    {action.consequences.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </div>
+                <button type="button" disabled title={enabled ? `Execute only on ${action.surface}` : "Phase flag off or not exposed in Mission Control"}>
+                  {enabled ? "Go to surface to execute" : "No UI action"}
+                </button>
+              </article>
+            );
+          })}
+        </div>
+      </Panel>
+      <Panel code="OWNER / APPLICABLE" title="Applicable now" meta={`${applicableApprovals.length} pending approvals · ${applicableGates.length} open gates`}>
+        {applicableApprovals.length || applicableGates.length ? (
+          <div className="record-list">
+            {applicableApprovals.map((approval) => (
+              <div className="record-row" key={approval.approvalId}>
+                <div className={`record-dot tone-${stateTone(approval.status)}`} />
+                <div>
+                  <strong>{approval.approvalId}</strong>
+                  <span>{approval.action.replaceAll("_", " ")} · pending owner disposition</span>
+                </div>
+                <Link href="/approvals">Open approvals</Link>
+              </div>
+            ))}
+            {applicableGates.map((gate) => (
+              <div className="record-row" key={gate.gateId}>
+                <div className={`record-dot tone-${stateTone(gate.status)}`} />
+                <div>
+                  <strong>{gate.gateId}</strong>
+                  <span>Open owner gate · challenge/sign required</span>
+                </div>
+                <Link href="/owner-gates">Open owner gates</Link>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="No applicable owner actions" detail="No pending approvals or open owner gates in the current read model." />
+        )}
+      </Panel>
+    </>
+  );
+}
+
 function Replay() {
   const router = useRouter();
   const pathname = usePathname();
@@ -2287,6 +2505,7 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
     if (view === "approvals") return <Approvals snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
     if (view === "campaigns") return <Campaigns snapshot={snapshot} />;
     if (view === "owner-gates") return <OwnerGates snapshot={snapshot} />;
+    if (view === "owner") return <OwnerPreview snapshot={snapshot} />;
     if (view === "workflow") return <Workflow snapshot={snapshot} />;
     if (view === "handoffs") return <Handoffs snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
     if (view === "worktrees") return <Worktrees snapshot={snapshot} />;

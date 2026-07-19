@@ -10,8 +10,8 @@
 - JSON responses; `Content-Type: application/json`
 - Timestamps: ISO-8601 UTC
 - Errors: `{ "error": { "code": string, "message": string, "details"?: object } }`
-- Pagination: `?cursor=&limit=` planned (`api-002`); current list endpoints return full collections
-- Caching: `Cache-Control: no-store`; ETag planned with pagination
+- Pagination: `?cursor=&limit=` on list endpoints (default limit 50, max 200; larger limits are clamped). Cursor is opaque base64url of `{ "o": <offset> }` into the snapshot list order (see `lib/api/pagination.ts`).
+- Caching: `Cache-Control: no-store`; list responses emit a weak `ETag` and return `304` when `If-None-Match` matches
 - Redaction: never return tokens, keys, connection strings (all JSON via `missionJson` / `missionCommandJson`)
 - Authority header: `X-ADOS-Authority` is `read-only` for GET; phase command successes use `phase2-commands` / `phase3-commands` / `phase6-commands`
 

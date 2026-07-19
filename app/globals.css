@@ -609,6 +609,51 @@ td .status-badge, td .verification-badge { display: inline-flex; margin-right: 4
   color: var(--muted);
   font-size: 0.74rem;
 }
+.owner-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+.owner-preview-card {
+  display: grid;
+  gap: 10px;
+  padding: 0 0 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.owner-preview-card > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.owner-preview-card > header strong { display: block; }
+.owner-preview-card > header small { display: block; color: var(--muted); margin-top: 3px; font-size: 0.72rem; }
+.owner-preview-card .incident-resolution ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+.owner-preview-card > button {
+  margin: 0 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--faint);
+  font: 600 0.62rem/1 "Cascadia Mono", monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: not-allowed;
+}
+@media (max-width: 1100px) {
+  .owner-preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .owner-preview-grid { grid-template-columns: 1fr; }
+}
 .detector-legend {
   display: grid;
   gap: 10px;
