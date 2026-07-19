@@ -43,7 +43,7 @@ Live Command Deck routes (`components/mission-control.tsx` → `dashboardViews`)
 - `/overview` — readiness + nine PRD operational questions
 - `/projects`
 - `/agents`
-- `/tasks`
+- `/tasks` — includes derived task dependency adjacency (snapshot `dependencies` only; never invents edges)
 - `/approvals` — consequence panels; Approve/Reject disabled (Phase 2)
 - `/campaigns` — table + budget burn/forecast panel (`lib/campaign-budgets.ts`; burn UNAVAILABLE without issuedAt)
 - `/owner-gates`
