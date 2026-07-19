@@ -33,5 +33,10 @@
     "Audit + consumption ledger updated on accept",
     "Next.js never writes state/** directly"
   ],
+  "qualityGates": {
+    "typecheck": "pass",
+    "unitTests": "80/80 pass",
+    "verifyReadonly": "pass"
+  },
   "nextRecommendedTask": "ados-mission-control-v2-roadmap-phase7-001"
 }
