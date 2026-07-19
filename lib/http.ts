@@ -27,11 +27,13 @@ export function missionCommandJson(
 }
 
 export async function missionResponse<T>(
-  selector: (snapshot: MissionSnapshot) => T,
+  selector: (snapshot: MissionSnapshot) => T | Response,
 ): Promise<Response> {
   try {
     const { snapshot } = await getSharedMissionSnapshot();
-    return missionJson(selector(snapshot));
+    const selected = selector(snapshot);
+    if (selected instanceof Response) return selected;
+    return missionJson(selected);
   } catch {
     return missionJson(
       { error: { code: "READ_MODEL_UNAVAILABLE", message: "The read-only state model is unavailable." } },

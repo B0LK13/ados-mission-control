@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { mutationHostAllowed, requestHost } from "@/lib/security/loopback";
 import { timingSafeEqualString } from "@/lib/security/timing-safe";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -77,6 +78,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.json(
       { error: { code: "READ_ONLY_V2", message: "Mission Control V2 exposes no mutation endpoints." } },
       { status: 405, headers: { Allow: "GET, HEAD, OPTIONS", "X-ADOS-Authority": "read-only" } },
+    );
+  }
+
+  // CSRF residual: opt-in mutations default to loopback Host only (see SECURITY.md).
+  if (mutationClass && !mutationHostAllowed(requestHost(request))) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "MUTATION_HOST_DENIED",
+          message:
+            "Mutation POSTs require a loopback Host (localhost / 127.0.0.1) unless MISSION_CONTROL_ALLOW_REMOTE_MUTATIONS=enabled.",
+        },
+      },
+      { status: 403, headers: { "Cache-Control": "no-store", "X-ADOS-Authority": "read-only" } },
     );
   }
 

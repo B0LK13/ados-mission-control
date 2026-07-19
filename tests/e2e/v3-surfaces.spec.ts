@@ -53,3 +53,34 @@ test("fleet observation remains non-authoritative when disabled", async ({ page 
   await expect(page.getByText("FLEET MODE DISABLED")).toBeVisible();
   await expect(page.getByText("FLEET OFF")).toBeVisible();
 });
+
+test("phase 2/3/4 opt-in surfaces stay disabled by default", async ({ page }) => {
+  await page.goto("/approvals");
+  await expect(page.getByRole("heading", { name: "Approvals", exact: true })).toBeVisible();
+  const approve = page.getByRole("button", { name: "Approve" }).first();
+  if (await approve.count()) {
+    await expect(approve).toBeDisabled();
+  }
+  await expect(page.getByRole("button", { name: "Reject" }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Withdraw" }).first()).toBeDisabled();
+
+  await page.goto("/operations");
+  await expect(page.getByText("PHASE 3 DISABLED")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Request approved dispatch" })).toBeDisabled();
+
+  await page.goto("/fleet");
+  await expect(page.getByText("FLEET MODE DISABLED")).toBeVisible();
+
+  await page.goto("/repos");
+  await expect(page).toHaveURL(/\/worktrees/);
+  await expect(page.getByRole("heading", { name: "Worktrees", exact: true })).toBeVisible();
+
+  await page.goto("/handoffs");
+  await expect(page.getByRole("heading", { name: "Handoffs", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Filter by from agent")).toBeVisible();
+  await expect(page.getByLabel("Filter by to agent")).toBeVisible();
+
+  await page.goto("/safety");
+  await expect(page.getByLabel("Detector legend")).toBeVisible();
+  await expect(page.getByLabel("Source to severity")).toBeVisible();
+});

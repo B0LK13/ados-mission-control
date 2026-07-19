@@ -56,6 +56,44 @@ test("safe methods pass through the read-only middleware", () => {
   }
 });
 
+test("enabled mutation POSTs require loopback Host unless remote allowed", async () => {
+  const previous = {
+    auth: process.env.MISSION_CONTROL_AUTH_MODE,
+    phase2: process.env.MISSION_CONTROL_PHASE2_COMMANDS,
+    remote: process.env.MISSION_CONTROL_ALLOW_REMOTE_MUTATIONS,
+  };
+  try {
+    process.env.MISSION_CONTROL_AUTH_MODE = "disabled";
+    process.env.MISSION_CONTROL_PHASE2_COMMANDS = "enabled";
+    delete process.env.MISSION_CONTROL_ALLOW_REMOTE_MUTATIONS;
+
+    const denied = middleware(
+      new NextRequest("http://evil.example/api/v1/approvals/approval-1/approve", { method: "POST" }),
+    );
+    assert.equal(denied.status, 403);
+    assert.equal((await denied.json()).error.code, "MUTATION_HOST_DENIED");
+
+    const allowed = middleware(
+      new NextRequest("http://localhost/api/v1/approvals/approval-1/approve", { method: "POST" }),
+    );
+    assert.equal(allowed.status, 200);
+    assert.equal(allowed.headers.get("x-ados-authority"), "phase2-commands");
+
+    process.env.MISSION_CONTROL_ALLOW_REMOTE_MUTATIONS = "enabled";
+    const remote = middleware(
+      new NextRequest("http://evil.example/api/v1/approvals/approval-1/approve", { method: "POST" }),
+    );
+    assert.equal(remote.status, 200);
+  } finally {
+    if (previous.auth === undefined) delete process.env.MISSION_CONTROL_AUTH_MODE;
+    else process.env.MISSION_CONTROL_AUTH_MODE = previous.auth;
+    if (previous.phase2 === undefined) delete process.env.MISSION_CONTROL_PHASE2_COMMANDS;
+    else process.env.MISSION_CONTROL_PHASE2_COMMANDS = previous.phase2;
+    if (previous.remote === undefined) delete process.env.MISSION_CONTROL_ALLOW_REMOTE_MUTATIONS;
+    else process.env.MISSION_CONTROL_ALLOW_REMOTE_MUTATIONS = previous.remote;
+  }
+});
+
 test("basic authentication fails closed, protects UI and APIs, and exempts health checks", async () => {
   const previous = {
     mode: process.env.MISSION_CONTROL_AUTH_MODE,

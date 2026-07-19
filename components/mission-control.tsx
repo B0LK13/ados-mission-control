@@ -50,6 +50,9 @@ import type {
   VerificationLabel,
   WorktreeNode,
 } from "@/lib/contracts";
+import { CopyIdButton } from "@/components/copy-id-button";
+import { HandoffLifecycleStepper } from "@/components/handoff-lifecycle-stepper";
+import { LeaseExpiryCountdown } from "@/components/lease-expiry-countdown";
 import { summarizeApproval } from "@/lib/approval-summary";
 import { buildCampaignBudgetPanel } from "@/lib/campaign-budgets";
 import { buildDeadLetterProjection, type DeadLetterItem } from "@/lib/dead-letter";
@@ -116,10 +119,10 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   campaigns: { eyebrow: "Autonomy campaign / 06", title: "Campaigns", description: "Cursor-first campaign status, budgets, runtimes, and push/merge/deploy policy — observation only." },
   "owner-gates": { eyebrow: "Protected decision / 07", title: "Owner gates", description: "Open and historical owner-only decisions. Phase 2 uses challenge → external Ed25519 sign → ADOS tool decide. Agents cannot self-approve." },
   workflow: { eyebrow: "Protocol graph / 08", title: "Workflow", description: "Read-only Owner → agent → validation flow derived from the brokered workflow summary. No drag-to-dispatch." },
-  handoffs: { eyebrow: "Handoff queue / 09", title: "Handoffs", description: "Per-agent handoff packets, lifecycle stage, and synchronous adapter protocol — observation only." },
-  worktrees: { eyebrow: "Repo hygiene / 10", title: "Worktrees", description: "Registered worktrees, dirty/untracked signals, branch/HEAD, and owner agent — no cleanup actions." },
+  handoffs: { eyebrow: "Handoff queue / 09", title: "Handoffs", description: "Per-agent handoff packets, lifecycle stepper, and from/to/lifecycle filters — observation only." },
+  worktrees: { eyebrow: "Repo hygiene / 10", title: "Worktrees", description: "Registered worktrees, dirty/untracked signals, branch/HEAD, and owner agent — no cleanup actions. Alias: /repos → /worktrees." },
   evidence: { eyebrow: "Trust store / 11", title: "Evidence", description: "Evidence metadata, trust flags, and verification labels. Content bodies are not ingested; hashes are observational." },
-  safety: { eyebrow: "Safety monitor / 12", title: "Safety", description: "Active safety signals and severity. Detectors are read-model derived; Mission Control never clears alerts." },
+  safety: { eyebrow: "Safety monitor / 12", title: "Safety", description: "Active safety signals, detector legend (source → severity), and inferred conflicts. Mission Control never clears alerts." },
   timeline: { eyebrow: "Trust timeline / 13", title: "Evidence & audit timeline", description: "A filterable chronology separating authoritative results, direct verification, reported claims, and diagnostics." },
   "routing-incidents": { eyebrow: "Containment register / 14", title: "Routing incidents", description: "Cross-project mistakes, repository containment, owner disposition, and recorded resolution." },
   "dead-letter": { eyebrow: "Failure backlog / 15", title: "Dead letter", description: "Repeated failures, blocked tasks, worker-unavailable handoffs, and routing containment still needing owner disposition — derived only, never invented." },
@@ -280,7 +283,25 @@ function Overview({ snapshot }: { snapshot: MissionSnapshot }) {
           {snapshot.ownerActions.length ? <ol className="action-list">{snapshot.ownerActions.map((action, index) => <li key={`${action}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><p>{action}</p><ChevronRight size={16} /></li>)}</ol> : <EmptyState title="No current owner action" detail="No unexpired pending approval or critical action was derived from authoritative state." />}
         </Panel>
         <Panel code="LEASE / PRIMARY" title="Authority anchor" meta={snapshot.primaryLease.authority}>
-          <div className="lease-card"><div className="lease-orbit"><ShieldCheck size={27} /></div><span>ACTIVE ORCHESTRATOR</span><strong>{snapshot.primaryLease.orchestrator}</strong><StatusBadge value={snapshot.primaryLease.state} /><dl><div><dt>Lease</dt><dd title={snapshot.primaryLease.leaseId}>{compactPath(snapshot.primaryLease.leaseId, 24)}</dd></div><div><dt>Heartbeat</dt><dd>{formatTimestamp(snapshot.primaryLease.heartbeatAt, true)}</dd></div><div><dt>Heartbeat age</dt><dd>{snapshot.primaryLease.heartbeatAgeSeconds == null ? "UNKNOWN" : `${snapshot.primaryLease.heartbeatAgeSeconds}s`} · {(snapshot.primaryLease.heartbeatFreshness || "unknown").toUpperCase()}</dd></div><div><dt>Host process</dt><dd>{snapshot.primaryLease.processLiveness?.alive === true ? "OBSERVED ALIVE" : snapshot.primaryLease.processLiveness?.alive === false ? "NOT OBSERVED" : "NOT OBSERVABLE"}</dd></div></dl></div>
+          <div className="lease-card">
+            <div className="lease-orbit"><ShieldCheck size={27} /></div>
+            <span>ACTIVE ORCHESTRATOR</span>
+            <strong>{snapshot.primaryLease.orchestrator}</strong>
+            <StatusBadge value={snapshot.primaryLease.state} />
+            <dl>
+              <div>
+                <dt>Lease</dt>
+                <dd title={snapshot.primaryLease.leaseId}>
+                  {compactPath(snapshot.primaryLease.leaseId, 24)}
+                  <CopyIdButton value={snapshot.primaryLease.leaseId} label="Copy lease" />
+                </dd>
+              </div>
+              <div><dt>Expiry</dt><dd><LeaseExpiryCountdown expiresAt={snapshot.primaryLease.expiresAt} /></dd></div>
+              <div><dt>Heartbeat</dt><dd>{formatTimestamp(snapshot.primaryLease.heartbeatAt, true)}</dd></div>
+              <div><dt>Heartbeat age</dt><dd>{snapshot.primaryLease.heartbeatAgeSeconds == null ? "UNKNOWN" : `${snapshot.primaryLease.heartbeatAgeSeconds}s`} · {(snapshot.primaryLease.heartbeatFreshness || "unknown").toUpperCase()}</dd></div>
+              <div><dt>Host process</dt><dd>{snapshot.primaryLease.processLiveness?.alive === true ? "OBSERVED ALIVE" : snapshot.primaryLease.processLiveness?.alive === false ? "NOT OBSERVED" : "NOT OBSERVABLE"}</dd></div>
+            </dl>
+          </div>
         </Panel>
       </div>
 
@@ -545,6 +566,7 @@ function Approvals({ snapshot, query, setQuery, status, setStatus }: { snapshot:
               <header>
                 <div>
                   <code className="full-id">{approval.approvalId}</code>
+                  <CopyIdButton value={approval.approvalId} label="Copy ID" />
                   <strong>{approval.action.replaceAll("_", " ")}</strong>
                   <small>{approval.requestingAgent || approval.issuedBy || "REQUESTER UNAVAILABLE"}</small>
                 </div>
@@ -558,7 +580,7 @@ function Approvals({ snapshot, query, setQuery, status, setStatus }: { snapshot:
               <dl className="approval-meta">
                 <div><dt>Filed vs ledger</dt><dd>Filed · {approval.fileStatus} · Ledger · {approval.authoritativeDisposition}</dd></div>
                 <div><dt>Risk / consumption</dt><dd>{(() => { const risk = scoreApprovalRisk(approval); return `${risk.band} (${risk.freshness}${risk.fromControlPlane ? " · control-plane" : " · derived"})`; })()} · {approval.consumed ? "CONSUMED" : "UNCONSUMED"} ({approval.consumptionCount}/{approval.executionLimit ?? "∞"})</dd></div>
-                <div><dt>Issue / expiry</dt><dd>{formatTimestamp(approval.issuedAt)} → {formatTimestamp(approval.expiresAt)}</dd></div>
+                <div><dt>Issue / expiry</dt><dd>{formatTimestamp(approval.issuedAt)} → {formatTimestamp(approval.expiresAt)} · <LeaseExpiryCountdown expiresAt={approval.expiresAt} /></dd></div>
                 <div><dt>Scope</dt><dd>{approval.scopeSummary || "SCOPE UNAVAILABLE"}{approval.ownerActionRequired ? " · OWNER ACTION REQUIRED" : ""}</dd></div>
               </dl>
               {(() => {
@@ -1289,43 +1311,65 @@ function Workflow({ snapshot }: { snapshot: MissionSnapshot }) {
 }
 
 function Handoffs({ snapshot, query, setQuery, status, setStatus }: { snapshot: MissionSnapshot; query: string; setQuery: (value: string) => void; status: string; setStatus: (value: string) => void }) {
+  const [fromAgent, setFromAgent] = useState("ALL");
+  const [toAgent, setToAgent] = useState("ALL");
   const stages = [...new Set(snapshot.handoffs.map((item) => item.lifecycleStage))];
+  const fromAgents = [...new Set(snapshot.handoffs.map((item) => item.fromAgent).filter(Boolean))].sort();
+  const toAgents = [...new Set(snapshot.handoffs.map((item) => item.toAgent).filter(Boolean))].sort();
   const items = snapshot.handoffs.filter((item) => (
     (status === "ALL" || item.lifecycleStage === status)
+    && (fromAgent === "ALL" || item.fromAgent === fromAgent)
+    && (toAgent === "ALL" || item.toAgent === toAgent)
     && `${item.handoffId} ${item.fromAgent} ${item.toAgent} ${item.title} ${item.taskId || ""}`.toLowerCase().includes(query.toLowerCase())
   ));
   return (
     <Panel code="HANDOFF / QUEUE" title="Agent handoff queue" meta={`${items.length} of ${snapshot.handoffs.length}`}>
       <FilterBar query={query} onQuery={setQuery} status={status} onStatus={setStatus} statuses={stages} label="Search handoff, agent, or task" />
+      <div className="filter-bar handoff-agent-filters">
+        <label className="select-field">
+          <ListFilter size={15} />
+          <span className="sr-only">Filter by from agent</span>
+          <select aria-label="Filter by from agent" value={fromAgent} onChange={(event) => setFromAgent(event.target.value)}>
+            <option value="ALL">All from agents</option>
+            {fromAgents.map((agent) => <option value={agent} key={`from-${agent}`}>{agent}</option>)}
+          </select>
+        </label>
+        <label className="select-field">
+          <ListFilter size={15} />
+          <span className="sr-only">Filter by to agent</span>
+          <select aria-label="Filter by to agent" value={toAgent} onChange={(event) => setToAgent(event.target.value)}>
+            <option value="ALL">All to agents</option>
+            {toAgents.map((agent) => <option value={agent} key={`to-${agent}`}>{agent}</option>)}
+          </select>
+        </label>
+      </div>
       {items.length ? (
-        <TableFrame label="Scrollable handoffs table">
-          <table>
-            <thead>
-              <tr>
-                <th>Handoff / title</th>
-                <th>From → to</th>
-                <th>Lifecycle</th>
-                <th>Task / expiry</th>
-                <th>Path / digest</th>
-                <th>Authority</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item: HandoffItem) => (
-                <tr key={item.handoffId}>
-                  <td><code className="full-id">{item.handoffId}</code><strong>{item.title}</strong></td>
-                  <td><strong>{item.fromAgent}</strong><span>→ {item.toAgent}</span></td>
-                  <td><StatusBadge value={item.lifecycleStage} /><StatusBadge value={item.status} /></td>
-                  <td><span>{item.taskId || "NO TASK ID"}</span><small>{formatTimestamp(item.expiresAt, true)}</small></td>
-                  <td><span title={item.path || undefined}>{compactPath(item.path, 36)}</span><small>{item.sha256 ? item.sha256.slice(0, 12) : "DIGEST UNAVAILABLE"}</small></td>
-                  <td><StatusBadge value={item.authority} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </TableFrame>
+        <div className="handoff-stack">
+          {items.map((item: HandoffItem) => (
+            <article className="handoff-card" key={item.handoffId} aria-label={`Handoff ${item.handoffId}`}>
+              <header>
+                <div>
+                  <code className="full-id">{item.handoffId}</code>
+                  <CopyIdButton value={item.handoffId} label="Copy ID" />
+                  <strong>{item.title}</strong>
+                  <small>{item.fromAgent} → {item.toAgent}</small>
+                </div>
+                <div className="handoff-card-badges">
+                  <StatusBadge value={item.lifecycleStage} />
+                  <StatusBadge value={item.status} />
+                  <StatusBadge value={item.authority} />
+                </div>
+              </header>
+              <HandoffLifecycleStepper stage={item.lifecycleStage} />
+              <dl>
+                <div><dt>Task / expiry</dt><dd><span>{item.taskId || "NO TASK ID"}</span><small>{formatTimestamp(item.expiresAt, true)} · <LeaseExpiryCountdown expiresAt={item.expiresAt} /></small></dd></div>
+                <div><dt>Path / digest</dt><dd><span title={item.path || undefined}>{compactPath(item.path, 48)}</span><small>{item.sha256 ? item.sha256.slice(0, 12) : "DIGEST UNAVAILABLE"}</small></dd></div>
+              </dl>
+            </article>
+          ))}
+        </div>
       ) : (
-        <EmptyState title="No matching handoffs" detail="Adjust the handoff search or lifecycle filter." />
+        <EmptyState title="No matching handoffs" detail="Adjust the handoff search or from/to/lifecycle filters. Filters never invent handoffs." />
       )}
     </Panel>
   );
@@ -1334,7 +1378,7 @@ function Handoffs({ snapshot, query, setQuery, status, setStatus }: { snapshot: 
 function Worktrees({ snapshot }: { snapshot: MissionSnapshot }) {
   return (
     <Panel code="REPO / WORKTREES" title="Registered worktrees" meta={`${snapshot.worktrees.length} nodes`}>
-      <div className="readonly-banner"><FolderGit2 size={16} /><strong>READ-ONLY</strong><span>Cleanup, prune, and commit actions remain control-plane / owner tools.</span></div>
+      <div className="readonly-banner"><FolderGit2 size={16} /><strong>READ-ONLY</strong><span>Cleanup, prune, and commit remain control-plane tools. Route alias: /repos → /worktrees.</span></div>
       {snapshot.worktrees.length ? (
         <TableFrame label="Scrollable worktrees table">
           <table>
@@ -1449,13 +1493,29 @@ function EvidenceBrowser({ snapshot, query, setQuery, status, setStatus }: { sna
 
 function Safety({ snapshot }: { snapshot: MissionSnapshot }) {
   const severities = ["CRITICAL", "BLOCKED", "ATTENTION", "NOTICE", "NOMINAL"] as const;
+  const detectorLegend = [
+    { source: "DUAL_PRIMARY / CURSOR_PRIMARY", severity: "CRITICAL" },
+    { source: "STALE_LEASE / EXPIRED_LEASE", severity: "BLOCKED" },
+    { source: "PATH_CONFLICT", severity: "ATTENTION" },
+    { source: "DIRTY_WORKTREE / CROSS_WORKTREE_DRIFT", severity: "ATTENTION" },
+  ] as const;
   const conflicts = snapshot.conflicts || [];
   return (
     <>
     <Panel code="SENTRY / SAFETY" title="Safety monitor" meta={`${snapshot.alerts.length} active · system ${snapshot.systemHealth.severity}`}>
       <div className="readonly-banner"><Siren size={16} /><strong>OBSERVATION ONLY</strong><span>Mission Control never acknowledges or clears safety alerts.</span></div>
-      <div className="detector-legend" aria-label="Severity legend">
-        {severities.map((level) => <span key={level} className={`tone-${stateTone(level)}`}>{level}</span>)}
+      <div className="detector-legend" aria-label="Detector legend">
+        <div className="detector-legend-row" aria-label="Severity bands">
+          {severities.map((level) => <span key={level} className={`tone-${stateTone(level)}`}>{level}</span>)}
+        </div>
+        <div className="detector-legend-map" aria-label="Source to severity">
+          {detectorLegend.map((entry) => (
+            <span key={entry.source} className={`detector-map-item tone-${stateTone(entry.severity)}`}>
+              <b>{entry.source}</b>
+              <em>→ {entry.severity}</em>
+            </span>
+          ))}
+        </div>
       </div>
       {snapshot.alerts.length ? (
         <div className="alert-list">
