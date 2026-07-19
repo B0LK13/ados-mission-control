@@ -59,7 +59,8 @@ V2 extends the read model for supervisor observation without becoming a control 
 - `lib/data-quality.ts` maps source/cache/stream state onto `LIVE|CACHED|MOCK|STALE|INFERRED|AUTHORITATIVE|UNAVAILABLE` (fixtures are always `MOCK`).
 - Snapshot projections include `campaigns`, `ownerGates`, and `freshness`.
 - GET `/api/v1/campaigns`, `/api/v1/owner-gates`, `/api/v1/replay`, and `/api/v1/support-bundle` are read-only.
-- `GET /api/v1/support-bundle` returns a redacted diagnostics JSON download (no auth secrets, no mutation capability).
+- `GET /api/v1/support-bundle` returns a redacted diagnostics JSON download (no auth secrets, no mutation capability). The Command Deck footer exposes the same download for operators.
+- Canonical trees and override env vars are documented in `docs/PATH-REGISTRY.md` (control-plane root, evidence/handoffs mounts, MC data root). Prefer that registry over inventing new roots.
 - UI views `campaigns`, `owner-gates`, and `replay` show budgets, protected decisions, and GET-only supervisor-run chronology with explicit “no UI action” banners.
 - The browser SSE client reconnects after stream failure; e2e covers disconnect → `DISCONNECTED` → `LIVE`.
 - Owner pause/kill/resume remain control-plane tools only.

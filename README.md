@@ -111,6 +111,16 @@ Copy `.env.example` to `.env.local` only when the default `D:\` paths need to ch
 
 `snapshot`, `health`, `agents`, `approvals`, `tasks`, `handoffs`, `worktrees`, `evidence`, `events`, `events/stream`, `safety/alerts`, `workflow`, `campaigns`, `owner-gates`, `replay`, and `support-bundle` are available below `/api/v1`.
 
+### Support bundle (diagnostics)
+
+`GET /api/v1/support-bundle` downloads a redacted JSON diagnostics pack (health, freshness, parse warnings, path configuration — never auth secrets). Use the footer **Download support bundle** control in the UI, or:
+
+```bash
+curl -fsS -OJ "http://127.0.0.1:3000/api/v1/support-bundle"
+```
+
+Canonical control-plane and mount paths are listed in `docs/PATH-REGISTRY.md`.
+
 Mutation routes are intentionally absent. The roadmap Phase 2 brokered approval path remains a separately authorized future capability; release 2.0 does not cross that authority boundary.
 
 ## Verify

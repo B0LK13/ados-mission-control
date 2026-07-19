@@ -135,6 +135,7 @@ Ordered against `ados-mission-control-update-package/04-CURSOR-MASTER-INSTRUCTIO
 18. ~~Playwright starts standalone server (matches `output: "standalone"`)~~ (done — `scripts/start-e2e-server.mjs`).
 19. ~~Support-bundle exporter (FBL-OPS-003)~~ (done — `GET /api/v1/support-bundle` + footer download).
 20. ~~Axe a11y gate (FBL-UX-002)~~ (done — `tests/e2e/a11y.spec.ts` / `npm run test:a11y`; included in `npm run test:e2e` CI; contrast + keyboard-scrollable tables fixed).
+21. ~~Document support-bundle + path registry (docs backlog)~~ (done — README invoke steps + ARCHITECTURE/`docs/PATH-REGISTRY.md`).
 
 **Handoff report:** `ados-mission-control-update-package/docs/COMPLETION-REPORT-2026-07-18.md`  
 **Classification:** `LIVE_UNSCOPED_AND_PUBLICATION_AUTHORIZED` (repos public; `dispatchEnabled=true` / `cursorPrimaryMode=LIVE_UNSCOPED`; unscoped launch without child-task still refused; evidence `docs/evidence/live-unscoped-publication-20260719/`)
