@@ -45,4 +45,6 @@ An owner can open Mission Control and, within seconds, know who holds the lease,
 
 ## MVP PoC status (2026-07-19)
 
-**Phase 1 MVP proof of concept: COMPLETE** — classification `MISSION_CONTROL_V2_PHASE1_MVP_POC_COMPLETE` (see `docs/evidence/mvp-poc-20260719/STATUS.json`). Mutation, signing, and dispatch remain Phase 2+ and require explicit owner authorization.
+**Phase 1 MVP proof of concept: COMPLETE** — classification `MISSION_CONTROL_V2_PHASE1_MVP_POC_COMPLETE` (see `docs/evidence/mvp-poc-20260719/STATUS.json`).
+
+**Phase 2 owner commands MVP: COMPLETE (2026-07-19)** — approve/reject/withdraw + signed owner-gate workflow via allowlisted ADOS tools when `MISSION_CONTROL_PHASE2_COMMANDS=enabled`. See `docs/authorizations/phase2-owner-commands-20260719.md` and `docs/evidence/mvp-poc-20260719/STATUS.json`. Phase 3 dispatch remains unauthorized.

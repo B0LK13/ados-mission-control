@@ -18,3 +18,7 @@ playwright-report/
 test-results/
 *.tsbuildinfo
 *.zip
+
+# Phase-2 fixture owner private key (never commit)
+tests/fixtures/keys/owner-ed25519-private.pem
+

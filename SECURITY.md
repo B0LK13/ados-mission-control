@@ -2,13 +2,13 @@
 
 ## Read-only guarantee
 
-Mission Control V2 provides authenticated, resilient visibility only. It does not authorize, approve, dispatch, or mutate ADOS operations.
+Mission Control V2 is a GET-only observability cockpit by default. Owner-authorized Phase 2 command routes may approve/reject/withdraw and close owner gates only through allowlisted ADOS tools — never via raw `state/**` writes from Next.js, and never for Phase 3 dispatch.
 
 The guarantee is enforced in layers:
 
-- `npm run verify:readonly` fails on ADOS write primitives, child-process launchers, or known dispatch adapters in `app`, `components`, and `lib`. The sole write exception is `lib/read-model/sqlite-store.ts`, constrained to the configured app-owned data root and explicitly audited against ADOS source symbols.
-- `middleware.ts` rejects `POST`, `PUT`, `PATCH`, `DELETE`, and other unsafe methods below `/api/*` with `405 READ_ONLY_V2` before authentication or route handling.
-- No approval, task, dispatch, runtime, or Mission Control mutation route exists.
+- `npm run verify:readonly` fails on ADOS write primitives, child-process launchers, or known dispatch adapters in `app`, `components`, and `lib`. Write/spawn exceptions: `lib/read-model/sqlite-store.ts` (app-owned cache) and `lib/commands/ados-bridge.ts` (argv-only allowlisted tool spawn).
+- `middleware.ts` rejects unsafe methods below `/api/*` with `405 READ_ONLY_V2`, except the Phase 2 POST allowlist when `MISSION_CONTROL_PHASE2_COMMANDS=enabled`.
+- No task dispatch, runtime promotion, lease transfer, or Phase 3 mutation route exists.
 - The container mounts ADOS `state`, `handoffs`, and `evidence` with `:ro`; a separate named volume is writable only at `/var/lib/mission-control`.
 - The hardened container runs as UID/GID 1001, with all Linux capabilities dropped, `no-new-privileges`, a read-only root filesystem, and only small temporary filesystems for runtime cache.
 
@@ -84,4 +84,5 @@ The suite additionally covers Basic-auth failure modes, versioned ingestion warn
 
 - The schema registry covers the ingested ledger/approval families; it is not a complete schema archive for every historical ADOS document.
 - Secret detection is defense in depth, not a substitute for preventing secrets from entering operational summaries.
-- V2 has one staging identity, not roles or SSO. Mutation-CSRF controls remain out of scope because no mutation surface exists.
+- V2 has one staging identity, not roles or SSO. Phase 2 mutations should stay behind Basic auth + loopback; CSRF hardening is a follow-up if browser exposure widens.
+- Owner-gate decisions require a pinned Ed25519 public key (`MISSION_CONTROL_OWNER_PUBKEY_PATH`). Private keys must never enter the Mission Control image or git tree.

@@ -9,70 +9,14 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Primary language:** TypeScript
 - **Classification status:** confirmed
 - **Maturity:** strong (overall score 3.6/5) → target: advanced
-- **Summary:** Phase-1++ read-only cockpit: CI (Node 22 + Playwright incl. axe a11y), support-bundle, PATH-REGISTRY, SSE fan-out, campaigns/owner-gates/replay. Deep analysis 2026-07-19 found Phase-1 screen gaps (workflow/handoffs/worktrees/evidence dedicated views), thin approval consequences, and owner-gated Phase 2+ items.
+- **Summary:** Phase-1 + Phase-2 MVP complete (2026-07-19): read-only Command Deck plus owner-authorized approve/reject/withdraw and signed owner-gate decide via ADOS tools. Remaining open: Phase 3 dispatch (not authorized) and deferred Phase 4 fleet.
 
-## Open Tasks (4)
+## Open Tasks (2)
 
 | Priority | Count |
 |---|---|
-| High | 2 |
 | Medium | 1 |
 | Low | 1 |
-
-### `ados-mission-control-v2-roadmap-phase2-001` — [OWNER-GATED] Phase 2: approve/reject/withdraw via ADOS tools (no raw state writes)
-
-- **Priority:** High | **Severity:** High | **Effort:** L | **Risk:** High | **Phase:** Advanced | **Status:** Open
-- **Category:** roadmap / phase-2
-- **Owner role:** tech-lead
-
-**Current state:** UI shows read-only approvals with NO UI ACTION / Phase-2 banners.
-
-**Target state:** Authorized command path + UI actions that invoke ADOS PowerShell/tools with full consequence panels and audit trail.
-
-**Gap:** Owner still uses external tools for approval decisions.
-
-**Acceptance criteria:**
-- [ ] Owner authorization package exists
-- [ ] Every UI mutation → ledger event
-- [ ] No raw state/* writes from Next.js
-- [ ] Security review
-
-**Validation steps:**
-1. Owner gate + integration tests against fixture control plane
-
-**Source evidence:**
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-- docs/05-SCREEN-INVENTORY.md
-- docs/08-PHASE-ROADMAP.md
-
-**Labels:** phase-2, owner-gated, approvals
-
-### `ados-mission-control-v2-roadmap-phase2-002` — [OWNER-GATED] Owner-gate signing workflow UI (keys/nonce/canonicalization)
-
-- **Priority:** High | **Severity:** High | **Effort:** L | **Risk:** High | **Phase:** Advanced | **Status:** Open
-- **Category:** roadmap / phase-2
-- **Owner role:** security-engineer
-
-**Current state:** Owner-gates view is observation-only.
-
-**Target state:** Signing workflow with key pinning, canonicalization, nonce, expiry, count — only after Phase 2 authorization.
-
-**Gap:** Signing workflow lives nowhere in-product (correct for V2; needed for safe autonomy later).
-
-**Acceptance criteria:**
-- [ ] Cryptographic design reviewed
-- [ ] UI cannot bypass policy engine
-- [ ] Fail-closed without keys
-
-**Validation steps:**
-1. Security threat model + fixture signing round-trip
-
-**Source evidence:**
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-- docs/05-SCREEN-INVENTORY.md
-- docs/08-PHASE-ROADMAP.md
-
-**Labels:** phase-2, owner-gated, signing
 
 ### `ados-mission-control-v2-roadmap-phase3-001` — [OWNER-GATED] Phase 3: controlled operations (approved dispatch only)
 
@@ -134,23 +78,21 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 
 Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md).
 
-**Verdict:** Strong Phase-1++ read-only cockpit (CI, a11y, replay, support-bundle, freshness honesty). Incomplete against Phase-1 screen inventory — several APIs lack dedicated views. Phase 2+ mutation/signing correctly absent until owner-gated.
+**Verdict:** Phase-1 read-only MVP and Phase-2 owner-command MVP are complete. Phase 3 dispatch remains unauthorized per `docs/authorizations/phase2-owner-commands-20260719.md`.
 
-### Recommended next (MC-local, not owner-gated)
+### Recommended next
 
-1. ~~**ui-002…006 + ux-002/003 + docs-004**~~ — Dedicated workflow/handoffs/worktrees/evidence/safety views, nine-question overview, approval consequences, ARCHITECTURE sync (done 2026-07-19).
-2. ~~**feature-001 / feature-002**~~ — Evidence-diff viewer + campaign budget burn/forecast (done 2026-07-19).
-3. ~~**feature-003 / ui-007**~~ — Dead-letter surface + task dependency graph on `/tasks` (done 2026-07-19).
-4. ~~**security-002 / testing-003 / dx-001 / operations-001 / sse-002**~~ — Closed or deferred in central backlog; only owner-gated roadmap items remain open.
+1. ~~**Phase-1 module surface + hardening**~~ — done 2026-07-19.
+2. ~~**roadmap-phase2-001/002**~~ — Approve/reject/withdraw + signed owner-gate workflow (done 2026-07-19; owner-authorized).
+3. **Stop** unless owner authorizes **roadmap-phase3-001** (controlled dispatch) or **roadmap-phase4-001** (fleet — deferred).
 
 ### Owner-gated (do not implement without authorization)
 
-- **roadmap-phase2-001/002** — Approve/reject/withdraw + signing UI via ADOS tools (never raw `state/*` from Next.js).
 - **roadmap-phase3-001** — Controlled dispatch of approved work only.
 - **roadmap-phase4-001** — Fleet + Prometheus/Grafana (defer).
 
 ### Completed earlier (keep for history)
 
-G0–G7 clearance, lease reacq, CI Node 22, campaigns/owner-gates/replay, Docker CI, package schemas, secrets baseline, timing-safe auth, SSE fan-out, PATH-REGISTRY, support-bundle, axe a11y gate, support-bundle/path docs.
+G0–G7 clearance, lease reacq, CI Node 22, campaigns/owner-gates/replay, Docker CI, package schemas, secrets baseline, timing-safe auth, SSE fan-out, PATH-REGISTRY, support-bundle, axe a11y, dead-letter, deps graph, evidence-diff, budget burn, redaction allowlist, keyboard e2e, Phase 2 owner commands.
 
-**Classification:** `LIVE_UNSCOPED_AND_PUBLICATION_AUTHORIZED` (control-plane). MC V2 remains GET-only observability.
+**Classification:** `LIVE_UNSCOPED_AND_PUBLICATION_AUTHORIZED` (control-plane). Default remains GET-only; Phase 2 commands are opt-in.

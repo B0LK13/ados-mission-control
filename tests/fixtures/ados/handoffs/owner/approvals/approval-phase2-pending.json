@@ -1,0 +1,20 @@
+{
+  "approvalId": "approval-phase2-pending",
+  "action": "INTERNAL_REVIEW_PICKUP",
+  "status": "PENDING",
+  "issuedAt": "2026-07-19T10:00:00.000Z",
+  "expiresAt": "2099-07-20T10:00:00.000Z",
+  "singleUse": true,
+  "issuedBy": "owner",
+  "justification": "Phase 2 approve/reject fixture without prior disposition.",
+  "affectedPaths": [
+    "D:\\\\ados-mission-control"
+  ],
+  "willDo": [
+    "record owner disposition via ADOS tool"
+  ],
+  "willNotDo": [
+    "dispatch workers",
+    "write state from Next.js"
+  ]
+}

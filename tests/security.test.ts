@@ -19,14 +19,19 @@ test("redacts secret-like objects, connection strings, and query parameters", ()
 
 test("all API mutations are rejected before route handling", async () => {
   process.env.MISSION_CONTROL_AUTH_MODE = "disabled";
+  process.env.MISSION_CONTROL_PHASE2_COMMANDS = "disabled";
   for (const route of [
     "http://localhost/api/approvals/approval-1",
     "http://localhost/api/v1/campaigns",
     "http://localhost/api/v1/owner-gates",
+    "http://localhost/api/v1/approvals/approval-1/approve",
+    "http://localhost/api/v1/owner-gates/gate-1/decide",
     "http://localhost/api/v1/replay?campaignId=c&runId=r",
     "http://localhost/api/v1/evidence-diff?campaignId=c&leftRunId=a&rightRunId=b",
     "http://localhost/api/v1/dead-letter",
     "http://localhost/api/v1/support-bundle",
+    "http://localhost/api/v1/approvals/approval-1/approve",
+    "http://localhost/api/v1/owner-gates/gate-1/decide",
   ]) {
     for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
       const response = middleware(new NextRequest(route, { method }));

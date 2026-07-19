@@ -26,6 +26,7 @@ import { validateInputRecords } from "@/lib/ingestion/schema-registry";
 import { logMissionEvent } from "@/lib/logging";
 import { getReadModelStore } from "@/lib/read-model/sqlite-store";
 import { disabledReadModelStatus, type IngestWatermark } from "@/lib/read-model/store";
+import { isPhase2CommandsEnabled } from "@/lib/commands/ados-bridge";
 import { redactValue, safeSummary } from "@/lib/redaction";
 import {
   exists,
@@ -36,8 +37,17 @@ import {
   resolveWithinRoot,
   type ParseWarning,
 } from "./io";
-
 import { computeHeartbeatAge } from "./heartbeat";
+
+function snapshotCapabilities(): MissionSnapshot["capabilities"] {
+  const phase2Commands = isPhase2CommandsEnabled();
+  const ownerSigningConfigured = Boolean(process.env.MISSION_CONTROL_OWNER_PUBKEY_PATH?.trim());
+  return {
+    phase2Commands,
+    ownerSigningConfigured,
+    mutationsEnabled: phase2Commands,
+  };
+}
 
 export { computeHeartbeatAge } from "./heartbeat";
 
@@ -970,6 +980,7 @@ async function loadFixture(): Promise<MissionSnapshot> {
       completionSentinel: "CURSOR_TASK_COMPLETED",
       outboxProtocolCreated: false,
     },
+    capabilities: snapshotCapabilities(),
   });
 }
 
@@ -1032,6 +1043,7 @@ function unavailableSnapshot(
       completionSentinel: "CURSOR_TASK_COMPLETED",
       outboxProtocolCreated: false,
     },
+    capabilities: snapshotCapabilities(),
   });
 }
 
@@ -1079,6 +1091,7 @@ async function cachedOrUnavailable(
         warnings: [warning, ...cached.snapshot.source.warnings.filter((item) => item !== warning)],
         stale: true,
       },
+      capabilities: snapshotCapabilities(),
     });
   } catch {
     logMissionEvent("error", "read_model_failure", { operation: "cache_recovery" });
@@ -1273,6 +1286,7 @@ export async function getMissionSnapshot(): Promise<MissionSnapshot> {
       completionSentinel: "CURSOR_TASK_COMPLETED",
       outboxProtocolCreated: false,
     },
+    capabilities: snapshotCapabilities(),
   });
 
   if (config.persistenceMode === "sqlite") {

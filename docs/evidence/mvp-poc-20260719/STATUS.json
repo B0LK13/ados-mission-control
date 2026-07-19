@@ -1,56 +1,58 @@
 {
-  "classification": "MISSION_CONTROL_V2_PHASE1_MVP_POC_COMPLETE",
-  "recordedAt": "2026-07-19T10:53:30.000Z",
+  "classification": "MISSION_CONTROL_V2_PHASE2_OWNER_COMMANDS_MVP_COMPLETE",
+  "recordedAt": "2026-07-19T11:15:00.000Z",
   "product": "ADOS Mission Control V2 (The Black Agency Command Deck)",
   "mvpDefinition": {
-    "source": ["PRODUCT_BRIEF.md", "docs/01-PRD-PHASE-1.md", "docs/08-PHASE-ROADMAP.md"],
+    "source": [
+      "PRODUCT_BRIEF.md",
+      "docs/01-PRD-PHASE-1.md",
+      "docs/08-PHASE-ROADMAP.md",
+      "docs/authorizations/phase2-owner-commands-20260719.md"
+    ],
     "inScope": [
-      "Read-only brokered cockpit answering nine operational questions",
-      "Module views: agents, workflow, approvals (preview), tasks+deps, handoffs, worktrees, evidence, timeline, safety, campaigns, owner-gates, replay, evidence-diff, dead-letter, routing-incidents",
-      "GET-only APIs + SSE full-snapshot stream with reconnect",
-      "Freshness honesty, redaction (incl. high-risk allowlist), support-bundle, Basic-auth staging",
-      "Keyboard + axe a11y coverage on key views"
+      "Phase 1 read-only brokered cockpit (nine questions + module surfaces)",
+      "Phase 2 approve/reject/withdraw via allowlisted ADOS tools",
+      "Phase 2 owner-gate challenge → external Ed25519 sign → decide",
+      "Fail-closed without pinned owner public key",
+      "Default GET-only when MISSION_CONTROL_PHASE2_COMMANDS is not enabled"
     ],
     "outOfScope": [
-      "Phase 2 approve/reject/withdraw (OWNER-GATED)",
-      "Phase 2 owner-gate signing UI (OWNER-GATED)",
-      "Phase 3 controlled dispatch from MC (OWNER-GATED)",
-      "Phase 4 fleet/Prometheus (deferred)"
+      "Phase 3 controlled dispatch / worker launch (NOT AUTHORIZED)",
+      "Phase 4 fleet/Prometheus (deferred)",
+      "Holding owner private keys in the Mission Control repo or image"
     ]
   },
   "backlogCloseout": {
     "completedThisLoop": [
-      "ados-mission-control-v2-security-002",
-      "ados-mission-control-v2-testing-003",
-      "ados-mission-control-v2-dx-001",
-      "ados-mission-control-v2-sse-002"
-    ],
-    "remainingOpenOwnerGatedOrDeferred": [
       "ados-mission-control-v2-roadmap-phase2-001",
       "ados-mission-control-v2-roadmap-phase2-002",
+      "ados-mission-control-v2-operations-001"
+    ],
+    "remainingOpenOwnerGatedOrDeferred": [
       "ados-mission-control-v2-roadmap-phase3-001",
       "ados-mission-control-v2-roadmap-phase4-001"
     ]
   },
   "qualityGates": {
     "typecheck": "pass",
-    "unitTests": "56/56 pass",
+    "unitTests": "61/61 pass",
     "verifyReadonly": "pass",
-    "keyboardE2e": "2/2 pass (live-keyboard, Linux-native build)"
+    "phase2Unit": "5/5 pass (middleware gate, approval disposition, signed gate decide, pubkey fail-closed)"
   },
   "successCriteriaMet": [
-    "Owner can open Command Deck and see lease, pending approvals, blockers, and readiness without raw JSON",
-    "No mutation APIs; READ_ONLY_V2 on unsafe methods",
-    "Truthy empty/unavailable states; no fabricated SSE deltas or evidence diffs"
+    "Owner can observe lease/approvals/blockers/readiness without raw JSON",
+    "Unsafe methods still READ_ONLY_V2 unless Phase 2 flag enabled",
+    "Phase 2 dispositions and gate decisions append via scripts/ados-tools only",
+    "Agents cannot self-approve owner gates; signatures verified against pinned pubkey"
   ],
   "autonomousLoop": {
     "iterations": [
-      { "id": 1, "task": "security-002", "result": "redactHighRiskEnvelope + force-redact keys" },
-      { "id": 2, "task": "testing-003", "result": "keyboard.spec.ts + live-keyboard project; nav aria-label fix" },
-      { "id": 3, "task": "dx-001", "result": "README/DEPLOYMENT WSL native-FS workaround" },
-      { "id": 4, "task": "sse-002", "result": "wont-fix full-snapshot resume documented" },
-      { "id": 5, "task": "mvp-proof", "result": "STATUS.json + backlog closeout" }
+      { "id": 1, "task": "phase2-bridge", "result": "ados-bridge + approval/gate tools + middleware allowlist" },
+      { "id": 2, "task": "phase2-http-fix", "result": "missionCommandJson for command routes" },
+      { "id": 3, "task": "phase2-ui", "result": "Approvals actions + owner-gate signing workflow" },
+      { "id": 4, "task": "phase2-tests", "result": "tests/phase2-commands.test.ts" },
+      { "id": 5, "task": "mvp-proof", "result": "STATUS.json + backlog closeout + push" }
     ],
-    "nextRecommendation": "Stop Phase-1 MVP work. Await explicit owner authorization before Phase 2 mutation/signing."
+    "nextRecommendation": "MVP reached for Phase 1+2. Do not implement Phase 3 dispatch without a new owner authorization package."
   }
 }

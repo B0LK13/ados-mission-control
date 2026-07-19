@@ -793,6 +793,30 @@ td .status-badge, td .verification-badge { display: inline-flex; margin-right: 4
 }
 .dead-letter-links a { color: var(--cyan); text-decoration: none; }
 .dead-letter-links a:hover { color: var(--lime); text-decoration: underline; }
+
+.owner-gate-workflow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+}
+.owner-gate-workflow textarea,
+.owner-gate-workflow select {
+  width: 100%;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+  font: 0.72rem/1.4 "Cascadia Mono", monospace;
+}
+.approval-actions-preview button:not(:disabled) {
+  cursor: pointer;
+  border-color: var(--lime);
+  color: var(--text);
+}
+
 .evidence-diff-form { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
 .evidence-diff-list { display: grid; gap: 12px; }
 .evidence-diff-entry {

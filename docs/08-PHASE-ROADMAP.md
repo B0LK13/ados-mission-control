@@ -1,6 +1,6 @@
 # Phase Roadmap — ADOS Mission Control
 
-> Release note: application version 2.0 ships read-only resilience, versioned ingestion, local cache recovery, and staging authentication. It does not implement the mutation capabilities listed under roadmap Phase 2; those still require explicit owner/ADOS authorization.
+> Release note: application version 2.0 ships read-only resilience plus an opt-in Phase 2 owner-command surface (approve/reject/withdraw + signed owner-gate decide) behind `MISSION_CONTROL_PHASE2_COMMANDS=enabled`. Phase 3 dispatch still requires a separate owner authorization package.
 
 ## Phase 1 — Read-only observability (current spec package)
 

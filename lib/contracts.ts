@@ -388,4 +388,9 @@ export interface MissionSnapshot {
     completionSentinel: "CURSOR_TASK_COMPLETED";
     outboxProtocolCreated: false;
   };
+  capabilities: {
+    phase2Commands: boolean;
+    ownerSigningConfigured: boolean;
+    mutationsEnabled: boolean;
+  };
 }

@@ -44,9 +44,9 @@ Live Command Deck routes (`components/mission-control.tsx` → `dashboardViews`)
 - `/projects`
 - `/agents`
 - `/tasks` — includes derived task dependency adjacency (snapshot `dependencies` only; never invents edges)
-- `/approvals` — consequence panels; Approve/Reject disabled (Phase 2)
+- `/approvals` — consequence panels; Approve/Reject/Withdraw when `MISSION_CONTROL_PHASE2_COMMANDS=enabled` (ADOS tool bridge only)
 - `/campaigns` — table + budget burn/forecast panel (`lib/campaign-budgets.ts`; burn UNAVAILABLE without issuedAt)
-- `/owner-gates`
+- `/owner-gates` — Phase 2 signed challenge→decide workflow when pubkey pinned; else fail-closed
 - `/workflow` — read-only graph from `workflowSummary` (GET `/api/v1/workflow`)
 - `/handoffs` — GET `/api/v1/handoffs`
 - `/worktrees` — GET `/api/v1/worktrees`
@@ -75,6 +75,7 @@ V2 extends the read model for supervisor observation without becoming a control 
 - `lib/data-quality.ts` maps source/cache/stream state onto `LIVE|CACHED|MOCK|STALE|INFERRED|AUTHORITATIVE|UNAVAILABLE` (fixtures are always `MOCK`).
 - Snapshot projections include `campaigns`, `ownerGates`, and `freshness`.
 - GET `/api/v1/campaigns`, `/api/v1/owner-gates`, `/api/v1/replay`, `/api/v1/evidence-diff`, and `/api/v1/support-bundle` are read-only.
+- Phase 2 (owner-authorized): POST `/api/v1/approvals/:id/{approve|reject|withdraw}` and POST `/api/v1/owner-gates/:id/{challenge|decide}` invoke allowlisted `scripts/ados-tools/*` only (see `docs/authorizations/phase2-owner-commands-20260719.md`). Default remains read-only (`MISSION_CONTROL_PHASE2_COMMANDS` unset/disabled).
 - `GET /api/v1/support-bundle` returns a redacted diagnostics JSON download (no auth secrets, no mutation capability). The Command Deck footer exposes the same download for operators.
 - Canonical trees and override env vars are documented in `docs/PATH-REGISTRY.md` (control-plane root, evidence/handoffs mounts, MC data root). Prefer that registry over inventing new roots.
 - UI views `campaigns`, `owner-gates`, and `replay` show budgets, protected decisions, and GET-only supervisor-run chronology with explicit “no UI action” banners.
@@ -85,4 +86,13 @@ Planning artifacts and remaining supervisor units live under `ados-mission-contr
 
 ## Future phase
 
-A mutation phase requires a separate owner-authorized command service, idempotency, signed audit records, and independent authorization review. Release 2.0 deliberately does not implement the roadmap Phase 2 mutation scope.
+## Phase 2 owner commands (authorized 2026-07-19)
+
+When `MISSION_CONTROL_PHASE2_COMMANDS=enabled`:
+
+- Middleware allowlists POST `/api/v1/approvals/{id}/approve|reject|withdraw` and `/api/v1/owner-gates/{id}/challenge|decide`.
+- `lib/commands/ados-bridge.ts` spawns allowlisted `scripts/ados-tools/*` only (argv-safe). Next.js still does not write `state/**` directly.
+- Approval dispositions append to `state/approvals.jsonl` + `event-ledger.jsonl`.
+- Owner-gate decisions require a pinned `MISSION_CONTROL_OWNER_PUBKEY_PATH` and Ed25519 signature over canonical challenge bytes (fail-closed without keys).
+- Default remains read-only (`PHASE2` unset/disabled → all mutations `405 READ_ONLY_V2`).
+- Phase 3 dispatch is still out of scope.

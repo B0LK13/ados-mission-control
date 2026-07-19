@@ -100,9 +100,9 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   projects: { eyebrow: "Repository registry / 02", title: "Projects", description: "Canonical repositories, control-plane boundaries, integration worktrees, and next permitted actions." },
   agents: { eyebrow: "Runtime registry / 03", title: "Agents & runtimes", description: "Availability, verification, authority, last execution, and promotion state without runtime mutation controls." },
   tasks: { eyebrow: "Execution ledger / 04", title: "Tasks & executions", description: "Task contracts reconciled with results, protocol state, approvals, evidence, and bounded next actions." },
-  approvals: { eyebrow: "Owner gate / 05", title: "Approvals", description: "Filed status, authoritative disposition, consumption, expiry, scope, and current owner-action requirements." },
+  approvals: { eyebrow: "Owner gate / 05", title: "Approvals", description: "Filed status, authoritative disposition, consumption, expiry, and scope. Phase 2 can approve/reject/withdraw via allowlisted ADOS tools when enabled." },
   campaigns: { eyebrow: "Autonomy campaign / 06", title: "Campaigns", description: "Cursor-first campaign status, budgets, runtimes, and push/merge/deploy policy — observation only." },
-  "owner-gates": { eyebrow: "Protected decision / 07", title: "Owner gates", description: "Open and historical owner-only decisions. Mission Control cannot approve, deny, or clear these gates." },
+  "owner-gates": { eyebrow: "Protected decision / 07", title: "Owner gates", description: "Open and historical owner-only decisions. Phase 2 uses challenge → external Ed25519 sign → ADOS tool decide. Agents cannot self-approve." },
   workflow: { eyebrow: "Protocol graph / 08", title: "Workflow", description: "Read-only Owner → agent → validation flow derived from the brokered workflow summary. No drag-to-dispatch." },
   handoffs: { eyebrow: "Handoff queue / 09", title: "Handoffs", description: "Per-agent handoff packets, lifecycle stage, and synchronous adapter protocol — observation only." },
   worktrees: { eyebrow: "Repo hygiene / 10", title: "Worktrees", description: "Registered worktrees, dirty/untracked signals, branch/HEAD, and owner agent — no cleanup actions." },
@@ -349,11 +349,54 @@ function Tasks({ snapshot, query, setQuery, status, setStatus }: { snapshot: Mis
 }
 
 function Approvals({ snapshot, query, setQuery, status, setStatus }: { snapshot: MissionSnapshot; query: string; setQuery: (value: string) => void; status: string; setStatus: (value: string) => void }) {
+  const phase2 = snapshot.capabilities?.phase2Commands === true;
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const statuses = [...new Set(snapshot.approvals.map((approval) => approval.status))];
   const items = snapshot.approvals.filter((approval) => (status === "ALL" || approval.status === status) && `${approval.approvalId} ${approval.action} ${approval.scopeSummary}`.toLowerCase().includes(query.toLowerCase()));
+
+  const router = useRouter();
+  const runAction = async (approvalId: string, action: "approve" | "reject" | "withdraw") => {
+    if (!phase2) return;
+    const confirmed = window.confirm(`Confirm owner ${action.toUpperCase()} for ${approvalId} via ADOS tools?\n\nThis appends a disposition ledger event. Mission Control does not write state/* directly.`);
+    if (!confirmed) return;
+    setBusyId(approvalId);
+    setActionMessage(null);
+    try {
+      const response = await fetch(`/api/v1/approvals/${encodeURIComponent(approvalId)}/${action}`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "idempotency-key": `${action}-${approvalId}-${Date.now()}`,
+        },
+        body: JSON.stringify({ justification: `Owner ${action} via Mission Control Phase 2` }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setActionMessage(payload?.error?.message || `Failed to ${action} ${approvalId}`);
+      } else {
+        setActionMessage(`${action.toUpperCase()} recorded for ${approvalId}. Refreshing snapshot…`);
+        router.refresh();
+      }
+    } catch (error) {
+      setActionMessage(error instanceof Error ? error.message : `Failed to ${action}`);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <Panel code="GATE / OWNER" title="Approval reconciliation" meta={`${items.length} of ${snapshot.approvals.length}`}>
-      <div className="readonly-banner"><ShieldCheck size={16} /><strong>READ-ONLY V1</strong><span>Approve / Reject remain Phase 2. Consequence text below is observational only.</span></div>
+      <div className="readonly-banner">
+        <ShieldCheck size={16} />
+        <strong>{phase2 ? "PHASE 2 COMMANDS" : "READ-ONLY V1"}</strong>
+        <span>
+          {phase2
+            ? "Approve / Reject / Withdraw invoke allowlisted ADOS tools (append-only dispositions). No raw state/* writes from Next.js."
+            : "Approve / Reject remain disabled until MISSION_CONTROL_PHASE2_COMMANDS=enabled."}
+        </span>
+      </div>
+      {actionMessage && <div className="source-notice tone-warning" role="status"><strong>COMMAND RESULT</strong><span>{actionMessage}</span></div>}
       <FilterBar query={query} onQuery={setQuery} status={status} onStatus={setStatus} statuses={statuses} label="Search approval ID, action, or scope" />
       {items.length ? (
         <div className="approval-stack">
@@ -366,8 +409,9 @@ function Approvals({ snapshot, query, setQuery, status, setStatus }: { snapshot:
                   <small>{approval.requestingAgent || approval.issuedBy || "REQUESTER UNAVAILABLE"}</small>
                 </div>
                 <div className="approval-actions-preview">
-                  <button type="button" disabled title="Phase 2: Approve via ADOS owner tools">Approve · Phase 2</button>
-                  <button type="button" disabled title="Phase 2: Reject via ADOS owner tools">Reject · Phase 2</button>
+                  <button type="button" disabled={!phase2 || busyId === approval.approvalId || approval.status !== "PENDING"} onClick={() => runAction(approval.approvalId, "approve")} title={phase2 ? "Approve via ADOS disposition tool" : "Phase 2 disabled"}>Approve</button>
+                  <button type="button" disabled={!phase2 || busyId === approval.approvalId || approval.status !== "PENDING"} onClick={() => runAction(approval.approvalId, "reject")} title={phase2 ? "Reject via ADOS disposition tool" : "Phase 2 disabled"}>Reject</button>
+                  <button type="button" disabled={!phase2 || busyId === approval.approvalId || !["PENDING", "APPROVED"].includes(approval.status)} onClick={() => runAction(approval.approvalId, "withdraw")} title={phase2 ? "Withdraw/revoke via ADOS disposition tool" : "Phase 2 disabled"}>Withdraw</button>
                   <StatusBadge value={approval.status} />
                 </div>
               </header>
@@ -808,9 +852,76 @@ function Campaigns({ snapshot }: { snapshot: MissionSnapshot }) {
 }
 
 function OwnerGates({ snapshot }: { snapshot: MissionSnapshot }) {
+  const phase2 = snapshot.capabilities?.phase2Commands === true;
+  const signingReady = snapshot.capabilities?.ownerSigningConfigured === true;
+  const [selected, setSelected] = useState<Record<string, string>>({});
+  const [challengeJson, setChallengeJson] = useState<Record<string, string>>({});
+  const [signature, setSignature] = useState<Record<string, string>>({});
+  const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const requestChallenge = async (gateId: string, status: "APPROVED" | "DENIED") => {
+    setBusy(gateId);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/v1/owner-gates/${encodeURIComponent(gateId)}/challenge`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status, selectedOption: selected[gateId] || undefined }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setMessage(payload?.error?.message || "Challenge failed");
+        return;
+      }
+      setChallengeJson((prev) => ({ ...prev, [gateId]: JSON.stringify(payload.challenge, null, 2) }));
+      setMessage(`Signing challenge ready for ${gateId}. Sign outside Mission Control, then paste the base64 signature.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Challenge failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const router = useRouter();
+  const submitDecision = async (gateId: string) => {
+    setBusy(gateId);
+    setMessage(null);
+    try {
+      const challenge = JSON.parse(challengeJson[gateId] || "null");
+      const response = await fetch(`/api/v1/owner-gates/${encodeURIComponent(gateId)}/decide`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ challenge, signature: signature[gateId] }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setMessage(payload?.error?.message || "Decide failed");
+      } else {
+        setMessage(`Gate ${gateId} closed as ${payload.status}.`);
+        router.refresh();
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Decide failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <Panel code="GATE / OWNER-ONLY" title="Protected owner decisions" meta={`${snapshot.ownerGates.length} visible · freshness ${snapshot.freshness}`}>
-      <div className="readonly-banner"><ShieldAlert size={16} /><strong>NO UI ACTION</strong><span>Approving or denying these gates requires control-plane owner tools. Agents cannot self-approve.</span></div>
+      <div className="readonly-banner">
+        <ShieldAlert size={16} />
+        <strong>{phase2 && signingReady ? "SIGNED OWNER WORKFLOW" : phase2 ? "SIGNING FAIL-CLOSED" : "NO UI ACTION"}</strong>
+        <span>
+          {phase2 && signingReady
+            ? "Challenge → external Ed25519 sign → decide. Agents cannot self-approve. Private keys never enter Mission Control."
+            : phase2
+              ? "Phase 2 is enabled but MISSION_CONTROL_OWNER_PUBKEY_PATH is missing — gate decisions stay fail-closed."
+              : "Approving or denying these gates requires Phase 2 authorization and a pinned owner public key."}
+        </span>
+      </div>
+      {message && <div className="source-notice tone-warning" role="status"><strong>GATE WORKFLOW</strong><span>{message}</span></div>}
       {snapshot.ownerGates.length ? (
         <div className="incident-grid">
           {snapshot.ownerGates.map((gate: OwnerGateCard) => (
@@ -825,6 +936,45 @@ function OwnerGates({ snapshot }: { snapshot: MissionSnapshot }) {
                 <div><dt>Recommended option</dt><dd>{gate.recommendedOption || "NONE"}</dd></div>
                 <div><dt>Owner action</dt><dd>{gate.ownerActionRequired ? "REQUIRED" : "NOT CURRENTLY REQUIRED"}</dd></div>
               </dl>
+              {gate.status === "OPEN" && phase2 && (
+                <div className="owner-gate-workflow">
+                  <label>
+                    <span className="sr-only">Selected option</span>
+                    <select
+                      aria-label={`Option for ${gate.gateId}`}
+                      value={selected[gate.gateId] || gate.recommendedOption || gate.options[0] || ""}
+                      onChange={(event) => setSelected((prev) => ({ ...prev, [gate.gateId]: event.target.value }))}
+                    >
+                      {gate.options.map((option) => <option key={option} value={option}>{option}</option>)}
+                    </select>
+                  </label>
+                  <div className="approval-actions-preview">
+                    <button type="button" disabled={!signingReady || busy === gate.gateId} onClick={() => requestChallenge(gate.gateId, "APPROVED")}>Challenge approve</button>
+                    <button type="button" disabled={!signingReady || busy === gate.gateId} onClick={() => requestChallenge(gate.gateId, "DENIED")}>Challenge deny</button>
+                  </div>
+                  {challengeJson[gate.gateId] && (
+                    <>
+                      <label className="search-field">
+                        <span className="sr-only">Challenge JSON</span>
+                        <textarea aria-label={`Challenge for ${gate.gateId}`} value={challengeJson[gate.gateId]} readOnly rows={6} />
+                      </label>
+                      <label className="search-field">
+                        <span className="sr-only">Signature</span>
+                        <input
+                          aria-label={`Signature for ${gate.gateId}`}
+                          placeholder="Base64 Ed25519 signature"
+                          value={signature[gate.gateId] || ""}
+                          onChange={(event) => setSignature((prev) => ({ ...prev, [gate.gateId]: event.target.value }))}
+                          autoComplete="off"
+                        />
+                      </label>
+                      <button type="button" disabled={!signingReady || busy === gate.gateId || !signature[gate.gateId]} onClick={() => submitDecision(gate.gateId)}>
+                        Submit signed decision
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
               <div className="incident-resolution">
                 <span>SUMMARY</span>
                 <p>{gate.summary}</p>
@@ -1338,7 +1488,11 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
 
         <footer className="application-footer">
           <span><ShieldCheck size={14} /> Mission Control V2 provides authenticated, resilient visibility.</span>
-          <span>It does not authorize, approve, dispatch, or mutate ADOS operations.</span>
+          <span>
+            {snapshot.capabilities?.phase2Commands
+              ? "Phase 2 owner commands are enabled via allowlisted ADOS tools. Dispatch remains Phase 3."
+              : "It does not authorize, approve, dispatch, or mutate ADOS operations."}
+          </span>
           <a className="support-bundle-link" href="/api/v1/support-bundle" download>
             Download support bundle
           </a>

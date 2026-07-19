@@ -1,0 +1,21 @@
+{
+  "classification": "MISSION_CONTROL_V2_PHASE2_OWNER_COMMANDS_AUTHORIZED_AND_IMPLEMENTED",
+  "recordedAt": "2026-07-19T11:08:30.000Z",
+  "authorization": "docs/authorizations/phase2-owner-commands-20260719.md",
+  "ownerDirective": "Authorized",
+  "implemented": {
+    "phase2-001": "approve/reject/withdraw via scripts/ados-tools + POST routes",
+    "phase2-002": "owner-gate challenge/decide with Ed25519 fail-closed signing"
+  },
+  "notAuthorized": ["ados-mission-control-v2-roadmap-phase3-001"],
+  "qualityGates": {
+    "typecheck": "pass",
+    "unitTests": "61/61 pass",
+    "verifyReadonly": "pass (spawn allowlisted only in lib/commands/ados-bridge.ts)"
+  },
+  "enablement": {
+    "flag": "MISSION_CONTROL_PHASE2_COMMANDS=enabled",
+    "pubkey": "MISSION_CONTROL_OWNER_PUBKEY_PATH=/path/to/owner-ed25519-public.pem",
+    "default": "disabled → 405 READ_ONLY_V2"
+  }
+}
