@@ -376,10 +376,10 @@ Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-
 
 ### Recommended next (MC-local, not owner-gated)
 
-1. **ui-002…005** — Dedicated `/workflow`, `/handoffs`, `/worktrees`, `/evidence` views (APIs already exist).
-2. **ux-002 / ux-003** — Overview nine PRD questions + approval consequence panels (still read-only).
-3. **feature-001…003** — Evidence-diff, budget forecast, dead-letter/incident surface.
-4. **security-002 / testing-003 / dx-001 / operations-001** — Redaction allowlist, keyboard e2e, WSL build note, push local `main`.
+1. ~~**ui-002…006 + ux-002/003 + docs-004**~~ — Dedicated workflow/handoffs/worktrees/evidence/safety views, nine-question overview, approval consequences, ARCHITECTURE sync (done 2026-07-19).
+2. **feature-001…003** — Evidence-diff, budget forecast, dead-letter/incident surface.
+3. **security-002 / testing-003 / dx-001 / operations-001** — Redaction allowlist, keyboard e2e, WSL build note, push local `main`.
+4. **ui-007** — Task dependency graph (optional Optimization).
 
 ### Owner-gated (do not implement without authorization)
 
