@@ -1,16 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { timingSafeEqualString } from "@/lib/security/timing-safe";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const AUTH_EXEMPT_PATHS = new Set(["/api/health", "/api/v1/health"]);
-
-function constantTimeEqual(left: string, right: string): boolean {
-  const length = Math.max(left.length, right.length);
-  let difference = left.length ^ right.length;
-  for (let index = 0; index < length; index += 1) {
-    difference |= (left.charCodeAt(index) || 0) ^ (right.charCodeAt(index) || 0);
-  }
-  return difference === 0;
-}
 
 function credentials(request: NextRequest): { username: string; password: string } | null {
   const authorization = request.headers.get("authorization");
@@ -51,7 +43,11 @@ export function middleware(request: NextRequest) {
     return authResponse(request, 503, "AUTH_NOT_CONFIGURED", "Mission Control authentication is enabled but not configured.");
   }
   const supplied = credentials(request);
-  if (!supplied || !constantTimeEqual(supplied.username, expectedUsername) || !constantTimeEqual(supplied.password, expectedPassword)) {
+  if (
+    !supplied ||
+    !timingSafeEqualString(supplied.username, expectedUsername) ||
+    !timingSafeEqualString(supplied.password, expectedPassword)
+  ) {
     return authResponse(request, 401, "AUTHENTICATION_REQUIRED", "Valid Mission Control credentials are required.");
   }
   return NextResponse.next();

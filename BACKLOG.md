@@ -48,5 +48,10 @@ Ordered against `ados-mission-control-update-package/04-CURSOR-MASTER-INSTRUCTIO
 12. Four-pane WT cockpit + live event broker (U6).
 13. Kill switches / service recovery / pilot (U8) → stop at `OWNER_ACTION_REQUIRED: Authorize local commit`.
 
+### Reliability / security (MC-local)
+
+14. ~~Basic auth `crypto.timingSafeEqual` (FBL-SEC-004)~~ (done).
+15. ~~Shared SSE/REST snapshot cache + SSE event ids (FBL-PERF-002 / FBL-UX-001)~~ (done).
+
 **Handoff report:** `ados-mission-control-update-package/docs/COMPLETION-REPORT-2026-07-18.md`  
-**Classification:** `ADOS_CURSOR_FIRST_SUPERVISOR_V1_HANDOFF_READY`
+**Classification:** `ADOS_CURSOR_FIRST_SUPERVISOR_V1_PACKAGE_HANDOFF_READY` (package/planning only — control-plane implementation remains blocked pending owner gates; see `docs/COMPLETION-REPORT-2026-07-18.md`)

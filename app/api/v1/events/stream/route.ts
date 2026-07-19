@@ -1,5 +1,5 @@
 import { getMissionControlConfig } from "@/lib/config";
-import { getMissionSnapshot } from "@/lib/broker/snapshot";
+import { getSharedMissionSnapshot } from "@/lib/broker/snapshot-cache";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -11,6 +11,9 @@ export async function GET(request: Request) {
   let snapshotTimer: ReturnType<typeof setInterval> | undefined;
   let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
   let streamController: ReadableStreamDefaultController<Uint8Array> | undefined;
+  // FBL-UX-001: EventSource reconnects send Last-Event-ID. This stream is full-snapshot,
+  // so resume always pushes the latest shared snapshot — never invented deltas.
+  const lastEventId = request.headers.get("last-event-id")?.trim() || "";
 
   const close = () => {
     if (closed) return;
@@ -27,13 +30,18 @@ export async function GET(request: Request) {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       streamController = controller;
+      if (lastEventId) {
+        controller.enqueue(encoder.encode(`: resume after ${lastEventId}\n\n`));
+      }
 
       const sendSnapshot = async () => {
         if (closed) return;
         try {
-          const snapshot = await getMissionSnapshot();
+          const { snapshot, sequence } = await getSharedMissionSnapshot(refreshMs);
           controller.enqueue(
-            encoder.encode(`event: snapshot\ndata: ${JSON.stringify(snapshot)}\n\n`),
+            encoder.encode(
+              `id: ${sequence}\nevent: snapshot\ndata: ${JSON.stringify(snapshot)}\n\n`,
+            ),
           );
         } catch (error) {
           const message = error instanceof Error ? error.message : "Read model unavailable.";

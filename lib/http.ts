@@ -1,5 +1,5 @@
 import type { MissionSnapshot } from "@/lib/contracts";
-import { getMissionSnapshot } from "@/lib/broker/snapshot";
+import { getSharedMissionSnapshot } from "@/lib/broker/snapshot-cache";
 import { redactValue } from "@/lib/redaction";
 
 const headers = {
@@ -15,7 +15,8 @@ export async function missionResponse<T>(
   selector: (snapshot: MissionSnapshot) => T,
 ): Promise<Response> {
   try {
-    return missionJson(selector(await getMissionSnapshot()));
+    const { snapshot } = await getSharedMissionSnapshot();
+    return missionJson(selector(snapshot));
   } catch {
     return missionJson(
       { error: { code: "READ_MODEL_UNAVAILABLE", message: "The read-only state model is unavailable." } },

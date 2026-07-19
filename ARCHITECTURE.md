@@ -50,7 +50,7 @@ All lists use truthful empty/unavailable states. Tasks, approvals, and the audit
 
 ## Refresh and failure isolation
 
-Each request builds a fresh snapshot and the SSE route publishes it on the configured interval. A malformed or unsupported record produces a warning without crashing unrelated views. A successful live ingest atomically updates the redacted SQLite cache and watermarks. If the root or authoritative lease later disappears, the last snapshot is returned only as `STALE`, `BLOCKED`, `recoveredFromCache: true`; if no cache exists, a truthful empty `UNAVAILABLE` snapshot is returned.
+REST and SSE share an in-process snapshot fan-out for the configured refresh window (`lib/broker/snapshot-cache.ts`) so each connected client does not rebuild the full read model independently. SSE frames include monotonic `id:` values so browsers can send `Last-Event-ID` on reconnect; resume still emits the latest full snapshot (never fabricated deltas). A malformed or unsupported record produces a warning without crashing unrelated views. A successful live ingest atomically updates the redacted SQLite cache and watermarks. If the root or authoritative lease later disappears, the last snapshot is returned only as `STALE`, `BLOCKED`, `recoveredFromCache: true`; if no cache exists, a truthful empty `UNAVAILABLE` snapshot is returned.
 
 ## Cursor-First visibility extensions
 
