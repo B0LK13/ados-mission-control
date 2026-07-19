@@ -107,7 +107,7 @@ See [`docs/security/V3-THREAT-MODEL.md`](docs/security/V3-THREAT-MODEL.md) for t
 
 ## Known limitations
 
-- The schema registry covers the ingested ledger/approval families; it is not a complete schema archive for every historical ADOS document.
+- The schema registry allowlists high-traffic ingest families (lease, sessions, project/worktree/dispatch state, task contracts, campaigns, owner-gates, plus ledger/approval streams). See [`docs/security/SCHEMA-REGISTRY.md`](docs/security/SCHEMA-REGISTRY.md). It is still not a complete archive of every historical ADOS document; unknown kinds stay warning-isolated and never upgrade authority.
 - Secret detection is defense in depth, not a substitute for preventing secrets from entering operational summaries.
 - V2 has one staging identity, not roles or SSO. Design for multi-identity/SSO is recorded in [`docs/adr/ADR-003-multi-identity-sso.md`](docs/adr/ADR-003-multi-identity-sso.md) (Cursor PRIMARY via IdP is an explicit non-goal). Opt-in mutation POSTs (Phase 2/3/6) require a loopback `Host` (`localhost` / `127.0.0.1` / `::1`) unless `MISSION_CONTROL_ALLOW_REMOTE_MUTATIONS=enabled`. Non-loopback hosts receive `403 MUTATION_HOST_DENIED`. This is the CSRF residual control for browser-exposed staging; full CSRF tokens remain a future hardening step if cookie-based browser auth widens.
 - Owner-gate decisions require a pinned Ed25519 public key (`MISSION_CONTROL_OWNER_PUBKEY_PATH`). Private keys must never enter the Mission Control image or git tree.

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.internal/schemas/input/v2/project-state.schema.json",
+  "title": "ADOS project state ingestion document",
+  "type": "object",
+  "properties": {
+    "schemaVersion": { "type": ["string", "number"] },
+    "project": { "type": "object", "additionalProperties": true },
+    "verification": { "type": "object", "additionalProperties": true },
+    "remote": { "type": ["boolean", "object", "string"] }
+  },
+  "additionalProperties": true
+}

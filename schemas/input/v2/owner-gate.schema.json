@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.internal/schemas/input/v2/owner-gate.schema.json",
+  "title": "ADOS owner-gate ingestion record",
+  "type": "object",
+  "properties": {
+    "schemaVersion": { "type": ["string", "number"] },
+    "gateId": { "type": "string", "minLength": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "campaignId": { "type": "string" },
+    "decisionType": { "type": "string" },
+    "status": { "type": "string" },
+    "options": { "type": "array", "items": { "type": "string" } }
+  },
+  "anyOf": [{ "required": ["gateId"] }, { "required": ["id"] }],
+  "additionalProperties": true
+}

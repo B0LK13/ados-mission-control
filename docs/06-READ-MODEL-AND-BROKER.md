@@ -32,9 +32,13 @@ REST + SSE
 | Handoffs | `{ADOS}/handoffs/**` |
 | Worktree registry | `{ADOS}/state/worktree-registry.json` |
 | Project state | `{ADOS}/state/project-state.json` |
+| Dispatch state | `{ADOS}/state/wave-0-dispatch-state.json` |
+| Campaigns / owner-gates | `{ADOS}/state/campaigns/**`, `campaigns.jsonl`, `owner-gates.jsonl`, `handoffs/owner/inbox/**` |
 | Cursor overlay | `{CURSOR_WT}/.agent-control/AGENT_LEASES.json`, `TASK_GRAPH.json` |
 | Git OBSERVED | `git -C` status/worktree on known repos |
 | Process OBSERVED | Windows process for lease `processId` |
+
+High-traffic families are version-checked by the allowlisted schema registry (`lib/ingestion/schema-registry.ts`). See [`docs/security/SCHEMA-REGISTRY.md`](security/SCHEMA-REGISTRY.md).
 
 Poll interval default: 2s for lease/failover; 1s ledger tail; 10s git/process.
 

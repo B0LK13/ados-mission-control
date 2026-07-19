@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.internal/schemas/input/v2/orchestrator-lease.schema.json",
+  "title": "ADOS orchestrator lease ingestion record",
+  "type": "object",
+  "properties": {
+    "schemaVersion": { "type": ["string", "number"] },
+    "leaseId": { "type": "string", "minLength": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "orchestrator": { "type": "string" },
+    "provider": { "type": "string" },
+    "state": { "type": "string" },
+    "heartbeatAt": { "type": "string" },
+    "expiresAt": { "type": "string" },
+    "processId": { "type": ["string", "number"] }
+  },
+  "anyOf": [{ "required": ["leaseId"] }, { "required": ["id"] }],
+  "additionalProperties": true
+}

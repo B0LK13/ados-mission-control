@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.internal/schemas/input/v2/worktree-registry.schema.json",
+  "title": "ADOS worktree registry ingestion document",
+  "type": "object",
+  "properties": {
+    "schemaVersion": { "type": ["string", "number"] },
+    "verificationStatus": { "type": "string" },
+    "verifiedAt": { "type": "string" },
+    "worktrees": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    }
+  },
+  "additionalProperties": true
+}

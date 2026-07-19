@@ -418,6 +418,8 @@ async function collectTasks(
         warnings.push(`Unreadable task contract skipped: ${path.basename(file)}`);
         continue;
       }
+      const contractValidation = validateInputRecords("task-contract", [contract], path.basename(file));
+      warnings.push(...contractValidation.warnings.map((warning) => `${warning.source}: ${warning.message}`));
       const taskId = text(contract, "taskId") || path.basename(file, ".json");
       const completedPath = resolveWithinRoot(orchestratorRoot, "handoffs", agent, "completed", `${taskId}.json`);
       const result = record(await readJson(completedPath));
@@ -855,10 +857,15 @@ async function loadSupervisorProjections(orchestratorRoot: string): Promise<{
     gateRecords.push(record(payload));
   }
 
-  const campaigns = campaignRecords
+  const campaignValidation = validateInputRecords("campaign", campaignRecords, "campaigns");
+  const gateValidation = validateInputRecords("owner-gate", gateRecords, "owner-gates");
+  warnings.push(...campaignValidation.warnings, ...gateValidation.warnings);
+
+  // Schema warnings never drop records — normalize still decides observability; authority stays OBSERVED.
+  const campaigns = campaignValidation.records
     .map(normalizeCampaign)
     .filter((item): item is CampaignCard => item !== null);
-  const ownerGates = gateRecords
+  const ownerGates = gateValidation.records
     .map(normalizeOwnerGate)
     .filter((item): item is OwnerGateCard => item !== null);
 
@@ -1172,6 +1179,19 @@ export async function getMissionSnapshot(): Promise<MissionSnapshot> {
   const eventValidation = validateInputRecords("ledger-event", eventResult.records, "event-ledger.jsonl");
   const approvalValidation = validateInputRecords("approval-disposition", approvalResult.records, "approvals.jsonl");
   const consumptionValidation = validateInputRecords("approval-consumption", consumptionResult.records, "approval-consumptions.jsonl");
+  const leaseValidation = validateInputRecords("orchestrator-lease", [leaseDocument], "orchestrator-lease.json");
+  const sessionsValidation = sessionsDocument
+    ? validateInputRecords("agent-sessions", [sessionsDocument], "agent-sessions.json")
+    : { records: [], warnings: [] as ParseWarning[] };
+  const projectValidation = projectDocument
+    ? validateInputRecords("project-state", [projectDocument], "project-state.json")
+    : { records: [], warnings: [] as ParseWarning[] };
+  const worktreeValidation = worktreeDocument
+    ? validateInputRecords("worktree-registry", [worktreeDocument], "worktree-registry.json")
+    : { records: [], warnings: [] as ParseWarning[] };
+  const dispatchValidation = dispatchDocument
+    ? validateInputRecords("dispatch-state", [dispatchDocument], "wave-0-dispatch-state.json")
+    : { records: [], warnings: [] as ParseWarning[] };
   const parseWarnings: ParseWarning[] = [
     ...eventResult.warnings,
     ...approvalResult.warnings,
@@ -1179,6 +1199,11 @@ export async function getMissionSnapshot(): Promise<MissionSnapshot> {
     ...eventValidation.warnings,
     ...approvalValidation.warnings,
     ...consumptionValidation.warnings,
+    ...leaseValidation.warnings,
+    ...sessionsValidation.warnings,
+    ...projectValidation.warnings,
+    ...worktreeValidation.warnings,
+    ...dispatchValidation.warnings,
   ];
   const approvalFiles: Record<string, unknown>[] = [];
   const approvalDirectory = resolveWithinRoot(config.orchestratorRoot, "handoffs", "owner", "approvals");

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.internal/schemas/input/v2/dispatch-state.schema.json",
+  "title": "ADOS wave/dispatch state ingestion document",
+  "type": "object",
+  "properties": {
+    "schemaVersion": { "type": ["string", "number"] },
+    "productionDispatchEnabled": { "type": ["boolean", "string"] },
+    "productionDispatch": { "type": "string" }
+  },
+  "additionalProperties": true
+}

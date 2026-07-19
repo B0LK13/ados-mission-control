@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ados.internal/schemas/input/v2/campaign.schema.json",
+  "title": "ADOS campaign ingestion record",
+  "type": "object",
+  "properties": {
+    "schemaVersion": { "type": ["string", "number"] },
+    "campaignId": { "type": "string", "minLength": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "status": { "type": "string" },
+    "primaryRuntime": { "type": "string" },
+    "reviewRuntime": { "type": "string" },
+    "projectIds": { "type": "array", "items": { "type": "string" } }
+  },
+  "anyOf": [{ "required": ["campaignId"] }, { "required": ["id"] }],
+  "additionalProperties": true
+}
