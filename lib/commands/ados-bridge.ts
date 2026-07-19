@@ -2,17 +2,25 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import { getMissionControlConfig } from "@/lib/config";
 
-export type Phase2ToolName =
+export type AdosToolName =
   | "set-owner-approval-disposition"
-  | "set-owner-gate-decision";
+  | "set-owner-gate-decision"
+  | "dispatch-approved-operation"
+  | "set-campaign-control";
 
-const ALLOWED_TOOLS: Record<Phase2ToolName, string> = {
-  "set-owner-approval-disposition": "set-owner-approval-disposition.mjs",
-  "set-owner-gate-decision": "set-owner-gate-decision.mjs",
+const ALLOWED_TOOLS: Record<AdosToolName, { script: string; phase: 2 | 3 }> = {
+  "set-owner-approval-disposition": { script: "set-owner-approval-disposition.mjs", phase: 2 },
+  "set-owner-gate-decision": { script: "set-owner-gate-decision.mjs", phase: 2 },
+  "dispatch-approved-operation": { script: "dispatch-approved-operation.mjs", phase: 3 },
+  "set-campaign-control": { script: "set-campaign-control.mjs", phase: 3 },
 };
 
 export function isPhase2CommandsEnabled(): boolean {
   return process.env.MISSION_CONTROL_PHASE2_COMMANDS?.trim().toLowerCase() === "enabled";
+}
+
+export function isPhase3CommandsEnabled(): boolean {
+  return process.env.MISSION_CONTROL_PHASE3_COMMANDS?.trim().toLowerCase() === "enabled";
 }
 
 export interface AdosToolResult {
@@ -46,14 +54,18 @@ function parseToolOutput(stdout: string, stderr: string): AdosToolResult {
 }
 
 /**
- * Invoke an allowlisted ADOS Phase-2 tool via argv-only node spawn.
- * The tool scripts live under scripts/ados-tools (outside the read-model write ban).
+ * Invoke an allowlisted ADOS tool via argv-only node spawn.
+ * Phase 2/3 tools require their respective enablement flags.
  */
 export async function invokeAdosTool(
-  tool: Phase2ToolName,
+  tool: AdosToolName,
   args: Record<string, string>,
 ): Promise<AdosToolResult> {
-  if (!isPhase2CommandsEnabled()) {
+  const meta = ALLOWED_TOOLS[tool];
+  if (!meta) {
+    return { ok: false, code: "TOOL_NOT_ALLOWLISTED", message: `Tool not allowlisted: ${tool}`, raw: "" };
+  }
+  if (meta.phase === 2 && !isPhase2CommandsEnabled()) {
     return {
       ok: false,
       code: "PHASE2_DISABLED",
@@ -61,14 +73,17 @@ export async function invokeAdosTool(
       raw: "",
     };
   }
-
-  const scriptName = ALLOWED_TOOLS[tool];
-  if (!scriptName) {
-    return { ok: false, code: "TOOL_NOT_ALLOWLISTED", message: `Tool not allowlisted: ${tool}`, raw: "" };
+  if (meta.phase === 3 && !isPhase3CommandsEnabled()) {
+    return {
+      ok: false,
+      code: "PHASE3_DISABLED",
+      message: "MISSION_CONTROL_PHASE3_COMMANDS is not enabled.",
+      raw: "",
+    };
   }
 
   const config = getMissionControlConfig();
-  const scriptPath = path.join(process.cwd(), "scripts", "ados-tools", scriptName);
+  const scriptPath = path.join(process.cwd(), "scripts", "ados-tools", meta.script);
   const argv = [scriptPath];
   const merged = {
     root: config.orchestratorRoot,

@@ -95,4 +95,11 @@ When `MISSION_CONTROL_PHASE2_COMMANDS=enabled`:
 - Approval dispositions append to `state/approvals.jsonl` + `event-ledger.jsonl`.
 - Owner-gate decisions require a pinned `MISSION_CONTROL_OWNER_PUBKEY_PATH` and Ed25519 signature over canonical challenge bytes (fail-closed without keys).
 - Default remains read-only (`PHASE2` unset/disabled → all mutations `405 READ_ONLY_V2`).
-- Phase 3 dispatch is still out of scope.
+## Phase 3 controlled operations (authorized 2026-07-19)
+
+When `MISSION_CONTROL_PHASE3_COMMANDS=enabled`:
+
+- POST `/api/v1/operations/dispatch` prepare/queue only after `APPROVED` disposition (fail-closed otherwise).
+- POST `/api/v1/operations/campaign-control` pause/resume with matching APPROVED approval.
+- Cursor PRIMARY / lease transfer remains impossible through Mission Control.
+- UI surface: `/operations`.

@@ -2,7 +2,7 @@
 
 ## Read-only guarantee
 
-Mission Control V2 is a GET-only observability cockpit by default. Owner-authorized Phase 2 command routes may approve/reject/withdraw and close owner gates only through allowlisted ADOS tools — never via raw `state/**` writes from Next.js, and never for Phase 3 dispatch.
+Mission Control V2 is a GET-only observability cockpit by default. Owner-authorized Phase 2 command routes may approve/reject/withdraw and close owner gates only through allowlisted ADOS tools — never via raw `state/**` writes from Next.js, and Phase 3 approved-only operations are opt-in via MISSION_CONTROL_PHASE3_COMMANDS=enabled and still cannot grant Cursor PRIMARY/lease.
 
 The guarantee is enforced in layers:
 

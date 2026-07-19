@@ -32,6 +32,8 @@ test("all API mutations are rejected before route handling", async () => {
     "http://localhost/api/v1/support-bundle",
     "http://localhost/api/v1/approvals/approval-1/approve",
     "http://localhost/api/v1/owner-gates/gate-1/decide",
+    "http://localhost/api/v1/operations/dispatch",
+    "http://localhost/api/v1/operations/campaign-control",
   ]) {
     for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
       const response = middleware(new NextRequest(route, { method }));

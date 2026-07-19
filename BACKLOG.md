@@ -9,41 +9,13 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Primary language:** TypeScript
 - **Classification status:** confirmed
 - **Maturity:** strong (overall score 3.6/5) → target: advanced
-- **Summary:** Phase-1 + Phase-2 MVP complete (2026-07-19): read-only Command Deck plus owner-authorized approve/reject/withdraw and signed owner-gate decide via ADOS tools. Remaining open: Phase 3 dispatch (not authorized) and deferred Phase 4 fleet.
+- **Summary:** Phase-1++ read-only cockpit: CI (Node 22 + Playwright incl. axe a11y), support-bundle, PATH-REGISTRY, SSE fan-out, campaigns/owner-gates/replay. Deep analysis 2026-07-19 found Phase-1 screen gaps (workflow/handoffs/worktrees/evidence dedicated views), thin approval consequences, and owner-gated Phase 2+ items.
 
-## Open Tasks (2)
+## Open Tasks (1)
 
 | Priority | Count |
 |---|---|
-| Medium | 1 |
 | Low | 1 |
-
-### `ados-mission-control-v2-roadmap-phase3-001` — [OWNER-GATED] Phase 3: controlled operations (approved dispatch only)
-
-- **Priority:** Medium | **Severity:** High | **Effort:** L | **Risk:** High | **Phase:** Advanced | **Status:** Open
-- **Category:** roadmap / phase-3
-- **Owner role:** tech-lead
-
-**Current state:** MC cannot dispatch; control-plane supervisor may operate under separate gates.
-
-**Target state:** MC optional control surface that only triggers already-approved operations through ADOS tools.
-
-**Gap:** No in-UI controlled operations (intentional until authorized).
-
-**Acceptance criteria:**
-- [ ] Dispatch impossible without owner approval
-- [ ] Cursor still cannot hold orchestrator lease via MC
-- [ ] Full audit trail
-
-**Validation steps:**
-1. Negative tests: unapproved dispatch denied
-
-**Source evidence:**
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-- docs/05-SCREEN-INVENTORY.md
-- docs/08-PHASE-ROADMAP.md
-
-**Labels:** phase-3, owner-gated
 
 ### `ados-mission-control-v2-roadmap-phase4-001` — Phase 4: fleet dashboard and Prometheus/Grafana hooks (defer)
 

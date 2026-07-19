@@ -1,0 +1,18 @@
+{
+  "classification": "MISSION_CONTROL_V2_PHASE3_CONTROLLED_OPERATIONS_AUTHORIZED_AND_IMPLEMENTED",
+  "recordedAt": "2026-07-19T11:20:00.000Z",
+  "authorization": "docs/authorizations/phase3-controlled-operations-20260719.md",
+  "ownerDirective": "Next phase",
+  "implemented": {
+    "dispatch": "POST /api/v1/operations/dispatch — prepare/queue only with APPROVED disposition",
+    "campaignControl": "POST /api/v1/operations/campaign-control — PAUSE/RESUME with APPROVED approval",
+    "ui": "/operations"
+  },
+  "invariants": [
+    "Unapproved dispatch denied",
+    "Cursor cannot acquire PRIMARY lease via MC",
+    "No Invoke-CursorAgent/Launch-Cursor from app/components/lib",
+    "Audit trail via event-ledger + approval-consumptions"
+  ],
+  "remainingOpen": ["ados-mission-control-v2-roadmap-phase4-001"]
+}

@@ -390,6 +390,7 @@ export interface MissionSnapshot {
   };
   capabilities: {
     phase2Commands: boolean;
+    phase3Commands: boolean;
     ownerSigningConfigured: boolean;
     mutationsEnabled: boolean;
   };

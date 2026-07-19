@@ -11,13 +11,17 @@ export function missionJson(data: unknown, status = 200): Response {
   return Response.json(redactValue(data), { status, headers });
 }
 
-/** Redacted JSON for Phase-2 command routes (not the read-model selector helper). */
-export function missionCommandJson(data: unknown, status = 200): Response {
+/** Redacted JSON for Phase-2/3 command routes (not the read-model selector helper). */
+export function missionCommandJson(
+  data: unknown,
+  status = 200,
+  authority: "phase2-commands" | "phase3-commands" = "phase2-commands",
+): Response {
   return Response.json(redactValue(data), {
     status,
     headers: {
       "Cache-Control": "no-store, max-age=0",
-      "X-ADOS-Authority": status >= 200 && status < 300 ? "phase2-commands" : "read-only",
+      "X-ADOS-Authority": status >= 200 && status < 300 ? authority : "read-only",
     },
   });
 }

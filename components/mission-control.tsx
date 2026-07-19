@@ -25,6 +25,7 @@ import {
   Moon,
   Network,
   OctagonAlert,
+  Play,
   Radio,
   Search,
   ShieldAlert,
@@ -70,6 +71,7 @@ export const dashboardViews = [
   "timeline",
   "routing-incidents",
   "dead-letter",
+  "operations",
   "replay",
   "evidence-diff",
 ] as const;
@@ -91,6 +93,7 @@ const navigation: Array<{ view: DashboardView; label: string; icon: typeof Gauge
   { view: "timeline", label: "Evidence & audit", icon: Activity },
   { view: "routing-incidents", label: "Routing incidents", icon: Waypoints },
   { view: "dead-letter", label: "Dead letter", icon: OctagonAlert },
+  { view: "operations", label: "Operations", icon: Play },
   { view: "replay", label: "Replay", icon: History },
   { view: "evidence-diff", label: "Evidence diff", icon: FileDiff },
 ];
@@ -111,8 +114,9 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   timeline: { eyebrow: "Trust timeline / 13", title: "Evidence & audit timeline", description: "A filterable chronology separating authoritative results, direct verification, reported claims, and diagnostics." },
   "routing-incidents": { eyebrow: "Containment register / 14", title: "Routing incidents", description: "Cross-project mistakes, repository containment, owner disposition, and recorded resolution." },
   "dead-letter": { eyebrow: "Failure backlog / 15", title: "Dead letter", description: "Repeated failures, blocked tasks, worker-unavailable handoffs, and routing containment still needing owner disposition — derived only, never invented." },
-  replay: { eyebrow: "Run chronology / 16", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
-  "evidence-diff": { eyebrow: "Run compare / 17", title: "Evidence diff", description: "GET-only comparison of two supervisor runs under one campaign. Missing runs stay UNAVAILABLE — never a fabricated diff." },
+  operations: { eyebrow: "Controlled ops / 16", title: "Controlled operations", description: "Phase 3 approved-only dispatch prepare/queue and campaign pause/resume via ADOS tools. Impossible without APPROVED disposition. Cursor cannot take PRIMARY lease here." },
+  replay: { eyebrow: "Run chronology / 17", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
+  "evidence-diff": { eyebrow: "Run compare / 18", title: "Evidence diff", description: "GET-only comparison of two supervisor runs under one campaign. Missing runs stay UNAVAILABLE — never a fabricated diff." },
 };
 
 function formatTimestamp(value?: string | null, compact = false): string {
@@ -464,6 +468,115 @@ function RoutingIncidents({ snapshot }: { snapshot: MissionSnapshot }) {
   return (
     <Panel code="ROUTING / CONTAINMENT" title="Cross-project incident register" meta={`${snapshot.routingIncidents.length} recorded`}>
       {snapshot.routingIncidents.length ? <div className="incident-grid">{snapshot.routingIncidents.map((incident) => <article className="incident-card" key={incident.incidentId}><header><div><Waypoints size={18} /><span>{incident.incidentId}</span></div><StatusBadge value={incident.containmentStatus} /></header><dl><div><dt>Intended project</dt><dd>{incident.intendedProject}</dd></div><div><dt>Incorrect repository</dt><dd title={incident.incorrectRepository}>{compactPath(incident.incorrectRepository, 58)}</dd></div><div><dt>Branch / commit</dt><dd>{incident.branch || "UNAVAILABLE"} · {incident.commit?.slice(0, 12) || "UNAVAILABLE"}</dd></div><div><dt>Owner disposition</dt><dd>{incident.ownerDispositionRequired ? "REQUIRED" : "NOT CURRENTLY REQUIRED"}</dd></div></dl><div className="incident-resolution"><span>FINAL RESOLUTION / CURRENT RECORD</span><p>{incident.resolution}</p></div><VerificationBadge value={incident.verification} /></article>)}</div> : <EmptyState title="No routing incident record" detail="No cross-project repository mistake was derived from current authoritative state." />}
+    </Panel>
+  );
+}
+
+function Operations({ snapshot }: { snapshot: MissionSnapshot }) {
+  const phase3 = snapshot.capabilities?.phase3Commands === true;
+  const [approvalId, setApprovalId] = useState(snapshot.approvals.find((item) => item.status === "APPROVED")?.approvalId || "");
+  const [taskId, setTaskId] = useState(snapshot.tasks[0]?.taskId || "");
+  const [runtime, setRuntime] = useState<"cursor" | "codex" | "kimi">("codex");
+  const [mode, setMode] = useState<"prepare" | "queue">("prepare");
+  const [campaignId, setCampaignId] = useState(snapshot.campaigns[0]?.campaignId || "");
+  const [campaignApprovalId, setCampaignApprovalId] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const dispatch = async () => {
+    if (!phase3) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/v1/operations/dispatch", {
+        method: "POST",
+        headers: { "content-type": "application/json", "idempotency-key": `dispatch-${Date.now()}` },
+        body: JSON.stringify({ approvalId, taskId, runtime, mode }),
+      });
+      const payload = await response.json();
+      setMessage(response.ok ? `Dispatch ${mode} accepted: ${payload.tool?.operationId || "ok"}` : payload?.error?.message || "Dispatch denied");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Dispatch failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const campaignControl = async (control: "PAUSE" | "RESUME") => {
+    if (!phase3) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/v1/operations/campaign-control", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ approvalId: campaignApprovalId, campaignId, control }),
+      });
+      const payload = await response.json();
+      setMessage(response.ok ? `Campaign ${control} recorded` : payload?.error?.message || "Control denied");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Control failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Panel code="OPS / PHASE-3" title="Approved-only controlled operations" meta={phase3 ? "PHASE 3 ENABLED" : "PHASE 3 DISABLED"}>
+      <div className="readonly-banner">
+        <Play size={16} />
+        <strong>{phase3 ? "APPROVED DISPATCH ONLY" : "NO PHASE 3 ACTION"}</strong>
+        <span>
+          {phase3
+            ? "Operations require an APPROVED disposition. Cursor cannot acquire PRIMARY lease through this surface. Live adapter launch remains outside MC (prepare/queue only)."
+            : "Set MISSION_CONTROL_PHASE3_COMMANDS=enabled after owner authorization to use this surface."}
+        </span>
+      </div>
+      {message && <div className="source-notice tone-warning" role="status"><strong>OPERATION RESULT</strong><span>{message}</span></div>}
+
+      <div className="owner-gate-workflow" aria-label="Approved worker dispatch">
+        <strong>Worker dispatch (prepare / queue)</strong>
+        <label className="search-field">
+          <span className="sr-only">Approval ID</span>
+          <input aria-label="Dispatch approval ID" value={approvalId} onChange={(event) => setApprovalId(event.target.value)} placeholder="approvalId (must be APPROVED)" disabled={!phase3} />
+        </label>
+        <label className="search-field">
+          <span className="sr-only">Task ID</span>
+          <input aria-label="Dispatch task ID" value={taskId} onChange={(event) => setTaskId(event.target.value)} placeholder="taskId" disabled={!phase3} />
+        </label>
+        <label>
+          <span className="sr-only">Runtime</span>
+          <select aria-label="Dispatch runtime" value={runtime} onChange={(event) => setRuntime(event.target.value as "cursor" | "codex" | "kimi")} disabled={!phase3}>
+            <option value="cursor">cursor</option>
+            <option value="codex">codex</option>
+            <option value="kimi">kimi</option>
+          </select>
+        </label>
+        <label>
+          <span className="sr-only">Mode</span>
+          <select aria-label="Dispatch mode" value={mode} onChange={(event) => setMode(event.target.value as "prepare" | "queue")} disabled={!phase3}>
+            <option value="prepare">prepare (packet only)</option>
+            <option value="queue">queue (write agent inbox contract)</option>
+          </select>
+        </label>
+        <button type="button" disabled={!phase3 || busy || !approvalId || !taskId} onClick={dispatch}>Request approved dispatch</button>
+      </div>
+
+      <div className="owner-gate-workflow" aria-label="Campaign pause resume">
+        <strong>Campaign pause / resume</strong>
+        <label className="search-field">
+          <span className="sr-only">Campaign approval ID</span>
+          <input aria-label="Campaign control approval ID" value={campaignApprovalId} onChange={(event) => setCampaignApprovalId(event.target.value)} placeholder="approvalId (CAMPAIGN/PAUSE/RESUME)" disabled={!phase3} />
+        </label>
+        <label className="search-field">
+          <span className="sr-only">Campaign ID</span>
+          <input aria-label="Campaign ID" value={campaignId} onChange={(event) => setCampaignId(event.target.value)} placeholder="campaignId" disabled={!phase3} />
+        </label>
+        <div className="approval-actions-preview">
+          <button type="button" disabled={!phase3 || busy || !campaignApprovalId || !campaignId} onClick={() => campaignControl("PAUSE")}>Pause</button>
+          <button type="button" disabled={!phase3 || busy || !campaignApprovalId || !campaignId} onClick={() => campaignControl("RESUME")}>Resume</button>
+        </div>
+      </div>
     </Panel>
   );
 }
@@ -1447,6 +1560,7 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
     if (view === "safety") return <Safety snapshot={snapshot} />;
     if (view === "timeline") return <Timeline snapshot={snapshot} query={query} setQuery={setQuery} status={status} setStatus={setStatus} />;
     if (view === "dead-letter") return <DeadLetter snapshot={snapshot} />;
+    if (view === "operations") return <Operations snapshot={snapshot} />;
     if (view === "replay") return <Replay />;
     if (view === "evidence-diff") return <EvidenceDiff />;
     return <RoutingIncidents snapshot={snapshot} />;
@@ -1489,9 +1603,11 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
         <footer className="application-footer">
           <span><ShieldCheck size={14} /> Mission Control V2 provides authenticated, resilient visibility.</span>
           <span>
-            {snapshot.capabilities?.phase2Commands
-              ? "Phase 2 owner commands are enabled via allowlisted ADOS tools. Dispatch remains Phase 3."
-              : "It does not authorize, approve, dispatch, or mutate ADOS operations."}
+            {snapshot.capabilities?.phase3Commands
+              ? "Phase 3 controlled operations enabled (approved-only). Cursor cannot take PRIMARY lease here."
+              : snapshot.capabilities?.phase2Commands
+                ? "Phase 2 owner commands are enabled via allowlisted ADOS tools. Enable Phase 3 separately for dispatch."
+                : "It does not authorize, approve, dispatch, or mutate ADOS operations."}
           </span>
           <a className="support-bundle-link" href="/api/v1/support-bundle" download>
             Download support bundle

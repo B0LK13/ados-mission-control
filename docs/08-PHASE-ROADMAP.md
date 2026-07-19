@@ -1,6 +1,6 @@
 # Phase Roadmap — ADOS Mission Control
 
-> Release note: application version 2.0 ships read-only resilience plus an opt-in Phase 2 owner-command surface (approve/reject/withdraw + signed owner-gate decide) behind `MISSION_CONTROL_PHASE2_COMMANDS=enabled`. Phase 3 dispatch still requires a separate owner authorization package.
+> Release note: application version 2.0 ships read-only resilience, opt-in Phase 2 owner commands, and opt-in Phase 3 approved-only controlled operations (`MISSION_CONTROL_PHASE3_COMMANDS=enabled`). Phase 4 fleet remains deferred.
 
 ## Phase 1 — Read-only observability (current spec package)
 

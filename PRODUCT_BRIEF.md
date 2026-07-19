@@ -47,4 +47,6 @@ An owner can open Mission Control and, within seconds, know who holds the lease,
 
 **Phase 1 MVP proof of concept: COMPLETE** — classification `MISSION_CONTROL_V2_PHASE1_MVP_POC_COMPLETE` (see `docs/evidence/mvp-poc-20260719/STATUS.json`).
 
-**Phase 2 owner commands MVP: COMPLETE (2026-07-19)** — approve/reject/withdraw + signed owner-gate workflow via allowlisted ADOS tools when `MISSION_CONTROL_PHASE2_COMMANDS=enabled`. See `docs/authorizations/phase2-owner-commands-20260719.md` and `docs/evidence/mvp-poc-20260719/STATUS.json`. Phase 3 dispatch remains unauthorized.
+**Phase 2 owner commands MVP: COMPLETE (2026-07-19)** — approve/reject/withdraw + signed owner-gate workflow via allowlisted ADOS tools when `MISSION_CONTROL_PHASE2_COMMANDS=enabled`.
+
+**Phase 3 controlled operations: AUTHORIZED (2026-07-19)** — approved-only dispatch prepare/queue + campaign pause/resume when `MISSION_CONTROL_PHASE3_COMMANDS=enabled`. See `docs/authorizations/phase3-controlled-operations-20260719.md`. Cursor cannot take PRIMARY lease via Mission Control.

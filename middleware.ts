@@ -4,19 +4,29 @@ import { timingSafeEqualString } from "@/lib/security/timing-safe";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const AUTH_EXEMPT_PATHS = new Set(["/api/health", "/api/v1/health"]);
 
-/** Phase-2 mutation routes — only when MISSION_CONTROL_PHASE2_COMMANDS=enabled. */
 const PHASE2_POST_ROUTES = [
   /^\/api\/v1\/approvals\/[^/]+\/(approve|reject|withdraw)$/,
   /^\/api\/v1\/owner-gates\/[^/]+\/(challenge|decide)$/,
+];
+
+const PHASE3_POST_ROUTES = [
+  /^\/api\/v1\/operations\/dispatch$/,
+  /^\/api\/v1\/operations\/campaign-control$/,
 ];
 
 function phase2Enabled(): boolean {
   return process.env.MISSION_CONTROL_PHASE2_COMMANDS?.trim().toLowerCase() === "enabled";
 }
 
-function isPhase2Post(pathname: string, method: string): boolean {
-  if (method !== "POST" || !phase2Enabled()) return false;
-  return PHASE2_POST_ROUTES.some((pattern) => pattern.test(pathname));
+function phase3Enabled(): boolean {
+  return process.env.MISSION_CONTROL_PHASE3_COMMANDS?.trim().toLowerCase() === "enabled";
+}
+
+function allowedMutation(pathname: string, method: string): "phase2" | "phase3" | null {
+  if (method !== "POST") return null;
+  if (phase2Enabled() && PHASE2_POST_ROUTES.some((pattern) => pattern.test(pathname))) return "phase2";
+  if (phase3Enabled() && PHASE3_POST_ROUTES.some((pattern) => pattern.test(pathname))) return "phase3";
+  return null;
 }
 
 function credentials(request: NextRequest): { username: string; password: string } | null {
@@ -44,8 +54,9 @@ function authResponse(request: NextRequest, status: 401 | 503, code: string, mes
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method;
+  const mutationClass = allowedMutation(pathname, method);
 
-  if (pathname.startsWith("/api/") && !SAFE_METHODS.has(method) && !isPhase2Post(pathname, method)) {
+  if (pathname.startsWith("/api/") && !SAFE_METHODS.has(method) && !mutationClass) {
     return NextResponse.json(
       { error: { code: "READ_ONLY_V2", message: "Mission Control V2 exposes no mutation endpoints." } },
       { status: 405, headers: { Allow: "GET, HEAD, OPTIONS", "X-ADOS-Authority": "read-only" } },
@@ -53,9 +64,9 @@ export function middleware(request: NextRequest) {
   }
 
   if (process.env.MISSION_CONTROL_AUTH_MODE?.trim().toLowerCase() !== "basic") {
-    if (isPhase2Post(pathname, method)) {
+    if (mutationClass) {
       const response = NextResponse.next();
-      response.headers.set("X-ADOS-Authority", "phase2-commands");
+      response.headers.set("X-ADOS-Authority", mutationClass === "phase3" ? "phase3-commands" : "phase2-commands");
       return response;
     }
     return NextResponse.next();
@@ -77,8 +88,8 @@ export function middleware(request: NextRequest) {
   }
 
   const response = NextResponse.next();
-  if (isPhase2Post(pathname, method)) {
-    response.headers.set("X-ADOS-Authority", "phase2-commands");
+  if (mutationClass) {
+    response.headers.set("X-ADOS-Authority", mutationClass === "phase3" ? "phase3-commands" : "phase2-commands");
   }
   return response;
 }
