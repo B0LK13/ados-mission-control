@@ -9,8 +9,9 @@
   --line: #26332d;
   --line-strong: #3a4c43;
   --text: #eef5ef;
-  --muted: #87968e;
-  --faint: #58655f;
+  /* WCAG AA: keep muted/faint ≥ 4.5:1 on --surface / --bg (FBL-UX-002). */
+  --muted: #a7b6ae;
+  --faint: #8f9f96;
   --lime: #b8f45d;
   --cyan: #63d9d0;
   --amber: #f4c463;
@@ -30,8 +31,8 @@
   --line: #c9d2ca;
   --line-strong: #a7b5a9;
   --text: #121a16;
-  --muted: #5e6c64;
-  --faint: #849087;
+  --muted: #445349;
+  --faint: #55655c;
   --lime: #4d7d08;
   --cyan: #087a72;
   --amber: #9a6500;
@@ -79,12 +80,13 @@ code {
 .cockpit-identity-banner {
   grid-column: 1 / -1;
   padding: 8px 16px;
-  background: color-mix(in srgb, var(--amber, #c9a227) 18%, var(--panel, #12141a));
-  border-bottom: 1px solid color-mix(in srgb, var(--amber, #c9a227) 45%, transparent);
-  color: var(--muted, #c8cdd8);
+  background: var(--surface-2);
+  border-bottom: 1px solid color-mix(in srgb, var(--amber) 55%, var(--line-strong));
+  color: var(--text);
   font: 600 0.68rem/1.45 "Cascadia Mono", ui-monospace, monospace;
   letter-spacing: 0.04em;
 }
+.cockpit-identity-banner strong { color: var(--lime); }
 .command-rail {
   position: sticky;
   top: 0;

@@ -39,6 +39,7 @@ export default defineConfig({
   ],
   projects: [
     { name: "live-desktop", testMatch: /live\.spec\.ts/, use: { ...devices["Desktop Chrome"], baseURL: "http://127.0.0.1:3201" } },
+    { name: "live-a11y", testMatch: /a11y\.spec\.ts/, use: { ...devices["Desktop Chrome"], baseURL: "http://127.0.0.1:3201" } },
     { name: "live-mobile", testMatch: /mobile\.spec\.ts/, use: { ...devices["Pixel 7"], baseURL: "http://127.0.0.1:3201" } },
     { name: "unavailable", testMatch: /unavailable\.spec\.ts/, use: { ...devices["Desktop Chrome"], baseURL: "http://127.0.0.1:3202" } },
     { name: "authenticated", testMatch: /auth\.spec\.ts/, use: { ...devices["Desktop Chrome"], baseURL: "http://127.0.0.1:3203", httpCredentials: { username: "owner", password: "e2e-only-secret" } } },

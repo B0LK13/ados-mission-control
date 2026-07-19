@@ -13,6 +13,7 @@
     "test": "npm run test:unit",
     "test:unit": "node scripts/run-unit-tests.mjs",
     "test:e2e": "playwright test",
+    "test:a11y": "playwright test --project=live-a11y",
     "evidence:screenshots": "node scripts/capture-screenshots.mjs",
     "evidence:verify": "node scripts/collect-v2-verification.mjs",
     "evidence:staging": "node scripts/verify-v2-staging.mjs",
@@ -36,6 +37,7 @@
     "react-dom": "19.2.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@eslint/eslintrc": "3.3.1",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "4.3.3",
