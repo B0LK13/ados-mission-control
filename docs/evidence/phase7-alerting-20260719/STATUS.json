@@ -12,12 +12,7 @@
   "roadmap": "docs/09-PHASE-ROADMAP-V3.md",
   "delivered": {
     "flag": "MISSION_CONTROL_ALERTS (fail-closed default)",
-    "engine": [
-      "lib/alerts/rules.ts",
-      "lib/alerts/engine.ts",
-      "lib/alerts/webhook.ts",
-      "lib/alerts/history-store.ts"
-    ],
+    "engine": ["lib/alerts/rules.ts", "lib/alerts/engine.ts", "lib/alerts/webhook.ts", "lib/alerts/history-store.ts"],
     "routes": [
       "GET /api/v1/alerts",
       "GET /api/v1/alerts/history",
