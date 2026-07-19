@@ -8,7 +8,7 @@ The guarantee is enforced in layers:
 
 - `npm run verify:readonly` fails on ADOS write primitives, child-process launchers, or known dispatch adapters in `app`, `components`, and `lib`. Write/spawn exceptions: `lib/read-model/sqlite-store.ts` (app-owned cache) and `lib/commands/ados-bridge.ts` (argv-only allowlisted tool spawn).
 - `middleware.ts` rejects unsafe methods below `/api/*` with `405 READ_ONLY_V2`, except the Phase 2 POST allowlist when `MISSION_CONTROL_PHASE2_COMMANDS=enabled`.
-- No task dispatch, runtime promotion, lease transfer, or Phase 3 mutation route exists.
+- Runtime promotion and lease transfer routes do not exist. Phase 3 dispatch is prepare/queue only behind `MISSION_CONTROL_PHASE3_COMMANDS=enabled` and requires an APPROVED disposition.
 - The container mounts ADOS `state`, `handoffs`, and `evidence` with `:ro`; a separate named volume is writable only at `/var/lib/mission-control`.
 - The hardened container runs as UID/GID 1001, with all Linux capabilities dropped, `no-new-privileges`, a read-only root filesystem, and only small temporary filesystems for runtime cache.
 

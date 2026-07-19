@@ -104,7 +104,7 @@ Copy `.env.example` to `.env.local` only when the default `D:\` paths need to ch
 - Claude remains the sole `PRIMARY` lease holder when the live lease says so.
 - Cursor is always rendered `NON-AUTHORITATIVE` and cannot acquire the orchestrator lease.
 - Mission Control never writes `state/**` from Next.js handlers; Phase 2 mutations go only through allowlisted `scripts/ados-tools/*`.
-- It never mutates leases, launches workers, enables dispatch, pushes, merges, or deploys (Phase 3+ remains unauthorized).
+- Lease transfer, Cursor PRIMARY, push/merge/deploy remain forbidden. Phase 3 approved-only prepare/queue is opt-in via `MISSION_CONTROL_PHASE3_COMMANDS=enabled`.
 - Approve/reject/withdraw and signed owner-gate decide are opt-in behind `MISSION_CONTROL_PHASE2_COMMANDS=enabled` (see `docs/authorizations/phase2-owner-commands-20260719.md`).
 - Cursor dispatch is modeled from the existing synchronous `Invoke-CursorAgent.ps1` protocol: task contract in `handoffs\cursor\inbox`, live acknowledgement/completion sentinels, result in `handoffs\cursor\completed`.
 - Cursor cannot independently certify its own output; the checker remains a separate agent.
@@ -210,4 +210,4 @@ The detailed design remains in `docs/`. The synchronous-dispatch correction is r
 - SQLite persists the latest redacted snapshot and ingest watermarks, not a full relational event history.
 - Historical formats remain supported through a bounded legacy schema profile; new unsupported versions warn but do not crash the dashboard.
 - Basic authentication is suitable for loopback staging. Any non-loopback exposure requires HTTPS and a separately approved identity/network design.
-- Runtime promotion and Phase 3 dispatch controls remain absent. Phase 2 owner commands are off by default.
+- Runtime promotion / live adapter launch from MC remain absent. Phase 2/3 command surfaces are off by default.
