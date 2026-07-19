@@ -53,17 +53,19 @@ V3 raises Mission Control from “complete cockpit” to **operator intelligence
 
 ## Phase 7 — Alerting & external ops hooks
 
+**Status:** COMPLETE (2026-07-19) — `phase7-001`…`005` Done in backlog.
+
 **Goal:** Notify operators of readiness/fleet/dead-letter signals without embedding secrets in metrics.
 
 | ID | Deliverable | Effort | Notes |
 |----|-------------|--------|-------|
-| P7-01 | Alert rule engine (local) | M | Threshold rules over readiness, heartbeats, dead-letter, fleet reachability |
-| P7-02 | Opt-in webhook notifier | M | Outbound HTTPS webhook only when configured; redacted payloads |
-| P7-03 | Alert history UI | S | `/alerts` or safety expansion with delivered/failed states |
-| P7-04 | Grafana provisioning runbook | S | Document scrape + import of `docs/grafana/*` into external Grafana (no bundled server) |
-| P7-05 | Mobile alert digest | S | Mobile-friendly digest view; not a native push app |
+| P7-01 | Alert rule engine (local) | M | Done — `lib/alerts/rules.ts` + `GET /api/v1/alerts` |
+| P7-02 | Opt-in webhook notifier | M | Done — HTTPS-only webhook; redacted payloads |
+| P7-03 | Alert history UI | S | Done — `/alerts` history panel |
+| P7-04 | Grafana provisioning runbook | S | Done — `docs/operations/GRAFANA-PROVISIONING.md` |
+| P7-05 | Mobile alert digest | S | Done — digest panel + `GET /api/v1/alerts/digest` |
 
-**Exit gate:** Alerting default off; payloads redacted; never grant mutation/approve/dispatch via alerts.
+**Exit gate:** Alerting default off; payloads redacted; never grant mutation/approve/dispatch via alerts. ✅
 
 **Flag:** `MISSION_CONTROL_ALERTS=enabled` (+ webhook URL/secret via env, never committed).
 

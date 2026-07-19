@@ -25,6 +25,7 @@ const serverDashboardViews: readonly DashboardView[] = [
   "dead-letter",
   "operations",
   "fleet",
+  "alerts",
   "replay",
   "evidence-diff",
 ];

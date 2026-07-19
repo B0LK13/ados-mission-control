@@ -426,6 +426,7 @@ export interface MissionSnapshot {
     phase3Commands: boolean;
     phase6Commands: boolean;
     fleetMode: boolean;
+    alertsEnabled: boolean;
     ownerSigningConfigured: boolean;
     mutationsEnabled: boolean;
   };

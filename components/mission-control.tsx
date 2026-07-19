@@ -7,6 +7,7 @@ import {
   Activity,
   AlertTriangle,
   Archive,
+  Bell,
   Bot,
   Boxes,
   ChevronRight,
@@ -76,6 +77,7 @@ export const dashboardViews = [
   "dead-letter",
   "operations",
   "fleet",
+  "alerts",
   "replay",
   "evidence-diff",
 ] as const;
@@ -99,6 +101,7 @@ const navigation: Array<{ view: DashboardView; label: string; icon: typeof Gauge
   { view: "dead-letter", label: "Dead letter", icon: OctagonAlert },
   { view: "operations", label: "Operations", icon: Play },
   { view: "fleet", label: "Fleet", icon: Network },
+  { view: "alerts", label: "Alerts", icon: Bell },
   { view: "replay", label: "Replay", icon: History },
   { view: "evidence-diff", label: "Evidence diff", icon: FileDiff },
 ];
@@ -121,8 +124,9 @@ const viewCopy: Record<DashboardView, { eyebrow: string; title: string; descript
   "dead-letter": { eyebrow: "Failure backlog / 15", title: "Dead letter", description: "Repeated failures, blocked tasks, worker-unavailable handoffs, and routing containment still needing owner disposition — derived only, never invented." },
   operations: { eyebrow: "Controlled ops / 16", title: "Controlled operations", description: "Phase 3 dispatch/campaign control and Phase 6 validate/integration/review-pickup via allowlisted ADOS tools. Impossible without APPROVED disposition. Cursor cannot take PRIMARY lease here." },
   fleet: { eyebrow: "Fleet observe / 17", title: "Fleet", description: "Opt-in multi-member observation only. Rows are NON_AUTHORITATIVE and never inherit this cockpit's PRIMARY lease. Metrics: GET /api/v1/metrics." },
-  replay: { eyebrow: "Run chronology / 18", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
-  "evidence-diff": { eyebrow: "Run compare / 19", title: "Evidence diff", description: "GET-only comparison of two supervisor runs under one campaign. Missing runs stay UNAVAILABLE — never a fabricated diff." },
+  alerts: { eyebrow: "Alerting / 18", title: "Alerts", description: "Opt-in local rule engine and delivery history. Non-authoritative; never approve, dispatch, or transfer lease. Mobile digest included." },
+  replay: { eyebrow: "Run chronology / 19", title: "Run replay", description: "GET-only chronological replay from evidence/supervisor-runs. Missing runs report UNAVAILABLE — never a fabricated timeline." },
+  "evidence-diff": { eyebrow: "Run compare / 20", title: "Evidence diff", description: "GET-only comparison of two supervisor runs under one campaign. Missing runs stay UNAVAILABLE — never a fabricated diff." },
 };
 
 function formatTimestamp(value?: string | null, compact = false): string {
@@ -634,6 +638,189 @@ type FleetApiResponse = {
   authority?: string;
   note?: string;
 };
+
+type AlertApiHit = {
+  ruleId: string;
+  severity: string;
+  title: string;
+  detail: string;
+  fingerprint: string;
+};
+
+type AlertHistoryRow = {
+  id: string;
+  ruleId: string;
+  severity: string;
+  title: string;
+  detail: string;
+  firedAt: string;
+  deliveryStatus: string;
+  deliveryDetail?: string;
+};
+
+type AlertApiResponse = {
+  enabled: boolean;
+  active: AlertApiHit[];
+  history: AlertHistoryRow[];
+  warnings: string[];
+  note?: string;
+};
+
+type AlertDigestResponse = {
+  enabled: boolean;
+  criticalCount: number;
+  warningCount: number;
+  top: Array<{ ruleId: string; severity: string; title: string; detail: string }>;
+  note?: string;
+};
+
+function Alerts({ snapshot }: { snapshot: MissionSnapshot }) {
+  const alertsEnabled = snapshot.capabilities?.alertsEnabled === true;
+  const [projection, setProjection] = useState<AlertApiResponse | null>(null);
+  const [digest, setDigest] = useState<AlertDigestResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      fetch("/api/v1/alerts").then(async (response) => {
+        const payload = (await response.json()) as AlertApiResponse & { error?: { message?: string } };
+        if (!response.ok) throw new Error(payload.error?.message || "Alerts fetch failed");
+        return payload;
+      }),
+      fetch("/api/v1/alerts/digest").then(async (response) => {
+        const payload = (await response.json()) as AlertDigestResponse & { error?: { message?: string } };
+        if (!response.ok) throw new Error(payload.error?.message || "Digest fetch failed");
+        return payload;
+      }),
+    ])
+      .then(([alertsPayload, digestPayload]) => {
+        if (!cancelled) {
+          setProjection(alertsPayload);
+          setDigest(digestPayload);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Alerts fetch failed");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [alertsEnabled]);
+
+  return (
+    <>
+      <Panel code="ALERTS / PHASE-7" title="Local alert rules" meta={alertsEnabled ? "ALERTS ENABLED" : "ALERTS DISABLED"}>
+        <div className="readonly-banner">
+          <Bell size={16} />
+          <strong>{alertsEnabled ? "NON-AUTHORITATIVE RULES" : "ALERTS OFF"}</strong>
+          <span>
+            {alertsEnabled
+              ? "Rules evaluate readiness, heartbeat, dead-letter, fleet reachability, and critical safety. Never approve/dispatch/lease. Webhook is opt-in via env."
+              : "Set MISSION_CONTROL_ALERTS=enabled after owner authorization. Optional MISSION_CONTROL_ALERT_WEBHOOK_URL (https only)."}
+          </span>
+        </div>
+        {loading && <EmptyState title="Evaluating alert rules" detail="Loading active alerts and history…" />}
+        {error && <div className="source-notice tone-critical" role="status"><strong>ALERTS ERROR</strong><span>{error}</span></div>}
+        {projection?.warnings?.length ? (
+          <div className="source-notice tone-warning" role="status">
+            <strong>ALERT WARNINGS</strong>
+            <span>{projection.warnings.join(" · ")}</span>
+          </div>
+        ) : null}
+        {projection && !loading && (
+          projection.active.length ? (
+            <div className="alert-list">
+              {projection.active.map((hit) => (
+                <div className={`alert-item tone-${stateTone(hit.severity)}`} key={hit.fingerprint}>
+                  <Bell size={17} />
+                  <div>
+                    <strong>{hit.title}</strong>
+                    <span>{hit.detail}</span>
+                  </div>
+                  <StatusBadge value={hit.severity} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title={projection.enabled ? "No active rule hits" : "Alerting disabled"}
+              detail={projection.note || "No derived alert rules are firing."}
+            />
+          )
+        )}
+      </Panel>
+
+      <Panel
+        code="ALERTS / HISTORY"
+        title="Delivery history"
+        meta={`${projection?.history?.length || 0} recent`}
+      >
+        <div className="readonly-banner">
+          <History size={16} />
+          <strong>AUDIT TRAIL</strong>
+          <span>Local Mission Control history only. Delivery statuses: delivered, failed, local_only, suppressed.</span>
+        </div>
+        {projection?.history?.length ? (
+          <div className="alert-list">
+            {projection.history.map((row) => (
+              <div className={`alert-item tone-${stateTone(row.severity)}`} key={row.id}>
+                <History size={17} />
+                <div>
+                  <strong>{row.ruleId} · {row.deliveryStatus}</strong>
+                  <span>{row.title} — {row.detail}</span>
+                  <span className="alert-meta">{row.firedAt}{row.deliveryDetail ? ` · ${row.deliveryDetail}` : ""}</span>
+                </div>
+                <StatusBadge value={row.severity} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="No alert history" detail="History appears after a rule fires while alerts are enabled." />
+        )}
+      </Panel>
+
+      <Panel code="ALERTS / DIGEST" title="Mobile alert digest" meta={digest ? `${digest.criticalCount} critical · ${digest.warningCount} warning` : "—"}>
+        <div className="alert-digest" aria-label="Mobile alert digest">
+          <div className="readonly-banner">
+            <Bell size={16} />
+            <strong>GLANCE VIEW</strong>
+            <span>Compact digest for mobile viewports. No native push infrastructure.</span>
+          </div>
+          {digest?.enabled ? (
+            <>
+              <div className="digest-counts">
+                <span><strong>{digest.criticalCount}</strong> critical</span>
+                <span><strong>{digest.warningCount}</strong> warning</span>
+              </div>
+              {digest.top.length ? (
+                <ol className="digest-list">
+                  {digest.top.map((item) => (
+                    <li key={`${item.ruleId}-${item.title}`}>
+                      <strong>{item.severity}</strong>
+                      <span>{item.title}</span>
+                      <em>{item.detail}</em>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <EmptyState title="Digest clear" detail="No active alert hits for the digest." />
+              )}
+            </>
+          ) : (
+            <EmptyState title="Digest disabled" detail={digest?.note || "Enable MISSION_CONTROL_ALERTS to populate the digest."} />
+          )}
+        </div>
+      </Panel>
+    </>
+  );
+}
 
 function Fleet({ snapshot }: { snapshot: MissionSnapshot }) {
   const fleetMode = snapshot.capabilities?.fleetMode === true;
@@ -1977,6 +2164,7 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
     if (view === "dead-letter") return <DeadLetter snapshot={snapshot} />;
     if (view === "operations") return <Operations snapshot={snapshot} />;
     if (view === "fleet") return <Fleet snapshot={snapshot} />;
+    if (view === "alerts") return <Alerts snapshot={snapshot} />;
     if (view === "replay") return <Replay />;
     if (view === "evidence-diff") return <EvidenceDiff />;
     return <RoutingIncidents snapshot={snapshot} />;
@@ -2019,15 +2207,17 @@ export function MissionControl({ initialSnapshot, view }: { initialSnapshot: Mis
         <footer className="application-footer">
           <span><ShieldCheck size={14} /> Mission Control V2 provides authenticated, resilient visibility.</span>
           <span>
-            {snapshot.capabilities?.phase6Commands
-              ? "Phase 6 controlled ops enabled (validate/integration/review-pickup, approved-only). Cursor cannot take PRIMARY lease here."
-              : snapshot.capabilities?.fleetMode
-                ? "Phase 4 fleet observation enabled (non-authoritative). Metrics at /api/v1/metrics never imply PRIMARY authority."
-                : snapshot.capabilities?.phase3Commands
-                  ? "Phase 3 controlled operations enabled (approved-only). Cursor cannot take PRIMARY lease here."
-                  : snapshot.capabilities?.phase2Commands
-                    ? "Phase 2 owner commands are enabled via allowlisted ADOS tools. Enable Phase 3 separately for dispatch."
-                    : "It does not authorize, approve, dispatch, or mutate ADOS operations."}
+            {snapshot.capabilities?.alertsEnabled
+              ? "Phase 7 alerting enabled (local rules + optional HTTPS webhook). Alerts never approve, dispatch, or transfer lease."
+              : snapshot.capabilities?.phase6Commands
+                ? "Phase 6 controlled ops enabled (validate/integration/review-pickup, approved-only). Cursor cannot take PRIMARY lease here."
+                : snapshot.capabilities?.fleetMode
+                  ? "Phase 4 fleet observation enabled (non-authoritative). Metrics at /api/v1/metrics never imply PRIMARY authority."
+                  : snapshot.capabilities?.phase3Commands
+                    ? "Phase 3 controlled operations enabled (approved-only). Cursor cannot take PRIMARY lease here."
+                    : snapshot.capabilities?.phase2Commands
+                      ? "Phase 2 owner commands are enabled via allowlisted ADOS tools. Enable Phase 3 separately for dispatch."
+                      : "It does not authorize, approve, dispatch, or mutate ADOS operations."}
           </span>
           <a className="support-bundle-link" href="/api/v1/support-bundle" download>
             Download support bundle

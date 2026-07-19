@@ -11,101 +11,12 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 - **Maturity:** strong (overall score 3.7/5) → target: advanced
 - **Summary:** Phases 1–4 MVP complete (2026-07-19): read-only Command Deck, opt-in Phase 2/3 commands, opt-in Phase 4 fleet/metrics. V3 roadmap AUTHORIZED: operator intelligence, controlled-ops completeness, alerting, and platform hardening (docs/09-PHASE-ROADMAP-V3.md).
 
-## Open Tasks (22)
+## Open Tasks (17)
 
 | Priority | Count |
 |---|---|
-| Medium | 12 |
-| Low | 10 |
-
-### `ados-mission-control-v2-roadmap-phase7-001` — Phase 7: local alert rule engine for readiness/heartbeat/dead-letter/fleet
-
-- **Priority:** Medium | **Severity:** Medium | **Effort:** M | **Risk:** Medium | **Phase:** V3-Alerting | **Status:** Open
-- **Category:** roadmap / phase-7
-- **Owner role:** fullstack-engineer
-
-**Current state:** Safety alerts are derived inline; no configurable rule engine or history.
-
-**Target state:** lib/alerts/rules.ts evaluates named rules; results available via API; MISSION_CONTROL_ALERTS gate.
-
-**Gap:** Operators only notice issues while looking at the UI.
-
-**Acceptance criteria:**
-- [ ] Default disabled
-- [ ] Rules never mutate ADOS state
-- [ ] Unit tests for rule evaluation
-- [ ] No secrets in rule outputs
-
-**Validation steps:**
-1. Unit tests for rules
-2. Flag off returns empty/disabled projection
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-7, v3, alerts, authorized
-
-### `ados-mission-control-v2-roadmap-phase7-002` — Phase 7: opt-in redacted webhook notifier
-
-- **Priority:** Medium | **Severity:** High | **Effort:** M | **Risk:** High | **Phase:** V3-Alerting | **Status:** Open
-- **Category:** roadmap / phase-7
-- **Owner role:** security-engineer
-
-**Current state:** No outbound notifier.
-
-**Target state:** Webhook sender uses MISSION_CONTROL_ALERT_WEBHOOK_URL (+ optional secret header); fails closed if misconfigured while alerts enabled.
-
-**Gap:** No push path for operator attention.
-
-**Acceptance criteria:**
-- [ ] Webhook URL/secret never committed
-- [ ] Payloads pass redaction tests
-- [ ] No approve/dispatch actions via webhook callbacks
-- [ ] Disabled when alerts flag off
-
-**Validation steps:**
-1. Unit tests with mock fetch
-2. Redaction assertions on payload
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-7, v3, alerts, security, authorized
-
-### `ados-mission-control-v2-roadmap-phase7-003` — Phase 7: alert history UI
-
-- **Priority:** Medium | **Severity:** Low | **Effort:** S | **Risk:** Low | **Phase:** V3-Alerting | **Status:** Open
-- **Category:** roadmap / phase-7
-- **Owner role:** frontend-engineer
-
-**Current state:** Safety view shows active derived alerts only.
-
-**Target state:** History list with timestamps, rule id, delivery status, redacted detail.
-
-**Gap:** Operators cannot audit what was fired.
-
-**Acceptance criteria:**
-- [ ] Empty/disabled truthful states
-- [ ] No mutation controls
-- [ ] Secrets absent from rendered detail
-
-**Validation steps:**
-1. Manual UI with fixture history
-2. Optional e2e
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-7, v3, ui, authorized
+| Medium | 9 |
+| Low | 8 |
 
 ### `ados-mission-control-v2-roadmap-phase8-001` — Phase 8: SSE bounded delta protocol ADR (design gate)
 
@@ -353,63 +264,6 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 
 **Labels:** e2e, phase2, phase3, phase4, gap-analysis-2026-07-19
 
-### `ados-mission-control-v2-roadmap-phase7-004` — Phase 7: Grafana external provisioning runbook
-
-- **Priority:** Low | **Severity:** Low | **Effort:** S | **Risk:** Low | **Phase:** V3-Alerting | **Status:** Open
-- **Category:** roadmap / phase-7
-- **Owner role:** devops-engineer
-
-**Current state:** Dashboard JSON stub exists; no operator runbook.
-
-**Target state:** docs/operations/GRAFANA-PROVISIONING.md with scrape config sample and non-authority warnings.
-
-**Gap:** Operators lack a clear path to wire external Grafana.
-
-**Acceptance criteria:**
-- [ ] Runbook states metrics are non-authoritative
-- [ ] No bundled Grafana server introduced
-- [ ] Sample scrape job uses /api/v1/metrics
-
-**Validation steps:**
-1. Doc review against ADR-001
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-7, v3, docs, authorized
-
-### `ados-mission-control-v2-roadmap-phase7-005` — Phase 7: mobile alert digest view
-
-- **Priority:** Low | **Severity:** Low | **Effort:** S | **Risk:** Low | **Phase:** V3-Alerting | **Status:** Open
-- **Category:** roadmap / phase-7
-- **Owner role:** frontend-engineer
-
-**Current state:** Mobile nav exists; no alert digest layout.
-
-**Target state:** Compact digest route/section usable on Pixel-class viewports in Playwright mobile project.
-
-**Gap:** On-call mobile glance is weak.
-
-**Acceptance criteria:**
-- [ ] Readable on mobile viewport
-- [ ] No push infrastructure required
-- [ ] Playwright mobile smoke optional but preferred
-
-**Validation steps:**
-1. Manual mobile viewport check
-2. Optional live-mobile Playwright
-
-**Source evidence:**
-- docs/09-PHASE-ROADMAP-V3.md
-- docs/authorizations/v3-roadmap-20260719.md
-- docs/08-PHASE-ROADMAP.md
-- docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md
-
-**Labels:** phase-7, v3, mobile, authorized
-
 ### `ados-mission-control-v2-roadmap-phase8-003` — Phase 8: fleet aggregation polish (filters, last-probe age)
 
 - **Priority:** Low | **Severity:** Low | **Effort:** S | **Risk:** Low | **Phase:** V3-Hardening | **Status:** Open
@@ -621,12 +475,12 @@ _Generated from the workspace-wide backlog at `/backlog/tasks.json`. Do not hand
 
 Full write-up: [`docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md`](docs/audits/MC-V2-DEEP-ANALYSIS-2026-07-19.md).
 
-**Verdict:** Phases 1–6 complete. Next is Phase 7 alerting under `docs/authorizations/v3-roadmap-20260719.md`.
+**Verdict:** Phases 1–7 complete. Next is Phase 8 hardening under `docs/authorizations/v3-roadmap-20260719.md`.
 
 ### Recommended next
 
-1. ~~**Phases 1–6**~~ — done 2026-07-19.
-2. **Start V3 Phase 7** — `ados-mission-control-v2-roadmap-phase7-001` (`MISSION_CONTROL_ALERTS`).
-3. Parallel polish / Phase 8 per `docs/09-PHASE-ROADMAP-V3.md`.
+1. ~~**Phases 1–7**~~ — done 2026-07-19.
+2. **Start V3 Phase 8** — `ados-mission-control-v2-roadmap-phase8-001` (SSE delta ADR).
+3. Parallel polish residuals per gap analysis.
 
-**Classification:** `MISSION_CONTROL_V3_PHASE6_CONTROLLED_OPS_COMPLETE`.
+**Classification:** `MISSION_CONTROL_V3_PHASE7_ALERTING_COMPLETE`.

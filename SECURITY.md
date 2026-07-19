@@ -2,13 +2,13 @@
 
 ## Read-only guarantee
 
-Mission Control V2 is a GET-only observability cockpit by default. Owner-authorized Phase 2 command routes may approve/reject/withdraw and close owner gates only through allowlisted ADOS tools — never via raw `state/**` writes from Next.js. Phase 3 approved-only operations are opt-in via `MISSION_CONTROL_PHASE3_COMMANDS=enabled` and still cannot grant Cursor PRIMARY/lease. Phase 6 validate/integration/review-pickup is opt-in via `MISSION_CONTROL_PHASE6_COMMANDS=enabled` with the same APPROVED-only, no-lease invariants. Phase 4 fleet observation and Prometheus metrics (`MISSION_CONTROL_FLEET_MODE`, `GET /api/v1/metrics`) are non-authoritative and default off.
+Mission Control V2 is a GET-only observability cockpit by default. Owner-authorized Phase 2 command routes may approve/reject/withdraw and close owner gates only through allowlisted ADOS tools — never via raw `state/**` writes from Next.js. Phase 3 approved-only operations are opt-in via `MISSION_CONTROL_PHASE3_COMMANDS=enabled` and still cannot grant Cursor PRIMARY/lease. Phase 6 validate/integration/review-pickup is opt-in via `MISSION_CONTROL_PHASE6_COMMANDS=enabled` with the same APPROVED-only, no-lease invariants. Phase 7 alerting is opt-in via `MISSION_CONTROL_ALERTS=enabled` with optional HTTPS webhook env secrets — alerts never approve, dispatch, or transfer lease. Phase 4 fleet observation and Prometheus metrics (`MISSION_CONTROL_FLEET_MODE`, `GET /api/v1/metrics`) are non-authoritative and default off.
 
 The guarantee is enforced in layers:
 
-- `npm run verify:readonly` fails on ADOS write primitives, child-process launchers, or known dispatch adapters in `app`, `components`, and `lib`. Write/spawn exceptions: `lib/read-model/sqlite-store.ts` (app-owned cache) and `lib/commands/ados-bridge.ts` (argv-only allowlisted tool spawn).
+- `npm run verify:readonly` fails on ADOS write primitives, child-process launchers, or known dispatch adapters in `app`, `components`, and `lib`. Write/spawn exceptions: `lib/read-model/sqlite-store.ts` (app-owned cache), `lib/alerts/history-store.ts` (MC dataRoot alert history), and `lib/commands/ados-bridge.ts` (argv-only allowlisted tool spawn).
 - `middleware.ts` rejects unsafe methods below `/api/*` with `405 READ_ONLY_V2`, except the Phase 2/3/6 POST allowlists when their respective flags are enabled.
-- Runtime promotion and lease transfer routes do not exist. Phase 3 dispatch and Phase 6 validate/integration/review-pickup are prepare/file only behind their flags and require an APPROVED disposition. Fleet probes never approve, dispatch, or transfer lease.
+- Runtime promotion and lease transfer routes do not exist. Phase 3 dispatch and Phase 6 validate/integration/review-pickup are prepare/file only behind their flags and require an APPROVED disposition. Fleet probes and Phase 7 alerts never approve, dispatch, or transfer lease. Alert webhook secrets stay in env; payloads are redacted.
 - The container mounts ADOS `state`, `handoffs`, and `evidence` with `:ro`; a separate named volume is writable only at `/var/lib/mission-control`.
 - The hardened container runs as UID/GID 1001, with all Linux capabilities dropped, `no-new-privileges`, a read-only root filesystem, and only small temporary filesystems for runtime cache.
 

@@ -114,9 +114,19 @@ When `MISSION_CONTROL_PHASE6_COMMANDS=enabled`:
 - Cursor PRIMARY / lease transfer remains impossible through Mission Control.
 - UI surface: `/operations` Phase 6 panel.
 
+## Phase 7 alerting (authorized 2026-07-19)
+
+When `MISSION_CONTROL_ALERTS=enabled`:
+
+- `GET /api/v1/alerts` evaluates local rules (readiness, heartbeat, dead-letter, fleet, critical safety).
+- Optional HTTPS webhook via `MISSION_CONTROL_ALERT_WEBHOOK_URL` (secret env optional); payloads redacted.
+- History under Mission Control `dataRoot/alerts/` (never ADOS `state/**`).
+- UI: `/alerts` (history + mobile digest). Digest API: `GET /api/v1/alerts/digest`.
+- Grafana: external provisioning only — `docs/operations/GRAFANA-PROVISIONING.md`.
+
 ## V3 roadmap (authorized 2026-07-19)
 
-See `docs/09-PHASE-ROADMAP-V3.md`. Phases 5–6 complete. Next: Phase 7 (`MISSION_CONTROL_ALERTS`), Phase 8 hardening. Authorization: `docs/authorizations/v3-roadmap-20260719.md`.
+See `docs/09-PHASE-ROADMAP-V3.md`. Phases 5–7 complete. Next: Phase 8 hardening. Authorization: `docs/authorizations/v3-roadmap-20260719.md`.
 
 ## Phase 4 fleet + metrics (authorized 2026-07-19)
 

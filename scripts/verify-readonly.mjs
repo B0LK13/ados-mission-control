@@ -4,6 +4,8 @@ import path from "node:path";
 const root = process.cwd();
 const sourceRoots = ["app", "components", "lib"].map((entry) => path.join(root, entry));
 const approvedReadModelAdapter = path.normalize("lib/read-model/sqlite-store.ts");
+/** Phase-7 local alert history under Mission Control dataRoot only (never ADOS state). */
+const approvedAlertHistoryStore = path.normalize("lib/alerts/history-store.ts");
 /** Phase-2 allowlisted bridge may spawn node scripts/ados-tools/* only (never Cursor adapters). */
 const approvedCommandBridge = path.normalize("lib/commands/ados-bridge.ts");
 const writerPattern = /\b(?:writeFile|appendFile|truncate|unlink|rename|rm|rmdir|mkdir)(?:Sync)?\s*\(/;
@@ -37,7 +39,11 @@ for (const sourceRoot of sourceRoots) {
   for (const file of await collect(sourceRoot)) {
     const source = await readFile(file, "utf8");
     const relative = path.normalize(path.relative(root, file));
-    if (writerPattern.test(source) && relative !== approvedReadModelAdapter) {
+    if (
+      writerPattern.test(source) &&
+      relative !== approvedReadModelAdapter &&
+      relative !== approvedAlertHistoryStore
+    ) {
       violations.push(`${relative} matched ${writerPattern}`);
     }
     if (
@@ -66,4 +72,4 @@ if (violations.length > 0) {
   process.exit(1);
 }
 
-console.log("Read-only source audit passed: no ADOS writers/dispatch adapters in app surfaces; SQLite cache + Phase-2/3/6 ados-bridge spawn are the only approved exceptions.");
+console.log("Read-only source audit passed: no ADOS writers/dispatch adapters in app surfaces; SQLite cache + Phase-7 alert history + Phase-2/3/6 ados-bridge spawn are the only approved exceptions.");
